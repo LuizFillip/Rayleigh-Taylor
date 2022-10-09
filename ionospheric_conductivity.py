@@ -40,11 +40,11 @@ def ion_ratio(nu_i, B = 0.285e-04):
     return (const.elementary_charge * B) / (const.proton_mass * nu_i)
 
 def electron_mobility(nu_e):
-    """Electric mobility for electrons"""
+    """Electric mobility for electrons (mass transport)"""
     return (-const.elementary_charge) / (const.electron_mass * nu_e)
 
 def ion_mobility(nu_i):
-    """Electric mobility for ions"""
+    """Electric mobility for ions (mass transport)"""
     return (const.elementary_charge) / (const.proton_mass * nu_i)
     
 def parallel_conductivity(Ne, nu_e, nu_i):
@@ -74,9 +74,12 @@ def Hall_conductivity(Ne, nu_e, nu_i, B = 0.285e-04):
 
 
 def main():
-    alts = np.arange(0, 600, 1.)
-    altkmrange = (0, 599, 1)
-    date = datetime(2009, 6, 21, 8, 3, 20)
+    
+    step = 5
+    hmax = 600
+    hmin = 100
+    alts = np.arange(hmin, hmax, step)
+    date = datetime(2014, 1, 1, 23, 0, 0)
     
     glat = 0
     glon = 0
@@ -92,7 +95,7 @@ def main():
                       index = alts, 
                       columns = columns)
     
-    iri = IRI(date, altkmrange, glat, glon)
+    iri = IRI(date, (hmin, hmax - step, step), glat, glon)
     
     Ne = iri.ne.values
     
@@ -105,21 +108,27 @@ def main():
     
     df["nue"] = electron_neutral_collision(df.Tn, df.Nn)
     
+    sigma_P = Pedersen_conductivity(Ne, df.nue, df.nui)
     
-    plt.plot(parallel_conductivity(Ne, df.nue, df.nui),  
-             df.index, label = "Parallel")
+    Re = 6.371009e6
+    L = 1
+    mlat = 2.93
     
-    plt.plot(Pedersen_conductivity(Ne, df.nue, df.nui), 
-             df.index, label = "Pedersen")
-    
-    plt.plot(Hall_conductivity(Ne, df.nue, df.nui), 
-             df.index, label = "Hall")
+    from scipy.integrate import cumtrapz
     
     
-    #plt.plot(df.nui, df.index, label = "ion collision")
-    #plt.plot(df.nue, df.index, label = "electron collision")
-    plt.xscale("log")
-    #plt.ylim([100, 700])
-    plt.legend()
+    def f1(sigma_P, x):
+        Re = 6.371009e6
+        L = 1
+        return 2*Re*L*sigma_P*(1 + 3 * np.sin(np.radians(x))**2)
+    
+    
+    integrated_P =  cumtrapz(f1(3, mlat), df.index)
 
-#print(df)
+    #integrated_P = 2*Re*L*sigma_P*(1 + 3 * np.sin(np.radians(mlat))**2)
+    
+    plt.plot(integrated_P, df.index)
+    
+    plt.xscale("log")    
+
+main()
