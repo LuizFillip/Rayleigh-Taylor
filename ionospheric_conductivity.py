@@ -8,6 +8,37 @@ from iri2016 import IRI
 
 from sys import exit
 
+def get_concentrations_profiles(TN, 
+                                o_point, 
+                                o2_point, 
+                                n2_point, 
+                                DZ):
+    
+    JMAX = len(TN)
+    
+    CO = np.zeros(JMAX)                 # creating 1d array
+    CO2 = np.zeros(JMAX)                # creating 1d array
+    CN2 = np.zeros(JMAX)                # creating 1d array
+
+    
+    HB = 200.0                          # F region base  height [km]
+
+    
+    for J in range(0, JMAX):
+        Z1 = HB + DZ * J
+        GR = 1.0 / (1.0 + Z1 / 6370.0) ** 2.0
+        HO = 0.0528 * TN[J] / GR                               # scale height of O [km]
+        HO2 = 0.0264 * TN[J] / GR                              # scale height of O2 [km]
+        HN2 = 0.0302 * TN[J] / GR                              # scale height of N2 [km]
+
+        p_co = np.float64(o_point / 5.33 * 8.55)
+        p_co2 = np.float64(o2_point / 1.67 * 4.44)
+        p_cn2 = np.float64(n2_point / 9.67 * 2.26)
+
+        CO[J] = p_co * np.exp(-(Z1 - 335.0) / HO)           # atomic oxygen [cm-3]
+        CO2[J] = p_co2 * np.exp(-(Z1 - 335.0) / HO2)        # molecular oxygen [cm-3]
+        CN2[J] = p_cn2 * np.exp(-(Z1 - 335.0) / HN2) 
+    return CO, CO2, CN2
 
 
 def ion_neutral_collision(Tn, O, O2, N2):
@@ -75,60 +106,80 @@ def Hall_conductivity(Ne, nu_e, nu_i, B = 0.285e-04):
 
 def main():
     
+    
+    
+    
+    def get_profiles(glat, glon, date, alts):
+        
+        res = msise_flat(date, alts[None, :], glat, glon, 100, 150, 4)
+        
+        
+        columns= ["He", "O", "N2", "O2", "Ar", "mass", 
+                  "H", "N", "AnO", "Tex", "Tn"]
+        
+        df = pd.DataFrame(res[0], 
+                          index = alts, 
+                          columns = columns)
+        
+        iri = IRI(date, (hmin, hmax - step, step), glat, glon)
+        
+        Ne = iri.ne.values
+        Te = iri.Te.values
+
+        df["nui"] = ion_neutral_collision(df.Tn, df.O, 
+                                          df.O2, df.N2)
+        
+        df["Nn"] = df[["He", "O", "N2", 
+                       "O2", "Ar", "H", "N"]].sum(axis = 1)
+        
+        df["nue"] = electron_neutral_collision(Te, df.Nn)
+        
+        return Pedersen_conductivity(Ne, df.nue, df.nui)
+    
+
+    
+    
+    
     step = 5
     hmax = 600
     hmin = 100
     alts = np.arange(hmin, hmax, step)
     date = datetime(2014, 1, 1, 23, 0, 0)
     
-    glat = 0
-    glon = 0
-    res = msise_flat(date, alts[None, :], glat, glon, 100, 150, 4)
+    glon = -40
+    
+    from geomagnetic_parameters import string_to_list
     
     
-    columns= ["He", "O", "N2", 
-              "O2", "Ar", "mass", 
-              "H", "N", "AnO", 
-              "Tex", "Tn"]
     
-    df = pd.DataFrame(res[0], 
-                      index = alts, 
-                      columns = columns)
-    
-    iri = IRI(date, (hmin, hmax - step, step), glat, glon)
-    
-    Ne = iri.ne.values
-    
-    
-    df["nui"] = ion_neutral_collision(df.Tn, df.O, 
-                                      df.O2, df.N2)
-    
-    df["Nn"] = df[["He", "O", "N2", 
-                   "O2", "Ar", "H", "N"]].sum(axis = 1)
-    
-    df["nue"] = electron_neutral_collision(df.Tn, df.Nn)
-    
-    sigma_P = Pedersen_conductivity(Ne, df.nue, df.nui)
-    
-    Re = 6.371009e6
-    L = 1
-    mlat = 2.93
-    
-    from scipy.integrate import cumtrapz
-    
-    
-    def f1(sigma_P, x):
+    def integrated_values(alts, date, glon = 0, lat_max = 30, delta = 5):
+        
+        
+        
+        out = []
+        for glat in np.arange(-2, lat_max + delta, delta):
+            mlat = string_to_list(0, glat, glon, date)[0]
+        
+            sigma_p = get_profiles(float(glat), glon, date, alts)
+            
+            sigma_1 = sigma_p.values * (1 + 3 * np.sin(np.radians(mlat))**2)
+            
+            out.append(sigma_1)
+        
         Re = 6.371009e6
         L = 1
-        return 2*Re*L*sigma_P*(1 + 3 * np.sin(np.radians(x))**2)
+        
+        integrated = 2*Re*L*(np.sum(np.vstack(out).T, axis = 1))*delta
+       
+        return sigma_p.index, integrated
     
+    altitude, sigma = integrated_values(alts, date, glon = 0)
     
-    integrated_P =  cumtrapz(f1(3, mlat), df.index)
-
-    #integrated_P = 2*Re*L*sigma_P*(1 + 3 * np.sin(np.radians(mlat))**2)
+    #(sigma)
+        
+    plt.plot(sigma, altitude)
     
-    plt.plot(integrated_P, df.index)
+    plt.xscale("log")
     
-    plt.xscale("log")    
-
+    #plt.yscale("log")
 main()
