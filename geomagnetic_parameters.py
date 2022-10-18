@@ -44,14 +44,14 @@ def dip(inclination):
    """Latitude inlicação magnética (dip) """
    return np.degrees(np.arctan(0.5*np.tan(np.radians(inclination)) / 2))
 
-def geo_to_mag(geo_lat, geo_lon, date):
+def geo2mag(geo_lat, geo_lon, date):
     """
     return the magnetic coords in the 
     same units as the geographic"""
     
     Re = 6378.0 #mean Earth radius in kilometers
      
-    cvals = coord.Coords([float(Re), 
+    cvals = coord.Coords([float(300 + Re), 
                           float(geo_lat), 
                           float(geo_lon)], 
                          'GEO', 'sph', 
@@ -83,7 +83,7 @@ def mag2geo(mag_lat, mag_lon, date):
     
     date = date.strftime("%Y-%m-%dT%H:%M")
     
-    cvals = coord.Coords([float(r), 
+    cvals = coord.Coords([float(300 + r), 
                           float(mag_lat), 
                           float(mag_lon)], 
                          'MAG', 'sph', 
@@ -100,11 +100,13 @@ def mag2geo(mag_lat, mag_lon, date):
     
     return (geo_lat, geo_lon)
 
-mag_lat = 0
-mag_lon = -40
+def main():
 
-date = datetime.datetime(2014, 1, 1)
-lat, lon = mag2geo(mag_lat, mag_lon, date)
-
-
-print(lat, lon)
+    mag_lat = 0
+    mag_lon = -40
+    
+    date = datetime.datetime(2014, 1, 1)
+    geo_lat, geo_lon = mag2geo(mag_lat, mag_lon, date)
+    
+    
+    print(geo2mag(geo_lat, geo_lon, date))
