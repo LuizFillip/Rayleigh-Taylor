@@ -11,7 +11,7 @@ from geomagnetic_parameters import toYearFraction
 
 
 def msis_data(glat, glon, date, hmin, hmax, step):
-    alts = np.arange(hmin, hmax, step)
+    alts = np.arange(hmin, hmax + step, step)
     
     iri = IRI(date, (hmin, hmax - step, step), glat, glon)
     
@@ -48,25 +48,13 @@ def get_density(date):
 
 
 
-hmin = 100
-hmax = 800
-step = 5
-glat = -3.73 
-glon = -38.522
-date = datetime.datetime(2014, 1, 1, 18, 0)
 
-
-
-Nn = msis_data(glat, glon, date, hmin, hmax, step)
-
-
-Ne = get_density(date)
 
 
 def collision_frequency(TN, O, O2, N2):
     
     return (4.45e-11 * O * np.sqrt(TN) * 
-            (1.04 - 0.067 * np.log10(TN)) ** 2.0 + 
+           (1.04 - 0.067 * np.log10(TN)) ** 2.0 + 
             6.64e-10 * O2 + 6.82e-10 * N2)
 
 def recombination(O2, N2, T):
@@ -78,7 +66,7 @@ def recombination(O2, N2, T):
 def length_scale_gradient(Ne, dz):
     factor = 1e-3
     L = ((1 / Ne) * (np.gradient(Ne, dz)))*factor
-    return L[1:]
+    return L
 
 def growth_rate_RT(nu, L, R, Vp, U):
     """Generalized instability rate growth"""
@@ -99,5 +87,37 @@ def get_winds(glat, glon, date):
                df.mer * np.sin(np.radians(d)))
     return df.loc[df.index == date, :]
 
-win = get_winds(glat, glon, date)
-print(win)
+
+
+hmin = 100
+hmax = 800
+step = 5
+glat = -3.73 
+glon = -38.522
+date = datetime.datetime(2014, 1, 1, 20, 0)
+
+
+
+Nn = msis_data(glat, glon, date, hmin, hmax, step)
+
+
+Ne = get_density(date)
+
+U = get_winds(glat, glon, date).U.values #[:-1]
+
+Vp = np.mean([24.649, 22.402, 19.696])
+nu  = collision_frequency(Nn.Tn, Nn.O, Nn.O2, Nn.N2).values
+R = recombination(Nn.O2,  Nn.N2, Nn.Tn).values
+L = length_scale_gradient(Ne.Ne.values, 5)
+
+#print(len(R), len(L), len(U), len(Ne))
+gamma = growth_rate_RT(nu, L, R, Vp, U)
+
+
+alts = Nn.index.values
+
+#print(len(alts))
+fig, ax = plt.subplots()
+ax.plot(gamma, alts)
+
+ax.set(xlim = [-2e-1, 2e-1])
