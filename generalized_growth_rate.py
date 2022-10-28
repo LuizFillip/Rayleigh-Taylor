@@ -36,33 +36,6 @@ def msis_data(glat, glon, date, hmin, hmax, step):
     
     return df
 
-def get_density(date):
-    infile = "G://My Drive//Python//data-analysis//Rayleigh-Taylor//database//density//"
-    filename = "20140101.txt"
-    df = pd.read_csv(infile + filename, index_col = 2)
-    df.index = pd.to_datetime(df.index)
-    
-    df = df.rename(columns = {"Unnamed: 0": "alts"})
-    
-    return df.loc[(df.index == date), :]
-
-
-def get_winds(glat, glon, date):
-    d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
-                                            year = toYearFraction(date))
-
-    df = pd.read_csv("G://My Drive//Python//data-analysis//Rayleigh-Taylor//database//winds//" + "20140101.txt", 
-                 index_col = 1)
-    df.index = pd.to_datetime(df.index)
-    df = df.rename(columns = {"Unnamed: 0": "alts"})
-    
-    df["U"] = (df.zon * np.cos(np.radians(d)) + 
-               df.mer * np.sin(np.radians(d)))
-    
-    # & (df.alts <= 600)
-    return df.loc[(df.index == date), :]
-
-
 
 def collision_frequency(TN, O, O2, N2):
     
@@ -81,46 +54,86 @@ def length_scale_gradient(Ne, dz):
     L = np.gradient(np.log(Ne), dz)*factor #(1 / Ne) *
     return L
 
+
+
+
+
+def get_winds(glat, glon, date):
+    
+    df = pd.read_csv("database/pyglow/winds2014.txt", 
+                 index_col = 0)
+    df["date"] = pd.to_datetime(df["date"])
+
+    
+    
+    d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
+                                            year = toYearFraction(date))
+
+    
+    df["U"] = (df.zon * np.cos(np.radians(d)) + 
+               df.mer * np.sin(np.radians(d)))
+    
+   
+    return df.loc[(df["date"] == date), :]
+
+
+def get_density(date):
+
+    df = pd.read_csv("database/pyglow/density2014.txt", index_col = 2)
+    df.index = pd.to_datetime(df.index)
+    
+    df = df.rename(columns = {"Unnamed: 0": "alts"})
+    
+    return df.loc[(df.index == date), :]
+
+
+def get_PRE():
+    df = pd.read_csv("database/pyglow/PRE2014.txt", 
+                     delimiter = ";")
+    def float_to_time(time):
+         args = str(time).split(".")
+         hour = int(args[0])
+         minute = int(float("0." + args[1])*60)
+         return f"{hour}:{minute}"
+   
+    df["time2"] = df["time"].apply(lambda x: float_to_time(x))
+    
+    df.index = pd.to_datetime(df.Date + " " + df.time2)
+    
+    del df["time2"], df["Date"]
+    return df
+
+
 def growth_rate_RT(nu, L, R, Vp, U):
     """Generalized instability rate growth"""
     return (Vp - U + sc.g / nu)*L - R
 
-
-
-
-
-
-
 hmin = 100
-hmax = 800
-step = 5
+hmax = 600
+step = 1
 glat = -3.73 
 glon = -38.522
-date = datetime.datetime(2014, 1, 1, 21, 10)
 
+
+df = get_PRE()
+
+date = df.index[0]
+U = get_winds(glat, glon, date).U.values
+Vp = df.loc[df.index == date, "peak"].values[0]
+Ne = get_density(date).Ne.values
 
 
 Nn = msis_data(glat, glon, date, hmin, hmax, step)
-
-
-Ne = get_density(date)
-
-U = get_winds(glat, glon, date).U.values 
-
-Vp = np.mean([24.649, 22.402, 19.696])
 nu  = collision_frequency(Nn.Tn, Nn.O, Nn.O2, Nn.N2).values
 R = recombination(Nn.O2, Nn.N2, Nn.Tn).values
-L = length_scale_gradient(Ne.Ne.values*1e6, 5)
-gamma = growth_rate_RT(nu, L, R, Vp, U)
+L = length_scale_gradient(Ne*1e6, step)
+gamma = growth_rate_RT(nu, L, 0, Vp, U)
 
-
+print(max(gamma))
 alts = Nn.index.values
+fig, ax = plt.subplots()
+ax.plot(gamma, alts)
 
-
-def main():
-    fig, ax = plt.subplots()
-    ax.plot(gamma, alts)
+ax.set(xlim = [-2e-3, 2e-2])
+        
     
-    ax.set(xlim = [-2e-4, 2e-4])
-    
-main()
