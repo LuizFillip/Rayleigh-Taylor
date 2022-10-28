@@ -37,17 +37,30 @@ def msis_data(glat, glon, date, hmin, hmax, step):
     return df
 
 def get_density(date):
-    infile = "database/density/"
+    infile = "G://My Drive//Python//data-analysis//Rayleigh-Taylor//database//density//"
     filename = "20140101.txt"
     df = pd.read_csv(infile + filename, index_col = 2)
     df.index = pd.to_datetime(df.index)
     
     df = df.rename(columns = {"Unnamed: 0": "alts"})
     
-    return df.loc[df.index == date, :]
+    return df.loc[(df.index == date), :]
 
 
+def get_winds(glat, glon, date):
+    d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
+                                            year = toYearFraction(date))
 
+    df = pd.read_csv("G://My Drive//Python//data-analysis//Rayleigh-Taylor//database//winds//" + "20140101.txt", 
+                 index_col = 1)
+    df.index = pd.to_datetime(df.index)
+    df = df.rename(columns = {"Unnamed: 0": "alts"})
+    
+    df["U"] = (df.zon * np.cos(np.radians(d)) + 
+               df.mer * np.sin(np.radians(d)))
+    
+    # & (df.alts <= 600)
+    return df.loc[(df.index == date), :]
 
 
 
@@ -65,27 +78,16 @@ def recombination(O2, N2, T):
   
 def length_scale_gradient(Ne, dz):
     factor = 1e-3
-    L = ((1 / Ne) * (np.gradient(Ne, dz)))*factor
+    L = np.gradient(np.log(Ne), dz)*factor #(1 / Ne) *
     return L
 
 def growth_rate_RT(nu, L, R, Vp, U):
     """Generalized instability rate growth"""
-    return (Vp - U - (sc.g / nu) )*L - R
+    return (Vp - U + sc.g / nu)*L - R
 
 
 
-def get_winds(glat, glon, date):
-    d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
-                                            year = toYearFraction(date))
 
-    df = pd.read_csv("database/winds/" + "20140101.txt", 
-                 index_col = 1)
-    df.index = pd.to_datetime(df.index)
-    df = df.rename(columns = {"Unnamed: 0": "alts"})
-    
-    df["U"] = (df.zon * np.cos(np.radians(d)) + 
-               df.mer * np.sin(np.radians(d)))
-    return df.loc[df.index == date, :]
 
 
 
@@ -94,7 +96,7 @@ hmax = 800
 step = 5
 glat = -3.73 
 glon = -38.522
-date = datetime.datetime(2014, 1, 1, 20, 0)
+date = datetime.datetime(2014, 1, 1, 21, 10)
 
 
 
@@ -103,21 +105,22 @@ Nn = msis_data(glat, glon, date, hmin, hmax, step)
 
 Ne = get_density(date)
 
-U = get_winds(glat, glon, date).U.values #[:-1]
+U = get_winds(glat, glon, date).U.values 
 
 Vp = np.mean([24.649, 22.402, 19.696])
 nu  = collision_frequency(Nn.Tn, Nn.O, Nn.O2, Nn.N2).values
-R = recombination(Nn.O2,  Nn.N2, Nn.Tn).values
-L = length_scale_gradient(Ne.Ne.values, 5)
-
-#print(len(R), len(L), len(U), len(Ne))
+R = recombination(Nn.O2, Nn.N2, Nn.Tn).values
+L = length_scale_gradient(Ne.Ne.values*1e6, 5)
 gamma = growth_rate_RT(nu, L, R, Vp, U)
 
 
 alts = Nn.index.values
 
-#print(len(alts))
-fig, ax = plt.subplots()
-ax.plot(gamma, alts)
 
-ax.set(xlim = [-2e-1, 2e-1])
+def main():
+    fig, ax = plt.subplots()
+    ax.plot(gamma, alts)
+    
+    ax.set(xlim = [-2e-4, 2e-4])
+    
+main()
