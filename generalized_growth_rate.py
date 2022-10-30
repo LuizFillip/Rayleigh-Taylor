@@ -65,16 +65,12 @@ def get_winds(glat, glon, date):
                  index_col = 0)
     df["date"] = pd.to_datetime(df["date"])
 
-    
-    
     d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
                                             year = toYearFraction(date))
 
-    
     df["U"] = (df.zon * np.cos(np.radians(d)) + 
                df.mer * np.sin(np.radians(d)))
     
-   
     return df.loc[(df["date"] == date), :]
 
 
@@ -105,7 +101,7 @@ def get_PRE():
     return df
 
 def collision_and_recombination(hmin, hmax, 
-                                step, glat, glon):
+                                step, glat, glon, date):
     alts = np.arange(hmin, 
                      hmax + step, 
                      step)   
@@ -157,64 +153,74 @@ def collision_and_recombination(hmin, hmax,
 
 
 def growth_rate_RT(nu, L, R, Vp, U):
-    """Generalized instability rate growth"""
-    return (Vp - U + sc.g / nu)*L - R
+    """
+    Generalized instability rate growth
+    Paramaters:
+    ---------- 
+    Vp: Prereversal Enhancement (PRE)
+    U: Neutral wind
+    
+    """
+    return (Vp - U - (9.81 / nu))*L - R
 
 hmin = 100
 hmax = 600
 step = 1
 glat = -3.73 
 glon = -38.522
-df = get_PRE()
 
-date = df.index[0]
-     
-R, nu = collision_and_recombination(hmin, hmax, 
-                                    step, glat, glon)
-U = get_winds(glat, glon, date).U.values
-Vp = df.loc[df.index == date, "peak"].values[0]
-Ne = get_density(date).Ne.values
+def get_gamma_maximus(hmin = 100, 
+                      hmax = 600, 
+                      step = 1, 
+                      glat = -3.73, 
+                      glon = -38.522):
+    pre = get_PRE()
+    
+    result = {200: [], 
+              250: [], 
+              300: [], 
+              350: [], 
+              400: [], 
+              450: []}
+    
+    
+    for date in pre.index:
+           
+        R, nu = collision_and_recombination(hmin, hmax, 
+                                            step, glat, 
+                                            glon, date)
+        U = get_winds(glat, glon, date).U.values
+        Vp = pre.loc[pre.index == date, "peak"].values[0]
+        Ne = get_density(date).Ne.values
+        
+        L = length_scale_gradient(Ne*1e6, step)
+        gamma = growth_rate_RT(nu, L, R, Vp, U)
+        
+        alts = np.arange(hmin, 
+                         hmax + step, 
+                         step)   
+        
+        for key in result.keys():
+            result[key].append(gamma[alts == key][0])
+            
+    return pd.DataFrame(result, index = pre.index)
 
-L = length_scale_gradient(Ne*1e6, step)
-gamma = growth_rate_RT(nu, L, R, Vp, U)
-
-print(max(gamma))
-alts = np.arange(hmin, 
-                 hmax + step, 
-                 step)   
-
-fig, ax = plt.subplots()
-ax.plot(gamma, alts)
-
-ax.set(xlim = [-2e-3, 2e-3])
-
-result = [gamma[alts == 200][0], 
-          gamma[alts == 250][0],
-          gamma[alts == 300][0], 
-          gamma[alts == 350][0], 
-          gamma[alts == 400][0]]
+df = get_gamma_maximus()
 
 
-print(result)
+df.to_csv("gamma_negative.txt", sep = ",", index = True)
+
 def main():
     
     
-    
-    
-            
-    
+   
+
+    fig, ax = plt.subplots()
+       
+    date = datetime.date(2014, 1, 1)       
     
     Nn = msis_data(glat, glon, date, hmin, hmax, step)
     nu  = collision_frequency(Nn.Tn, Nn.O, Nn.O2, Nn.N2).values
     R = recombination(Nn.O2, Nn.N2, Nn.Tn).values
-    L = length_scale_gradient(Ne*1e6, step)
-    gamma = growth_rate_RT(nu, L, R, Vp, 0)
-    
-    print(max(gamma))
-    alts = Nn.index.values
-    fig, ax = plt.subplots()
-    ax.plot(gamma, alts)
-    
-    ax.set(xlim = [-2e-3, 2e-2])
-            
+
     
