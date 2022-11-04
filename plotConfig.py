@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 
-
-plt.rcParams.update({'font.size': 14, 
+fontsize = 25
+paths = {"latex" : "G:\\My Drive\\Doutorado\\Modelos_Latex_INPE\\docs\\Proposal\\Figures\\methods\\"}
+plt.rcParams.update({'font.size': fontsize, 
                      'axes.linewidth' : 0.5,
                      'grid.linewidth' : 0.5,
                      'lines.linewidth' : 1.,
