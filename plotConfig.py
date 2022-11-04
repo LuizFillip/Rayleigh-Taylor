@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 
 fontsize = 25
-paths = {"latex" : "G:\\My Drive\\Doutorado\\Modelos_Latex_INPE\\docs\\Proposal\\Figures\\methods\\"}
+paths = {"latex" : 
+         "G:\\My Drive\\Doutorado\\Modelos_Latex_INPE\\docs\\Proposal\\Figures\\methods\\"}
 plt.rcParams.update({'font.size': fontsize, 
                      'axes.linewidth' : 0.5,
                      'grid.linewidth' : 0.5,
@@ -28,3 +29,15 @@ plt.rcParams.update({'font.size': fontsize,
                      'axes.prop_cycle' : plt.cycler('color', ['#0C5DA5', '#00B945', '#FF9500', 
                                                               '#FF2C00', '#845B97', '#474747', '#9e9e9e'])
                          }) 
+
+
+def text_painels(axs, x = 0.8, y = 0.8, 
+                 fontsize = fontsize):
+    """Plot text for enumerate painels by letter"""
+    chars = list(map(chr, range(97, 123)))
+    
+    for num, ax in enumerate(axs.flat):
+        char = chars[num]
+        ax.text(x, y, f"({char})", 
+                transform = ax.transAxes, 
+                fontsize = fontsize)

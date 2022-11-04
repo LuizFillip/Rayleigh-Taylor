@@ -46,13 +46,13 @@ def collision_frequency(TN, O, O2, N2):
 
 def recombination(O2, N2, T):
     
-    RK1 = 4.0e-11   # recombination of O+ with O2
-    RK2 = 1.3e-12   # recombination of O+ with N2
+    RK1 = 4.0e-11 
+    RK2 = 1.3e-12  
     return (RK1 * O2) + (RK2 * N2)    
   
 def length_scale_gradient(Ne, dz):
     factor = 1e-3
-    L = np.gradient(np.log(Ne), dz)*factor #(1 / Ne) *
+    L = np.gradient(np.log(Ne), dz)*factor
     return L
 
 
@@ -74,9 +74,10 @@ def get_winds(glat, glon, date):
     return df.loc[(df["date"] == date), :]
 
 
-def get_density(date):
+def get_density(ne_infile, 
+                date):
 
-    df = pd.read_csv("database/pyglow/density2014.txt", index_col = 2)
+    df = pd.read_csv(ne_infile, index_col = 2)
     df.index = pd.to_datetime(df.index)
     
     df = df.rename(columns = {"Unnamed: 0": "alts"})
@@ -84,9 +85,11 @@ def get_density(date):
     return df.loc[(df.index == date), :]
 
 
-def get_PRE():
-    df = pd.read_csv("database/pyglow/PRE2014.txt", 
+def get_PRE(pre_infile = "database/pyglow/PRE2014.txt"):
+    
+    df = pd.read_csv(pre_infile, 
                      delimiter = ";")
+    
     def float_to_time(time):
          args = str(time).split(".")
          hour = int(args[0])
@@ -152,22 +155,20 @@ def collision_and_recombination(hmin, hmax,
     return BETA, CFO
 
 
-def growth_rate_RT(nu, L, R, Vp, U):
+def growth_rate_RT(nu, L, R, Vp, U, sign = -1):
     """
     Generalized instability rate growth
     Paramaters:
     ---------- 
     Vp: Prereversal Enhancement (PRE)
     U: Neutral wind
+    nu: ion-neutral collisional frequency
+    L: gradient scale
+    R: Recombination
     
     """
-    return (Vp - U - (9.81 / nu))*L - R
-
-hmin = 100
-hmax = 600
-step = 1
-glat = -3.73 
-glon = -38.522
+     
+    return (Vp - U + sign + (9.81 / nu))*L - R
 
 def get_gamma_maximus(hmin = 100, 
                       hmax = 600, 
@@ -191,24 +192,62 @@ def get_gamma_maximus(hmin = 100,
                                             glon, date)
         U = get_winds(glat, glon, date).U.values
         Vp = pre.loc[pre.index == date, "peak"].values[0]
-        Ne = get_density(date).Ne.values
+        Ne = get_density("database/pyglow/density2014.txt", date).Ne.values
         
         L = length_scale_gradient(Ne*1e6, step)
-        gamma = growth_rate_RT(nu, L, R, Vp, U)
+        gamma = growth_rate_RT(nu, L, R, Vp, 0)
         
         alts = np.arange(hmin, 
                          hmax + step, 
-                         step)   
-        
+                         step)      
+
+        max_gamma = np.where((alts > 250) & (alts < 350), gamma, )
         for key in result.keys():
             result[key].append(gamma[alts == key][0])
             
     return pd.DataFrame(result, index = pre.index)
 
-df = get_gamma_maximus()
+#Nn = msis_data(glat, glon, date, hmin, hmax, step)
+#nu  = collision_frequency(Nn.Tn, Nn.O, Nn.O2, Nn.N2).values
+#R = recombination(Nn.O2, Nn.N2, Nn.Tn).values
+
+hmin = 100 
+hmax = 600 
+step = 1
+glat = -3.73
+glon = -38.522
+
+pre = get_PRE()
+
+out = []
+
+date = pre.index[0]
+       
+R, nu = collision_and_recombination(hmin, hmax, 
+                                    step, glat, 
+                                    glon, date)
+
+U = get_winds(glat, glon, date).U.values
+
+Vp = pre.loc[pre.index == date, "peak"].values[0]
+
+Ne = get_density("database/pyglow/density2014.txt", 
+                 date).Ne.values
+
+L = length_scale_gradient(Ne*1e6, step)
+
+alts = np.arange(hmin, 
+                 hmax + step, 
+                 step)   
 
 
-df.to_csv("gamma_negative.txt", sep = ",", index = True)
+plt.plot(U, alts)
+    
+ 
+
+#df.to_csv("gamma_negative_noPRE.txt", sep = ",", index = True)
+
+
 
 def main():
     
@@ -219,8 +258,17 @@ def main():
        
     date = datetime.date(2014, 1, 1)       
     
-    Nn = msis_data(glat, glon, date, hmin, hmax, step)
-    nu  = collision_frequency(Nn.Tn, Nn.O, Nn.O2, Nn.N2).values
-    R = recombination(Nn.O2, Nn.N2, Nn.Tn).values
-
+ 
+    out1 = []
+    out.append(out1)
+    for pp in [0, U]:
+        gamma = growth_rate_RT(nu, L, R, 0, U)
+    
+        max_gamma = max(gamma[(alts >= 250) & (alts <= 350)])
+        
+        out1.append(max_gamma)      
+        
+df = pd.DataFrame(out, 
+                  columns = ["nowind", "wind"], 
+                  index = pre.index)
     
