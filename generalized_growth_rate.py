@@ -8,9 +8,14 @@ import scipy.constants as sc
 import pyIGRF
 from nrlmsise00.dataset import msise_4d
 from geomagnetic_parameters import toYearFraction
+from generic import float_to_time
 
-
-def msis_data(glat, glon, date, hmin, hmax, step):
+def msis_data(date, 
+              hmin = 100, 
+              hmax = 600, 
+              step = 1, 
+              glat = -3.73, 
+              glon = -38.522):
     alts = np.arange(hmin, hmax + step, step)
     
     iri = IRI(date, (hmin, hmax - step, step), glat, glon)
@@ -56,52 +61,78 @@ def length_scale_gradient(Ne, dz):
     return L
 
 
+#%%
 
 
 
-def get_winds(glat, glon, date):
+
+
+class PRE(object):
     
-    df = pd.read_csv("database/pyglow/winds2014.txt", 
-                 index_col = 0)
-    df["date"] = pd.to_datetime(df["date"])
-
-    d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
-                                            year = toYearFraction(date))
-
-    df["U"] = (df.zon * np.cos(np.radians(d)) + 
-               df.mer * np.sin(np.radians(d)))
+    def __init__(self, infile):
     
-    return df.loc[(df["date"] == date), :]
-
-
-def get_density(ne_infile, 
-                date):
-
-    df = pd.read_csv(ne_infile, index_col = 2)
-    df.index = pd.to_datetime(df.index)
+        df = pd.read_csv(infile, index_col = 0)
     
-    df = df.rename(columns = {"Unnamed: 0": "alts"})
+        df = df.dropna()
     
-    return df.loc[(df.index == date), :]
+        time = df["time"].apply(lambda x: float_to_time(x))
+        df.index = pd.to_datetime(df.index + " " + time)
+        
+        self.df = df
+        self.pre = self.df["vz"].values
+        self.times = self.df.index
 
 
-def get_PRE(pre_infile = "database/pyglow/PRE2014.txt"):
+
+class getPyglow(object):
     
-    df = pd.read_csv(pre_infile, 
-                     delimiter = ";")
+    def __init__(self, 
+                 date, 
+                 infile =  "database/pyglow/" ):
+        self.infile = infile
+        self.date = date
+
+    @staticmethod
+    def read(infile):
+        
+        df = pd.read_csv(infile,index_col = 0)
+        df["date"] = pd.to_datetime(df["date"])
+        return df
     
-    def float_to_time(time):
-         args = str(time).split(".")
-         hour = int(args[0])
-         minute = int(float("0." + args[1])*60)
-         return f"{hour}:{minute}"
+    def winds(self, 
+              filename = "winds2014_2015.txt", 
+              glat = -3.73, 
+              glon = -38.522):
+        
+        df = self.read(self.infile + filename)
+        
+        d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
+                                                year = toYearFraction(date))
+
+        df["U"] = (df.zon * np.cos(np.radians(d)) + 
+                   df.mer * np.sin(np.radians(d)))
+        return df.loc[(df["date"] == self.date), :]
+        
+    
+    def density(self,
+                filename = "density2014_2015.txt"):
+        
+        df = self.read(self.infile + filename)
+        
+        return df.loc[(df["date"] == self.date), :]
+infile = "database/PRE/FZ_PRE_2014_2015.txt"
+
+
+df = PRE(infile)
    
-    df["time2"] = df["time"].apply(lambda x: float_to_time(x))
-    
-    df.index = pd.to_datetime(df.Date + " " + df.time2)
-    
-    del df["time2"], df["Date"]
-    return df
+date = df.times[0]
+
+df = getPyglow(date)
+
+
+
+
+
 
 def collision_and_recombination(hmin, hmax, 
                                 step, glat, glon, date):
