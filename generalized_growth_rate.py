@@ -10,7 +10,7 @@ from nrlmsise00.dataset import msise_4d
 from geomagnetic_parameters import toYearFraction
 from generic import float_to_time
 
-def msis_data(date, 
+def runMSISE(date, 
               hmin = 100, 
               hmax = 600, 
               step = 1, 
@@ -42,28 +42,36 @@ def msis_data(date,
     return df
 
 
-
-def collision_frequency(TN, O, O2, N2):
+class neutral_parameters(object):
     
-    return (4.45e-11 * O * np.sqrt(TN) * 
-           (1.04 - 0.067 * np.log10(TN)) ** 2.0 + 
-            6.64e-10 * O2 + 6.82e-10 * N2)
+    def __init__(self, TN, O, O2, N2):
+        self.tn = TN
+        self.o = O
+        self.o2 = O2
+        self.n2 = N2
 
-def recombination(O2, N2, T):
+    @property
+    def collision(self):
+        """Collision frequency from Bailey and Balan 1992"""
+        nu_o = (4.45e-11 * self.o * np.sqrt(self.tn) * 
+               (1.04 - 0.067 * np.log10(self.tn)) ** 2.0)
+        
+        nu_o2 = (6.64e-10 * self.o2)
+        
+        nu_n2 = 6.82e-10 * self.n2
+        
+        return  nu_o + nu_o2 + nu_n2
     
-    RK1 = 4.0e-11 
-    RK2 = 1.3e-12  
-    return (RK1 * O2) + (RK2 * N2)    
+    @property
+    def recombination(self):
+        
+        return (4.0e-11  * self.o2) + (1.3e-12   * self.n2)    
   
-def length_scale_gradient(Ne, dz):
-    factor = 1e-3
+def length_scale_gradient(Ne, dz = 1):
+    """Vertical variation of """
+    factor = 1e-3 #convert km to meters
     L = np.gradient(np.log(Ne), dz)*factor
     return L
-
-
-#%%
-
-
 
 
 
@@ -102,7 +110,8 @@ class getPyglow(object):
     def winds(self, 
               filename = "winds2014_2015.txt", 
               glat = -3.73, 
-              glon = -38.522):
+              glon = -38.522, 
+              component = "U"):
         
         df = self.read(self.infile + filename)
         
@@ -111,7 +120,7 @@ class getPyglow(object):
 
         df["U"] = (df.zon * np.cos(np.radians(d)) + 
                    df.mer * np.sin(np.radians(d)))
-        return df.loc[(df["date"] == self.date), :]
+        return df.loc[(df["date"] == self.date), component].values
         
     
     def density(self,
@@ -119,21 +128,83 @@ class getPyglow(object):
         
         df = self.read(self.infile + filename)
         
-        return df.loc[(df["date"] == self.date), :]
+        return df.loc[(df["date"] == self.date), "Ne"].values
+    
+
+def growth_rate_RT(nu, L, R, Vp, U):
+    """
+    Generalized instability rate growth
+    Paramaters:
+    ---------- 
+    Vp: Prereversal Enhancement (PRE)
+    U: Neutral wind
+    nu: ion-neutral collisional frequency
+    L: gradient scale
+    R: Recombination
+    
+    """
+     
+    return (Vp - U + (9.81 / nu))*L - R
+    
 infile = "database/PRE/FZ_PRE_2014_2015.txt"
 
+pre = PRE(infile)
 
-df = PRE(infile)
+out_res = []
+
+for i in range(len(pre.times)):
    
-date = df.times[0]
+    date = pre.times[i]
+    
+    vz = pre.pre[i]
+    
+    pyglow = getPyglow(date)
+    
+    
+    ne = pyglow.density()
+    u = pyglow.winds()
+    dat = runMSISE(date)
+    
+    
+    neutral = neutral_parameters(dat.Tn.values, 
+                                  dat.O.values, 
+                                  dat.O2.values, 
+                                  dat.N2.values)
+    
+    nu = neutral.collision
+    r = neutral.recombination
+    
+    l = length_scale_gradient(ne*1e6)
+    
+    alts = dat.index.values
+    
+    gamma = growth_rate_RT(nu, l, r, vz, u)
+    no_wind = growth_rate_RT(nu, l, r, vz, 0)
+    no_r = growth_rate_RT(nu, l, 0, vz, u)
+    no_r_wind = growth_rate_RT(nu, l, 0, vz, 0)
+    local = growth_rate_RT(nu, l, 0, 0, 0)
+    out_gammas = []
+    out_res.append(out_gammas)
+    
+    for elem in [gamma, no_wind, no_r, 
+                 no_r_wind, local]:
+        
+    
+        max_gamma = elem[(alts > 200) & (alts < 400)]
+    
+    
+        out_gammas.append(np.max(max_gamma))
+        
+df = pd.DataFrame(out_res, 
+                  index = pre.times, 
+                  columns = ["all", "nowind", 
+                             "noreco", "nowindReco", 
+                             "local"])
 
-df = getPyglow(date)
-
-
-
-
-
-
+df.to_csv("database/growthRates/gammas.txt", 
+          sep = ",", 
+          index = True)
+#%%
 def collision_and_recombination(hmin, hmax, 
                                 step, glat, glon, date):
     alts = np.arange(hmin, 
@@ -186,120 +257,5 @@ def collision_and_recombination(hmin, hmax,
     return BETA, CFO
 
 
-def growth_rate_RT(nu, L, R, Vp, U, sign = -1):
-    """
-    Generalized instability rate growth
-    Paramaters:
-    ---------- 
-    Vp: Prereversal Enhancement (PRE)
-    U: Neutral wind
-    nu: ion-neutral collisional frequency
-    L: gradient scale
-    R: Recombination
-    
-    """
-     
-    return (Vp - U + sign + (9.81 / nu))*L - R
 
-def get_gamma_maximus(hmin = 100, 
-                      hmax = 600, 
-                      step = 1, 
-                      glat = -3.73, 
-                      glon = -38.522):
-    pre = get_PRE()
-    
-    result = {200: [], 
-              250: [], 
-              300: [], 
-              350: [], 
-              400: [], 
-              450: []}
-    
-    
-    for date in pre.index:
-           
-        R, nu = collision_and_recombination(hmin, hmax, 
-                                            step, glat, 
-                                            glon, date)
-        U = get_winds(glat, glon, date).U.values
-        Vp = pre.loc[pre.index == date, "peak"].values[0]
-        Ne = get_density("database/pyglow/density2014.txt", date).Ne.values
-        
-        L = length_scale_gradient(Ne*1e6, step)
-        gamma = growth_rate_RT(nu, L, R, Vp, 0)
-        
-        alts = np.arange(hmin, 
-                         hmax + step, 
-                         step)      
-
-        max_gamma = np.where((alts > 250) & (alts < 350), gamma, )
-        for key in result.keys():
-            result[key].append(gamma[alts == key][0])
-            
-    return pd.DataFrame(result, index = pre.index)
-
-#Nn = msis_data(glat, glon, date, hmin, hmax, step)
-#nu  = collision_frequency(Nn.Tn, Nn.O, Nn.O2, Nn.N2).values
-#R = recombination(Nn.O2, Nn.N2, Nn.Tn).values
-
-hmin = 100 
-hmax = 600 
-step = 1
-glat = -3.73
-glon = -38.522
-
-pre = get_PRE()
-
-out = []
-
-date = pre.index[0]
-       
-R, nu = collision_and_recombination(hmin, hmax, 
-                                    step, glat, 
-                                    glon, date)
-
-U = get_winds(glat, glon, date).U.values
-
-Vp = pre.loc[pre.index == date, "peak"].values[0]
-
-Ne = get_density("database/pyglow/density2014.txt", 
-                 date).Ne.values
-
-L = length_scale_gradient(Ne*1e6, step)
-
-alts = np.arange(hmin, 
-                 hmax + step, 
-                 step)   
-
-
-plt.plot(U, alts)
-    
- 
-
-#df.to_csv("gamma_negative_noPRE.txt", sep = ",", index = True)
-
-
-
-def main():
-    
-    
-   
-
-    fig, ax = plt.subplots()
-       
-    date = datetime.date(2014, 1, 1)       
-    
- 
-    out1 = []
-    out.append(out1)
-    for pp in [0, U]:
-        gamma = growth_rate_RT(nu, L, R, 0, U)
-    
-        max_gamma = max(gamma[(alts >= 250) & (alts <= 350)])
-        
-        out1.append(max_gamma)      
-        
-df = pd.DataFrame(out, 
-                  columns = ["nowind", "wind"], 
-                  index = pre.index)
     
