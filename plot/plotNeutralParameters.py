@@ -64,3 +64,7 @@ ax1.set(xscale = "log",
 
 text_painels(ax, x = 0.01, y = 0.95, 
                  fontsize = 35)
+
+
+fig.savefig(path_tex["latex"] + "neutral_parameters.png", 
+            dpi = 500)
