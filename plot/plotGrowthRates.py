@@ -50,14 +50,15 @@ ax.plot(no_r, alts, **args, label = "$R = 0$")
 ax.plot(no_r_wind, alts, **args, label = "$R = U = 0$")
 ax.plot(local, alts, **args, label = "$R = U = V_z = 0$")
 
-ax.legend()
-ax.set(xlim = [-6e-3, 6e-3], 
-          xlabel = ("Taxa de crescimento,\n" + 
-                    r"$\gamma_{RT}~(10^{-3} s^{-1})$"))
+ax.legend(fontsize = 30)
+ax.set(xlim = [-3e-3, 3e-3],
+       ylabel = "Altitude (km)",
+       xlabel = (r"$\gamma_{RT}~(10^{-3} s^{-1})$"))
 
-
+ax.axvline(0, color = "k", linestyle = "--")
 ax.xaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/10e-3)))
+    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
 
-
+fig.savefig(path_tex["latex"] + "growth_rates_profiles.png", 
+            dpi = 500)
 plt.show()

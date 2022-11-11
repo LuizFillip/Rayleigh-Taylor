@@ -22,7 +22,7 @@ ax.plot(df["nowind"], label = "$U = 0$", **args)
 ax.plot(df["noreco"], label = "$R = 0$", **args)
 ax.plot(df["nowindReco"], label =  "$U = R = 0$", **args)
 ax.plot(df["local"], label = "$U = V_z = R = 0$", **args)
-ax.plot(df["all"],  label = "Todos parâmetros", **args)
+ax.plot(df["all"],  label = "Todos os termos", **args)
 
 
 ax.set(ylim = [-0.5e-3, 3e-3], 
@@ -38,4 +38,12 @@ ax.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
 
 
 ax.yaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/10e-3)))
+    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
+
+
+
+fig.savefig(path_tex["latex"] + "annual_growth_rates.png", 
+            dpi = 500)
+
+
+plt.show()
