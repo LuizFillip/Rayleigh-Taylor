@@ -10,7 +10,9 @@ df = pd.read_csv("database/growthRates/Gammas.txt",
 
 df.index = pd.to_datetime(df.index)
 
-df = df.loc[df.index.year == 2014]
+year = 2014
+
+df = df.loc[df.index.year == year]
 
 fig, ax = plt.subplots(figsize = (20, 10))
 
@@ -25,6 +27,7 @@ ax.plot(df["all"],  label = "Todos parâmetros", **args)
 
 ax.set(ylim = [-0.5e-3, 3e-3], 
        xlabel = "Meses", 
+       title = f"Fortaleza, {year}",
        ylabel = "$\gamma_{RT}~ (\\times 10^{-3} s^{-1})$")
 
 
