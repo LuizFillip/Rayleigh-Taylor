@@ -18,11 +18,12 @@ fig, ax = plt.subplots(figsize = (20, 10))
 
 args = dict(lw = 2)
 
-ax.plot(df["nowind"], label = "$U = 0$", **args)
-ax.plot(df["noreco"], label = "$R = 0$", **args)
-ax.plot(df["nowindReco"], label =  "$U = R = 0$", **args)
-ax.plot(df["local"], label = "$U = V_z = R = 0$", **args)
-ax.plot(df["all"],  label = "Todos os termos", **args)
+
+ax.plot(df["all"], **args, label = "Todos os termos")
+ax.plot(df["nowind"], **args, label = "$U = 0$")
+ax.plot(df["noreco"], **args, label = "$R = 0$")
+ax.plot(df["nowindReco"], **args, label = "$R = U = 0$")
+ax.plot(df["local"], **args, label = "$R = U = V_z = 0$")
 
 
 ax.set(ylim = [-0.5e-3, 3e-3], 
