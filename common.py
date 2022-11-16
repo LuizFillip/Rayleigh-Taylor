@@ -24,7 +24,10 @@ def postdamData(date):
     
     df["F10.7a"] = df["F10.7obs"].rolling(window = 81).mean()
     df = df.loc[df["D"] == 2]
-    return df.loc[df.index == date, ["F10.7obs", "F10.7a", "Ap"]].values
+    
+    _date_ = pd.to_datetime(date.date())
+    return df.loc[df.index == _date_, 
+                  ["F10.7obs", "F10.7a", "Ap"]].values
 
 
 def runMSISE(date, 
