@@ -9,7 +9,7 @@ def float_to_time(tt):
     args = str(tt).split(".")
     hour = int(args[0])
     minute = int(float("0." + args[1])*60)
-    return hour, minute
+    return f"{hour}:{minute}"
 
 class PRE(object):
     
@@ -25,9 +25,9 @@ class PRE(object):
         self.df = df
         self.pre = self.df["vz"].values
         self.times = self.df.index
+        
 
-
-class neutral_parameters(object):
+class neutrals(object):
     
     def __init__(self, TN, O, O2, N2):
         self.tn = TN
@@ -52,11 +52,10 @@ class neutral_parameters(object):
         
         return (4.0e-11  * self.o2) + (1.3e-12   * self.n2)    
   
-def length_scale_gradient(Ne, dz = 1):
-    """Vertical variation of """
+def scale_gradient(Ne, dz = 1):
+    """length scale gradiendt : Vertical variation of density"""
     factor = 1e-3 #convert km to meters
-    L = np.gradient(np.log(Ne), dz)*factor
-    return L
+    return np.gradient(np.log(Ne), dz)*factor
 
 
 
