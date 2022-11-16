@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
 from nrlmsise00 import msise_flat
 import os
+import pyIGRF
+from geomagnetic_parameters import toYearFraction
+
 
 def postdamData(date):
     infile = "G:\\My Drive\\Python\\data-analysis\\PlanetaryIndices\\database\\postdam.txt"
@@ -56,7 +58,44 @@ def runMSISE(date,
     
     return df
 
+class getPyglow(object):
+    
+    def __init__(self, 
+                 date, 
+                 infile =  "database/pyglow/" ):
+        self.infile = infile
+        self.date = date
 
+    @staticmethod
+    def read(infile):
+        
+        df = pd.read_csv(infile, index_col = 0)
+        df["date"] = pd.to_datetime(df["date"])
+        return df
+
+    
+    def winds(self, 
+              filename = "winds2014_2015.txt", 
+              glat = -3.73, 
+              glon = -38.522, 
+              component = "U"):
+        
+        df = self.read(self.infile + filename)
+        
+        d, i, h, x, y, z, f = pyIGRF.igrf_value(glat, glon, 
+                                                year = toYearFraction(self.date))
+
+        df["U"] = (df.zon * np.cos(np.radians(d)) + 
+                   df.mer * np.sin(np.radians(d)))
+        return df.loc[(df["date"] == self.date), component].values
+        
+    
+    def density(self,
+                filename = "density2014_2015.txt"):
+        
+        df = self.read(self.infile + filename)
+        
+        return df.loc[(df["date"] == self.date), "Ne"].values
     
 def read_all():
     
@@ -89,8 +128,3 @@ class loadNe(object):
     def sel_time(self, date):
         return self.df.loc[self.df["date"] == date, "Ne"]
                               
-filename = "20140101.txt"
-date = datetime(2014, 1, 1, 20, 10)    
-df = loadNe(filename).sel_time(date)
-
-print(df)
