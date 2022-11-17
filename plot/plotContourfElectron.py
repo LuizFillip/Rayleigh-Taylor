@@ -1,12 +1,14 @@
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import matplotlib.dates as dates
+
+
 infile = "database/density/"
 _, _, files = next(os.walk(infile))
 
-#print(files)
 
-filename = files[0]
+filename = files[30]
 
 
 df = pd.read_csv(infile + filename, 
@@ -26,3 +28,11 @@ plt.contourf(df1.columns,
              df1.index, 
              df1.values, 50, 
              cmap = "rainbow")
+
+
+ax.xaxis.set_major_formatter(dates.DateFormatter('%H:%M'))
+ax.xaxis.set_major_locator(dates.HourLocator(interval = 2))
+
+
+ax.set(ylabel = "Altitude (km)", 
+       xlabel = "Time (UT)")
