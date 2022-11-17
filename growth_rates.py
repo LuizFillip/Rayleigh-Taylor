@@ -3,12 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np 
 from RTIparameters import PRE, neutrals, scale_gradient
-from common import loadNe, runMSISE
-
-def growth_rate_RT(nu, L, R):
-    """Local rate growth"""
-    return (9.81 / nu) * L - R
-
+from common import loadNe, runMSISE, getPyglow
+import os
+from tqdm import tqdm
 
 def growth_rate_RT(nu, L, R, Vp, U):
     """
@@ -19,55 +16,104 @@ def growth_rate_RT(nu, L, R, Vp, U):
     U: Neutral wind
     nu: ion-neutral collisional frequency
     L: gradient scale
-    R: Recombination
+    R: Recombination rate
     
     """
      
     return (Vp - U + (9.81 / nu))*L - R
     
-infile = "database/PRE/FZ_PRE_2014_2015.txt"
 
-pre = PRE(infile)
-i = 0
 
-vz = pre.pre[i]
 
-out = []
-times = pd.date_range("2014-01-01 00:00", 
-                      "2014-01-01 23:50", 
-                      freq = "10min")
-for date in times:
-    
+def run_for_all_times(vz, 
+                      date, 
+                      neInfile = "20140101.txt"):
+    """Running for all electron density (range 200 to 500 km)
+    in whole day for each 10 minutes"""
 
-    df = loadNe("20140101.txt").sel_time(date)
+    end =  date + datetime.timedelta(hours = 23, minutes = 50)
     
-    hmin = df.index[0]
-    hmax = df.index[-1]
-    dat = runMSISE(date, hmin = hmin, 
-                   hmax = hmax)
+    times = pd.date_range(date, 
+                          end, 
+                          freq = "10min")
+    
+    out = []
+    
+    for date in times:
+        
+        df = loadNe(neInfile).sel_time(date)
+        
+        hmin = df.index[0]
+        hmax = df.index[-1]
+        dat = runMSISE(date, 
+                       hmin = hmin, 
+                       hmax = hmax)
+        neutral = neutrals(dat.Tn.values, 
+                            dat.O.values, 
+                            dat.O2.values, 
+                            dat.N2.values)
+        
+        nu = neutral.collision
+        r = neutral.recombination
+        ne = df.values
+        
+        l = scale_gradient(ne)
+        
+        alts = dat.index.values
+        
+        gamma = growth_rate_RT(nu, l, r, vz, 0)
+    
+        max_gamma = gamma[alts == 300 ]
+        out.append(np.nanmax(max_gamma))
+        
+    return out
+
+def run_for_all_days2():
+    gammas = []
+    dates = []
+    
+    pre = PRE("database/PRE/FZ_PRE_2014_2015.txt").df
     
     
-    neutral = neutrals(dat.Tn.values, 
-                                  dat.O.values, 
-                                  dat.O2.values, 
-                                  dat.N2.values)
-    
-    nu = neutral.collision
-    r = neutral.recombination
-    ne = df.values
-    
-    l = scale_gradient(ne)
-    
-    alts = dat.index.values
-    
-    gamma = growth_rate_RT(nu, l, r, vz, 0)
-    
-    out.append(np.nanmax(gamma))
+    for num in tqdm(pre.index):
+        
+        try:
+            filename = num.strftime("%Y%m%d") + ".txt"
+            vz = pre.loc[num, "vz"]
+            
+            date = pd.to_datetime(num.date())
+            
+            gammas.append(run_for_all_times(vz, date, 
+                          neInfile = "database/density/" + filename))
+        
+            dates.append(date)
+        except:
+            continue
+        
+    return gammas, dates
+
+
+gammas, dates = run_for_all_days2()
 #%%
-# Growth rate without winds and recombination
-fig = plt.figure(figsize = (20, 5))
-plt.plot(times, out)
+import plotConfig
 
+x = np.linspace(0, 24, 144)
+z = np.array(gammas).T
+y = dates
+
+fig, ax = plt.subplots(figsize = (30, 15))
+cs = ax.contourf(y, x, z, 30)
+
+import matplotlib.dates as md
+ax.xaxis.set_major_formatter(md.DateFormatter('%d-%m'))
+ax.xaxis.set_major_locator(md.DayLocator(interval = 10))
+
+cb = plt.colorbar(cs)
+
+cb.set_label(r'$\gamma_{RT}~(s^{-1})$')
+ax.set(yticks = np.arange(0, 25, 2),
+       ylabel = "Tempo (UT)", 
+        xlabel = "Meses")
 #%%
 
 def run_for_all_days(pre):
@@ -86,32 +132,32 @@ def run_for_all_days(pre):
         dat = runMSISE(date)
         
         
-        neutral = neutral_parameters(dat.Tn.values, 
-                                      dat.O.values, 
-                                      dat.O2.values, 
-                                      dat.N2.values)
+        neutral = neutrals(dat.Tn.values, 
+                           dat.O.values, 
+                            dat.O2.values, 
+                             dat.N2.values)
         
         nu = neutral.collision
         r = neutral.recombination
         
-        l = length_scale_gradient(ne*1e6)
+        l = scale_gradient(ne*1e6)
         
         alts = dat.index.values
         
-        gamma = growth_rate_RT(nu, l, r, vz, u)
-        no_wind = growth_rate_RT(nu, l, r, vz, 0)
-        no_r = growth_rate_RT(nu, l, 0, vz, u)
-        no_r_wind = growth_rate_RT(nu, l, 0, vz, 0)
-        local = growth_rate_RT(nu, l, 0, 0, 0)
+        GRT = growth_rate_RT(nu, l, r, vz, u)
+        wind_zero = growth_rate_RT(nu, l, r, vz, 0)
+        reco_zero = growth_rate_RT(nu, l, 0, vz, u)
+        reco_wind_zero = growth_rate_RT(nu, l, 0, vz, 0)
+        LRT = growth_rate_RT(nu, l, 0, 0, 0)
         out_gammas = []
         out_res.append(out_gammas)
         
-        for elem in [gamma, no_wind, no_r, 
-                     no_r_wind, local]:
+        for elem in [GRT, wind_zero, reco_zero, 
+                     reco_wind_zero, LRT]:
             
         
-            max_gamma = elem[(alts > 200) & (alts < 400)]
-        
+            max_gamma = elem[(alts > 250) & (alts < 350)]
+            #max_gamma = elem[alts == 300 ]
         
             out_gammas.append(np.max(max_gamma))
             
@@ -121,8 +167,10 @@ def run_for_all_days(pre):
                                  "noreco", "nowindReco", 
                                  "local"])
 
-    #df.to_csv("database/growthRates/gammas.txt", 
-         # sep = ",", 
-          #index = True)
+    df.to_csv("database/growthRates/gammas250_350km.txt", 
+              sep = ",", 
+              index = True)
+infile = "database/PRE/FZ_PRE_2014_2015.txt"
 
-    
+pre = PRE(infile)
+run_for_all_days(pre)
