@@ -1,9 +1,20 @@
 import locale
 import matplotlib.pyplot as plt
-
+import os
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
-path_tex = {"latex" : 
-         "G:\\My Drive\\Doutorado\\Modelos_Latex_INPE\\docs\\Proposal\\Figures\\methods\\"}
+
+
+
+
+
+
+latex = "G:\\My Drive\\Doutorado\\Modelos_Latex_INPE\\docs\\Proposal\\Figures\\"
+
+    
+def path_tex(folder):
+    
+    return os.path.join(latex, folder)  
+    
 fontsize = 35
 
 lw = 1
