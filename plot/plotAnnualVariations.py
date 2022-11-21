@@ -8,16 +8,17 @@ infile = "database/growthRates/gammas250_350km.txt"
 
 
 def plotAnnualVariation(infile, year = 2014):
-    df = pd.read_csv(infile, 
-                     index_col = 0)
+    
+    
+    df = pd.read_csv(infile, index_col = 0)
     
     df.index = pd.to_datetime(df.index)
     
     df = df.loc[df.index.year == year]
     
-    fig, ax = plt.subplots(figsize = (20, 10))
+    fig, ax = plt.subplots(figsize = (25, 12))
     
-    args = dict(lw = 2)
+    args = dict(lw = 3)
     
     
     ax.plot(df["all"], **args, label = "Todos os termos")
@@ -29,28 +30,30 @@ def plotAnnualVariation(infile, year = 2014):
     
     ax.set(ylim = [-0.5e-3, 2e-3], 
            xlabel = "Meses", 
-           title = f"Fortaleza, {year}",
-           ylabel = "$\gamma_{RT}~ (\\times 10^{-3} s^{-1})$")
+           ylabel = "$\gamma_{RT}~ (10^{-3} s^{-1})$")
     
     
-    ax.legend(ncol = 3, fontsize = 30)
+    ax.legend(bbox_to_anchor=[1.02, 1.15], ncol = 5, fontsize = 30)
     
     ax.axhline(0, linestyle = "--", color = "k", lw = 2)
     
     ax.xaxis.set_major_formatter(dates.DateFormatter('%b'))
     ax.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
     
+    ax.text(0.01, 0.9, year, transform = ax.transAxes)
     
     ax.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
-    
-    
-    
-    #fig.savefig(path_tex["latex"] + "annual_growth_rates.png", 
-      #          dpi = 500)
-    
-    
+                    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
     plt.show()
     
     
-plotAnnualVariation(infile)
+    return fig
+    
+    
+
+    
+    
+fig = plotAnnualVariation(infile)
+
+
+fig.savefig(path_tex("results") + "\\annual_growth_rates.png", dpi = 300)
