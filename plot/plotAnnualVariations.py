@@ -35,7 +35,7 @@ def plotAnnualVariation(infile, year = 2014):
     
     ax.legend(bbox_to_anchor=[1.02, 1.15], ncol = 5, fontsize = 30)
     
-    ax.axhline(0, linestyle = "--", color = "k", lw = 2)
+    ax.axhline(0, linestyle = "--", color = "k", lw = 3)
     
     ax.xaxis.set_major_formatter(dates.DateFormatter('%b'))
     ax.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
@@ -45,7 +45,6 @@ def plotAnnualVariation(infile, year = 2014):
     ax.yaxis.set_major_formatter(
                     ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
     plt.show()
-    
     
     return fig
     
