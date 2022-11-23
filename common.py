@@ -5,9 +5,11 @@ import os
 import pyIGRF
 from geomagnetic_parameters import toYearFraction
 
+#infile = "G:\\My Drive\\Python\\data-analysis\\PlanetaryIndices\\database\\postdam.txt"
+infile = "G:/Meu Drive/Python/data-analysis/PlanetaryIndices/database/postdam.txt"
 
-def postdamData(date):
-    infile = "G:\\My Drive\\Python\\data-analysis\\PlanetaryIndices\\database\\postdam.txt"
+def postdamData(infile, date):
+    
     """Read data from GFZ postdam"""
     df = pd.read_csv(infile, 
                      header = 39, 
@@ -30,18 +32,19 @@ def postdamData(date):
                   ["F10.7obs", "F10.7a", "Ap"]].values
 
 
-def runMSISE(date, 
+def runMSISE( 
+             date, 
               hmin = 100, 
               hmax = 600, 
               step = 1, 
               glat = -3.73, 
-              glon = -38.522):
+              glon = -38.522, infile = infile):
     
     """Running models MSISE00"""
     
     alts = np.arange(hmin, hmax + step, step)
     
-    f107, f107a, ap = tuple(postdamData(date).ravel())
+    f107, f107a, ap = tuple(postdamData(infile, date).ravel())
     
     
     res = msise_flat(date, alts[None, :], glat, glon, f107a, 
@@ -100,13 +103,6 @@ class getPyglow(object):
         
         return df.loc[(df["date"] == self.date), "Ne"].values
     
-def read_all():
-    
-    infile = "database/density/"
-    _, _, files = next(os.walk(infile))
-    
-    
-    filename = files[0]
     
 
 
