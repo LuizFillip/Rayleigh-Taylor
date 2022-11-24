@@ -48,11 +48,41 @@ def plotAnnualVariation(infile, year = 2014):
     
     return fig
     
-    
+year = 2014
+df = pd.read_csv(infile, index_col = 0)
 
+df.index = pd.to_datetime(df.index)
+
+df = df.loc[df.index.year == year]
+
+fig, axs = plt.subplots(nrows = 5, figsize = (20, 25), 
+                       sharex = True)
+
+plt.subplots_adjust(hspace = 0.1)
+
+col = df.columns
+names = ["Todos os termos", "$U = 0$", "$R = 0$", 
+         "$R = U = 0$", "$V_p = R = U = 0$"]
+
+for num, ax in enumerate(axs.flat):
+
+    ax.plot(df[col[num]], 
+            lw = 3, 
+            color = "k", 
+            label = names[num])
     
+    ax.set(ylim = [-0.3e-3, 3e-3], 
+           ylabel ='$\gamma_{RT}~(s^{-1})$')
     
-fig = plotAnnualVariation(infile)
+    ax.legend(loc = "upper left")    
+    
+    if num == 4:
+        ax.set_xlabel("Meses")
+
+ax.xaxis.set_major_formatter(dates.DateFormatter('%b'))
+ax.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
+
+#fig = plotAnnualVariation(infile)
 
 
-fig.savefig(path_tex("results") + "\\annual_growth_rates.png", dpi = 300)
+#fig.savefig(path_tex("results") + "\\annual_growth_rates.png", dpi = 300)

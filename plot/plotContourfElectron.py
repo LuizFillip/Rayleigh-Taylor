@@ -1,38 +1,40 @@
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import numpy as np
+import plotConfig
 import matplotlib.dates as dates
 
-
-infile = "database/density/"
-_, _, files = next(os.walk(infile))
+infile = "database/growthRates/reco_and_vp_alltimes.txt"
 
 
-filename = files[30]
+df = pd.read_csv(infile, index_col = 0)
 
+df.index = pd.to_datetime(df.index)
 
-df = pd.read_csv(infile + filename, 
-                 index_col = 0)
-df["date"] = pd.to_datetime(df["date"])
-df["alts"] = df.index
+df["date"] = df.index.date
+df["time"] = df.index.hour + df.index.minute / 60
 
 df1 = pd.pivot_table(df, 
                      columns = "date", 
-                     index = "alts", 
-                     values = "Ne")
+                     index = "time", 
+                     values = "gVp_max")
 
 
-fig, ax = plt.subplots(figsize = (30, 12))
-
-plt.contourf(df1.columns, 
-             df1.index, 
-             df1.values, 50, 
-             cmap = "rainbow")
 
 
-ax.xaxis.set_major_formatter(dates.DateFormatter('%H:%M'))
-ax.xaxis.set_major_locator(dates.HourLocator(interval = 2))
+fig, ax = plt.subplots(figsize = (25, 10))
 
+cs = plt.contourf(df1.columns, 
+                 df1.index, 
+                 df1.values, 50, 
+                 cmap = "rainbow")
 
-ax.set(ylabel = "Altitude (km)", 
-       xlabel = "Time (UT)")
+plt.colorbar(cs)
+ax.set(ylabel = "Hora (UT)", 
+       yticks = np.arange(0, 26, 2),
+       xlabel = "Dia do ano")
+
+    
+ax.xaxis.set_major_formatter(dates.DateFormatter('%b'))
+ax.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
