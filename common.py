@@ -5,8 +5,8 @@ import os
 import pyIGRF
 from geomagnetic_parameters import toYearFraction
 
-#infile = "G:\\My Drive\\Python\\data-analysis\\PlanetaryIndices\\database\\postdam.txt"
-infile = "G:/Meu Drive/Python/data-analysis/PlanetaryIndices/database/postdam.txt"
+infile = "G:\\My Drive\\Python\\data-analysis\\PlanetaryIndices\\database\\postdam.txt"
+#infile = "G:\\Meu Drive\\Python/data-analysis/PlanetaryIndices/database/postdam.txt"
 
 def postdamData(infile, date):
     
