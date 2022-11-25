@@ -1,5 +1,6 @@
 import pandas as pd
-from generalized_growth_rate import getPyglow, length_scale_gradient
+from common import getPyglow
+from RTIparameters import scale_gradient
 from datetime import datetime
 import matplotlib.pyplot as plt
 from plotConfig import *
@@ -15,10 +16,10 @@ ne = pyglow.density()
 
 fig, ax = plt.subplots(ncols = 2, 
                        sharey = True, 
-                       figsize = (18, 18))
+                       figsize = (25, 20))
 
 
-plt.subplots_adjust(wspace = 0.2)
+plt.subplots_adjust(wspace = 0.1)
 
 alts = np.arange(100, 600 + 1, 1)
 
@@ -27,7 +28,7 @@ args = dict(lw = 4, color = "k")
 
 ax[0].plot(ne, alts, **args)
 
-ax[1].plot(length_scale_gradient(ne), alts, **args)
+ax[1].plot(scale_gradient(ne), alts, **args)
 
 ax[0].set(ylabel = "Altitude (km)", 
           xscale = "log", 
@@ -35,17 +36,17 @@ ax[0].set(ylabel = "Altitude (km)",
                               r" $n_0~(cm^{-3}$)"),)
 
 ax[1].axvline(0, linestyle = "--", lw = 2, color = "k")
-ax[1].set(xlabel = ("Gradiente de escala \n" + 
+ax[1].set(xlim = [-6e-5, 6e-5], 
+          xlabel = ("Gradiente de escala \n" + 
        r"$ L^{-1} = \frac{1}{n_0} \frac{\partial n_0}{\partial z} (10^{-3} m^{-1})$"))
 
 
 ax[1].xaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/10e-3)))
+    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
 
 
 
 text_painels(ax, x = 0.05, y = 0.95, 
                  fontsize = 45)
 
-print(length_scale_gradient(ne))
-fig.savefig(path_tex["latex"] + "electron_density.png",  dpi = 500)
+fig.savefig(path_tex("methods") + "\\electron_density.png",  dpi = 500)
