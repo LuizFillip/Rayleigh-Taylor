@@ -1,5 +1,5 @@
 import pandas as pd
-from generalized_growth_rate import getPyglow
+from common import getPyglow
 from datetime import datetime
 import matplotlib.pyplot as plt
 from plotConfig import *
@@ -17,7 +17,7 @@ u = pyglow.winds(component = ["zon", "mer", "U"])
 
 fig, ax = plt.subplots(ncols = 1, 
                        sharey = True, 
-                       figsize = (12, 14))
+                       figsize = (15, 20))
 
 
 alts = np.arange(100, 600 + 1, 1)
