@@ -1,5 +1,6 @@
 import pandas as pd
-from generalized_growth_rate import runMSISE, neutral_parameters
+from common import runMSISE
+from RTIparameters import neutrals
 from datetime import datetime
 import matplotlib.pyplot as plt
 from plotConfig import *
@@ -8,7 +9,7 @@ date = datetime(2014, 1, 1, 21, 10)
 
 dat = runMSISE(date)
 
-neutral = neutral_parameters(dat.Tn.values, 
+neutral = neutrals(dat.Tn.values, 
                               dat.O.values, 
                               dat.O2.values, 
                               dat.N2.values)
@@ -16,14 +17,14 @@ neutral = neutral_parameters(dat.Tn.values,
 
 fig, ax = plt.subplots(ncols = 3, 
                        sharey = True, 
-                       figsize = (24, 12))
+                       figsize = (25, 20))
 
 plt.subplots_adjust(wspace = 0.1)
 nu = neutral.collision
 r = neutral.recombination
 
 
-args = dict(lw = 2)
+args = dict(lw = 3)
 ax[0].plot(dat.Tn, dat.index, **args, color = "k")
 
 ax[0].set(xlabel = "Temperatura (K)", 
@@ -66,5 +67,5 @@ text_painels(ax, x = 0.01, y = 0.95,
                  fontsize = 35)
 
 
-fig.savefig(path_tex["latex"] + "neutral_parameters.png", 
+fig.savefig(path_tex("methods") + "\\neutral_parameters.png", 
             dpi = 500)
