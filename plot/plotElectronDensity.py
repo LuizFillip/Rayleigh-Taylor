@@ -16,7 +16,7 @@ ne = pyglow.density()
 
 fig, ax = plt.subplots(ncols = 2, 
                        sharey = True, 
-                       figsize = (25, 20))
+                       figsize = (25, 25))
 
 
 plt.subplots_adjust(wspace = 0.1)

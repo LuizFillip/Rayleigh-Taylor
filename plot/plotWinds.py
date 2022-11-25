@@ -35,5 +35,5 @@ ax.set(xlim = [-140, 140],
        xlabel = "Velocidade (m/s)")
 
 
-fig.savefig(path_tex["latex"] + "winds.png", 
-            dpi = 500)
+fig.savefig(path_tex("methods") + "\\winds.png", 
+            dpi = 300)

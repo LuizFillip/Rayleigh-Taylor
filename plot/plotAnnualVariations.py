@@ -2,87 +2,91 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as dates
 import matplotlib.ticker as ticker
-
+import numpy as np
 from plotConfig import *
 infile = "database/growthRates/gammas250_350km.txt"
 
 
+def text_painels(axs, x = 0.8, y = 0.8, 
+                 fontsize = 30):
+    """Plot text for enumerate painels by letter"""
+    chars = list(map(chr, range(97, 123)))
+    
+    for num, ax in enumerate(axs):
+        char = chars[num]
+        ax.text(x, y, f"({char})", 
+                transform = ax.transAxes, 
+                fontsize = fontsize)
+
 def plotAnnualVariation(infile, year = 2014):
-    
-    
     df = pd.read_csv(infile, index_col = 0)
     
     df.index = pd.to_datetime(df.index)
     
     df = df.loc[df.index.year == year]
     
-    fig, ax = plt.subplots(figsize = (25, 12))
+    fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows = 5,
+                                                  figsize = (20, 25), 
+                                                  sharex = True)
     
-    args = dict(lw = 3)
+    plt.subplots_adjust(hspace = 0.1)
     
+    axs = list((ax1, ax2, ax3, ax4, ax5))
     
-    ax.plot(df["all"], **args, label = "Todos os termos")
-    ax.plot(df["nowind"], **args, label = "$U = 0$")
-    ax.plot(df["noreco"], **args, label = "$R = 0$")
-    ax.plot(df["nowindReco"], **args, label = "$R = U = 0$")
-    ax.plot(df["local"], **args, label = "$R = U = V_z = 0$")
+    col = df.columns
+    names = [r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y} - R$",
+             r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y} - R$", 
+             r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y}$", 
+             r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y}$", 
+             r"$(\frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y}$"]
     
+    from math import floor, log10, inf
     
-    ax.set(ylim = [-0.5e-3, 2e-3], 
-           xlabel = "Meses", 
-           ylabel = "$\gamma_{RT}~ (10^{-3} s^{-1})$")
+    def num_zeros(decimal):
+        return inf if decimal == 0 else -floor(log10(abs(decimal))) - 1
     
+    for num, ax in enumerate(axs):
+        
+        if num == 4:
+            
+            df[col[num]] = df[col[num]] * 10
+            
+            name = "$\gamma_{RT} ~(10^{-4}~s^{-1})$"
+            
+        else:
+            name = "$\gamma_{RT} ~(10^{-3}~s^{-1})$"
+            
     
-    ax.legend(bbox_to_anchor=[1.02, 1.15], ncol = 5, fontsize = 30)
+        ax.plot(df[col[num]], 
+                lw = 3, 
+                color = "k")
+        
+        
+        ax.text(0.95, 0.8, names[num],  
+                horizontalalignment ='right',
+                transform = ax.transAxes) 
+        
+       
+        ax.set(ylim = [-0.3e-3, 3e-3], 
+               yticks = np.arange(-0.3e-3, 3e-3, 0.9e-3),
+               ylabel = name)
+        
+        
+        ax.yaxis.set_major_formatter(
+                        ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
     
-    ax.axhline(0, linestyle = "--", color = "k", lw = 3)
+    ax5.set(xlabel = "Meses")
+    ax4.xaxis.set_major_formatter(dates.DateFormatter('%b'))
+    ax4.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
     
-    ax.xaxis.set_major_formatter(dates.DateFormatter('%b'))
-    ax.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
+
     
-    ax.text(0.01, 0.9, year, transform = ax.transAxes)
+    text_painels(axs, x = 0.01, y = 0.8, fontsize = 35)
     
-    ax.yaxis.set_major_formatter(
-                    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
-    plt.show()
     
     return fig
+
+
+fig  = plotAnnualVariation(infile, year = 2014)
     
-year = 2014
-df = pd.read_csv(infile, index_col = 0)
-
-df.index = pd.to_datetime(df.index)
-
-df = df.loc[df.index.year == year]
-
-fig, axs = plt.subplots(nrows = 5, figsize = (20, 25), 
-                       sharex = True)
-
-plt.subplots_adjust(hspace = 0.1)
-
-col = df.columns
-names = ["Todos os termos", "$U = 0$", "$R = 0$", 
-         "$R = U = 0$", "$V_p = R = U = 0$"]
-
-for num, ax in enumerate(axs.flat):
-
-    ax.plot(df[col[num]], 
-            lw = 3, 
-            color = "k", 
-            label = names[num])
-    
-    ax.set(ylim = [-0.3e-3, 3e-3], 
-           ylabel ='$\gamma_{RT}~(s^{-1})$')
-    
-    ax.legend(loc = "upper left")    
-    
-    if num == 4:
-        ax.set_xlabel("Meses")
-
-ax.xaxis.set_major_formatter(dates.DateFormatter('%b'))
-ax.xaxis.set_major_locator(dates.MonthLocator(interval = 1))
-
-#fig = plotAnnualVariation(infile)
-
-
-#fig.savefig(path_tex("results") + "\\annual_growth_rates.png", dpi = 300)
+    #fig.savefig(path_tex("results") + "\\annual_growth_rates.png", dpi = 300)
