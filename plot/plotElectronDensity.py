@@ -16,7 +16,7 @@ ne = pyglow.density()
 
 fig, ax = plt.subplots(ncols = 2, 
                        sharey = True, 
-                       figsize = (25, 25))
+                       figsize = (15, 15))
 
 
 plt.subplots_adjust(wspace = 0.1)
@@ -49,4 +49,4 @@ ax[1].xaxis.set_major_formatter(
 text_painels(ax, x = 0.05, y = 0.95, 
                  fontsize = 45)
 
-fig.savefig(path_tex("methods") + "\\electron_density.png",  dpi = 500)
+fig.savefig(path_tex("methods") + "\\electron_density.png")

@@ -67,5 +67,4 @@ text_painels(ax, x = 0.01, y = 0.95,
                  fontsize = 35)
 
 
-fig.savefig(path_tex("methods") + "\\neutral_parameters.png", 
-            dpi = 500)
+fig.savefig(path_tex("methods") + "\\neutral_parameters.png")

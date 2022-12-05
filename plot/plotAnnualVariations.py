@@ -26,7 +26,7 @@ def plotAnnualVariation(infile, year = 2014):
     df = df.loc[df.index.year == year]
     
     fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(nrows = 5,
-                                                  figsize = (20, 25), 
+                                                  figsize = (15, 20), 
                                                   sharex = True)
     
     plt.subplots_adjust(hspace = 0.1)
@@ -34,11 +34,11 @@ def plotAnnualVariation(infile, year = 2014):
     axs = list((ax1, ax2, ax3, ax4, ax5))
     
     col = df.columns
-    names = [r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y} - R$",
-             r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y} - R$", 
-             r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y}$", 
-             r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y}$", 
-             r"$(\frac{g}{\nu_{in}})\frac{\partial n_e}{\partial y}$"]
+    names = [r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$",
+             r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$", 
+             r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$", 
+             r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$", 
+             r"$(\frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$"]
     
     from math import floor, log10, inf
     
@@ -89,4 +89,4 @@ def plotAnnualVariation(infile, year = 2014):
 
 fig  = plotAnnualVariation(infile, year = 2014)
     
-    #fig.savefig(path_tex("results") + "\\annual_growth_rates.png", dpi = 300)
+#fig.savefig(path_tex("results") + "\\annual_growth_rates.png")
