@@ -25,10 +25,10 @@ df1 = pd.pivot_table(df,
 
 fig, ax = plt.subplots(figsize = (25, 10))
 
-cs = plt.contourf(df1.columns, 
+cs = plt.contourf(df1.columns , 
                  df1.index, 
-                 df1.values, 50, 
-                 cmap = "rainbow")
+                 df1.values*1e3, 50, 
+                 cmap = "Blues")
 
 plt.colorbar(cs)
 ax.set(ylabel = "Hora (UT)", 

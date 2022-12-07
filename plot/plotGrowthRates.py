@@ -57,7 +57,7 @@ no_r_wind = growth_rate_RT(nu, l, 0, vz, 0)
 local = growth_rate_RT(nu, l, 0, 0, 0)
 
 
-fig, ax = plt.subplots(figsize = (8, 15))
+fig, ax = plt.subplots(figsize = (15, 15))
 
 args = dict(lw = 3)
 ax.plot(gamma, alts, **args, label = r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$")
@@ -75,5 +75,5 @@ ax.axvline(0, lw = 2, color = "k", linestyle = "--")
 ax.xaxis.set_major_formatter(
     ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
 infile = "G:\\Meu Drive\\Doutorado\\Modelos_Latex_INPE\\docs\\Proposal\\Figures\\methods\\"
-#fig.savefig(infile + "\\growth_rates_profiles.png")
+fig.savefig(infile + "\\growth_rates_profiles.png")
 plt.show()

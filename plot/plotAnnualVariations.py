@@ -89,4 +89,4 @@ def plotAnnualVariation(infile, year = 2014):
 
 fig  = plotAnnualVariation(infile, year = 2014)
     
-#fig.savefig(path_tex("results") + "\\annual_growth_rates.png")
+fig.savefig(path_tex("results") + "\\annual_growth_rates.png")
