@@ -15,7 +15,7 @@ def path_tex(folder):
     
     return os.path.join(latex, folder)  
     
-fontsize = 35
+fontsize = 30
 
 lw = 1
 major = 8
