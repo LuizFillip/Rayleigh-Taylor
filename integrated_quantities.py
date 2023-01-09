@@ -1,10 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.constants as const
-from datetime import datetime
 import pandas as pd
-from ionospheric_conductivity import *
-
+from generic import read_iri
 
 def integrated_values(alts, date, glon = 0, 
                       lat_max = 30, 
@@ -21,74 +19,67 @@ def integrated_values(alts, date, glon = 0,
         
         out.append(sigma_1)
     
-    Re = 6.371009e6
+   
     L = 1
     
     integrated = 2*Re*L*(np.sum(np.vstack(out).T, axis = 1))*delta
    
     return sigma_p.index, integrated
    
-    
-def read_iri(infile):
-    iri = pd.read_csv(infile, 
-                 delim_whitespace=True, 
-                 header = None)
-    
-    return iri
-
-def read_msise(infile):
-    df = pd.read_csv(infile, 
-                 delim_whitespace = True, 
-                 header = 33, 
-                 names = ["height", 
-                          "O", 
-                          "N2", 
-                          "O2", 
-                          "mass", 
-                          "Tn", 
-                          "Tex", 
-                          "He", 
-                          "Ar", 
-                          "H", 
-                          "N", 
-                          "OAn"])
-    
-    
-    df["nui"] = ion_neutral_collision(df.Tn, df.O, 
-                                      df.O2, df.N2)
-    
-    df["Nn"] = df[[ "O", "N2", "O2"]].sum(axis = 1)
-    
-    df["nue"] = electron_neutral_collision(df.Tn, df.Nn)
-    
-    return df
 
 
-def apex_factor(lat, h, Re = 6378):
-    return ((h + Re) / 
-            (Re * (1 - np.sin(np.radians(lat))**2)))
+from mag_parameters import apex_latitude, apex_range
 
+Ne = []
 
-delta = 5
-
-
-apex_heights = np.arange(100, 600, 5)
-out_2 = []
-for h in apex_heights:
-    L = apex_factor(mlat, h, Re = 6378)
-    out_1 = []
-    for mlat in range(0, 35, 5):
-        infile_msise = f"database/msis/mlat_{mlat}.txt"
-        msi = read_msise(infile_msise)
-        infile_iri = f"database/iri/mlat_{mlat}.txt"
-        Ne = read_iri(infile_iri).iloc[:, 1]
+for i in range(0, 35, 5):
     
-        sp = Pedersen_conductivity(Ne, msi.nue, msi.nui)
+    df = read_iri(f"database/density_magnetic/{i}.txt")
+    alts = df[0].values 
+    Ne.append(df[1].values* 1e-6)
     
-        sigma_1 = sp*(1 + 3 * np.sin(np.radians(mlat))**2)
 
-#
+ne = np.vstack(Ne).T
+mlats = np.arange(0, 35, 5)
 
-        integrated = 2*Re*L*(sigma_1)*delta
+def interpolate_data():
+    from scipy import interpolate
     
-    out_2 = np.sum(np.vstack(out_1).T, axis = 1)
+    X = np.arange(0, 35, 5)
+    Y = alts
+    
+    x,y = np.meshgrid(X,Y)
+    
+    
+    f = interpolate.interp2d(x, y, ne, kind='cubic')
+    
+    Xnew = np.linspace(0, 35, 50)
+    Ynew = np.linspace(100, 700, 1000)
+    
+    
+    return f(Xnew,Ynew)
+
+
+
+def plotContourfMagLines(alts, mlats, ne):
+    
+
+    fig, ax = plt.subplots()   
+    
+    ax.contourf(mlats, alts, ne, 50)
+    
+    dz = 50
+    hmin = min(alts)
+    hmax = max(alts)
+    
+    heights = np.arange(hmin, hmax + dz, dz)
+        
+    for h in heights:
+        lats, apex = apex_range(h, num = 10)
+        
+        ax.plot(lats, apex, color = "k")    
+        
+    ax.set(xlim = [0, 20], ylim = [100, 700])
+    
+    
+plotContourfMagLines(Ynew, Xnew, neI)
