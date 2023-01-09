@@ -1,9 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-from iri2016 import IRI
-from geomagnetic_parameters import mag2geo
-import datetime
+
 
 def density_integrated(Ne, lat, h):
     Re = 6378.165
@@ -46,6 +43,8 @@ def main():
     for h in heights:
         lats, apex = apex_range(h, num = 15)
         ax.plot(lats, apex, color = "k")    
-    
+       
+
+
    
   
