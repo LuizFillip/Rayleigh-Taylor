@@ -1,15 +1,8 @@
-from nrlmsise00.dataset import msise_4d
-from nrlmsise00 import msise_model
 import numpy as np 
-import scipy.constants as sc
 import pandas as pd
+from common import float_to_time
 
 
-def float_to_time(tt):
-    args = str(tt).split(".")
-    hour = int(args[0])
-    minute = int(float("0." + args[1])*60)
-    return f"{hour}:{minute}"
 
 class PRE(object):
     

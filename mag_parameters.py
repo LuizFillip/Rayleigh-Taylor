@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def dipole_magnetic_field(colatitude, h = 1):
+    Re = 6.371009e6
+    return ((h + Re)) * (np.cos(np.radians(colatitude)))**2
 
 def density_integrated(Ne, lat, h):
     Re = 6378.165
@@ -29,7 +32,6 @@ def apex_range(h, num = 200):
     
     return latitudes, apex_height(latitudes, h)
     
-
 
 
 def main():
