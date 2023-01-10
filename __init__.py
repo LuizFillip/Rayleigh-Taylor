@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Oct  8 18:15:15 2022
+import os, sys
 
-@author: Luiz
-"""
+parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+sys.path.append(parent)
 
