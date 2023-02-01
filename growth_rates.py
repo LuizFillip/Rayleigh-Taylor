@@ -1,28 +1,11 @@
 import datetime
 import pandas as pd
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np 
 from RTIparameters import PRE, neutrals, scale_gradient
-from common import loadNe, runMSISE, getPyglow
-import os
+from common import loadNe, runMSISE, growth_rate_RT
+#import os
 from tqdm import tqdm
-
-def growth_rate_RT(nu, L, R, Vp, U):
-    """
-    Generalized instability rate growth
-    Paramaters:
-    ---------- 
-    Vp: Prereversal Enhancement (PRE)
-    U: Neutral wind
-    nu: ion-neutral collisional frequency
-    L: gradient scale
-    R: Recombination rate
-    
-    """
-     
-    return (Vp - U + (9.81 / nu))*L - R
-    
-
 
 
 def run_for_all_times(vz, 
@@ -83,8 +66,7 @@ def run_for_all_times(vz,
     return pd.DataFrame(out, index = times)
 
 
-preInfile = "database/PRE/FZ_PRE_2014_2015.txt"
-densityInfile = "D:\\ne\\"
+
 
 
 def run_for_all_days2(preInfile, densityInfile):
@@ -109,9 +91,12 @@ def run_for_all_days2(preInfile, densityInfile):
         
     return pd.concat(gammas)
 
-
-df = run_for_all_days2(preInfile, densityInfile)
-
-
-df.to_csv("database/growthRates/reco_and_vp_alltimes.txt",
-          sep = ",", index = True)
+def main():
+    preInfile = "database/PRE/FZ_PRE_2014_2015.txt"
+    densityInfile = "D:\\ne\\"
+    
+    df = run_for_all_days2(preInfile, densityInfile)
+    
+    
+    df.to_csv("database/growthRates/reco_and_vp_alltimes2.txt",
+              sep = ",", index = True)

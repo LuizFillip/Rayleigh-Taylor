@@ -6,14 +6,12 @@ from mag_parameters import apex_latitude, apex_range
 
 
 
-def integrated_density(alts, date, glon = 0, 
-                      lat_max = 30, 
-                      delta = 5):
+def integrated_density(delta = 5):
     
 
     Ne = []
 
-    for i in range(0, 35, 5):
+    for i in range(0, 35, delta):
         
         df = read_iri(f"database/density_magnetic/{i}.txt")
         alts = df[0].values 
@@ -26,15 +24,14 @@ def integrated_density(alts, date, glon = 0,
     Re = 6.31e6
     integrated = 2*Re*L*np.sum(ne, axis = 1)*delta
 
-    #plt.plot(integrated, alts)
+    plt.plot(integrated, alts)
 
-    #plt.xscale("log")
-    mlats = np.arange(0, 35, 5)
-   
+    plt.xlabel("Densidade integradas")
+    plt.ylabel("Altura de apex")
     return alts, integrated
    
 
-
+alts, integrated = integrated_density()
 
 
 def plotContourfMagLines(alts, mlats, ne):
