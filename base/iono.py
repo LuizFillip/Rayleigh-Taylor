@@ -26,7 +26,6 @@ def ion_mobility(nu_i):
     """Electric mobility for ions (mass transport)"""
     return ( c.elementary_charge) / ( c.proton_mass * nu_i)
 
-
 def electron_ratio(nu_e, B = 0.285e-04):
     """Electron ratio cyclotron frequency and collision"""
     return electron_cyclotron(B) / nu_e
@@ -51,9 +50,7 @@ def Pedersen_conductivity(Ne, nu_e, nu_i, B = 0.285e-04):
     
     return Ne *  c.elementary_charge * (ion_term - electron_term)
 
-def dl(lat, dzeta, Re = 6.371009e6, L = 1):
-    zeta = np.sin(np.radians(lat))
-    return pow((1 + 3 * zeta**2), 0.5) * Re * L * dzeta
+
     
 def pedersen(Ne, nui, B):
     return Ne *  c.proton_mass * nui / B**2
