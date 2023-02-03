@@ -3,7 +3,6 @@ from astropy import units as u
 from astropy import constants as c
 import pandas as pd
 from geo.core import run_igrf
-from geo.conversions import year_fraction
 from datetime import datetime, timedelta
 
 def nui_1(Tn, O, O2, N2):
@@ -65,7 +64,6 @@ def density(date, df):
     
     return df.loc[(df["date"] == date), "Ne"].values  
     
-infile = "database/pyglow/for_winds_2014.txt"
 
 def rangetime_winds(infile):
 
@@ -79,32 +77,30 @@ def rangetime_winds(infile):
     
     return df
     
+def get_wind(date, 
+             year = 2014, 
+             site = "for"):    
     
-df = rangetime_winds(infile)
-u_wind = u.m / u.s
-
-#zon = df.zon.values 
-#mer = df.mer.values * u_wind
+    infile = f"database/pyglow/{site}_winds_{year}.txt"
 
 
-start = datetime(2014, 1, 2)
-end = datetime(2014, 1, 2)
-#(end - start)
-#df = df.between_time(str(start), str(end))
-
-print(df.loc[(df.index.date == start.date())])
-
-
-df["zon"] = df["zon"] * u_wind
-df["mer"] = df["mer"] * u_wind
-
-u = effective_wind(df.zon, df.mer, 
-                   2014, site = "for")
-
-
-d, i = run_igrf(2014, site = "for")
-
-print(d, i)
+    df = rangetime_winds(infile)
     
-   
+    u_wind = u.m / u.s
+    
+    df = df.loc[(df.index.date == date.date())]
+    
+    U = effective_wind(df.zon, df.mer, 
+                       year, site = "for")
+   # U = U.to_frame()
+    return U.values * u_wind
+
+
+date = datetime(2014, 1, 1)
+
+u = get_wind(date)
+
+
+print(u)
+
   
