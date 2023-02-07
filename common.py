@@ -4,7 +4,20 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
 from nrlmsise00 import msise_flat
+import os
+from base.neutral import eff_wind
 
+def get_ne(date_time, root = "database/density/"):
+    
+    filename = date_time.strftime('%Y%m%d') + ".txt"
+    
+    infile = os.path.join(root, filename)
+    
+    df = pd.read_csv(infile, index_col = 0)
+    
+    df["date"] = pd.to_datetime(df["date"])
+    
+    return df.loc[df["date"] == date_time, "Ne"]
 
 def get_pre(date):
     infile ="database/PRE/FZ_PRE_2014.txt"
@@ -19,23 +32,27 @@ def get_pre(date):
 
 
 def get_wind(date, 
-             year = 2014, 
-             site = "for"):    
+             func_wind = "Nogueira"):    
     
-    infile = f"database/pyglow/{site}_winds_{year}.txt"
+    infile = f"database/pyglow/winds2014.txt"
 
     df = pd.read_csv(infile, index_col = "time")
-    
-    try:
-        del df["Unnamed: 0"]
-    except:
-        pass
-    
+
+    df.rename(columns = {"Unnamed: 0":  "alts"},
+              inplace = True)
     df.index = pd.to_datetime(df.index)
-    
+
     if isinstance(date, dt.datetime):
         date = date.date()
         
+    if func_wind == "Nogueira":
+        df["U"] = eff_wind(df.zon, df.mer).Nogueira
+    elif func_wind == "Jonas":
+        df["U"] = eff_wind(df.zon, df.mer).Jonas
+    else:
+        df["U"] = eff_wind(df.zon, df.mer).Carrasco
+        
+    #date = dt.datetime(2014, 1, 1)
     return df.loc[df.index.date == date]
 
 def plot_all(winds, u):
@@ -47,7 +64,7 @@ def plot_all(winds, u):
     plt.legend()
     
     
-def runMSISE(datetime, 
+def run_msise(datetime, 
           hmin = 100, 
           hmax = 600, 
           step = 1, 
