@@ -3,15 +3,14 @@ from astropy import units as u
 from astropy import constants as c
 import pandas as pd
 from geo.core import run_igrf
-from datetime import datetime, timedelta
 
 def nui_1(Tn, O, O2, N2):
     """
     The ion-neutral collisionfrequency
     by Bailey and Balan (1996)
     """
-    term_O = (4.45e-11 * O * np.sqrt(Tn * u.K) * 
-              (1.04 - 0.067 * np.log10(Tn* u.K))**2)
+    term_O = (4.45e-11 * O * np.sqrt(Tn) * 
+              (1.04 - 0.067 * np.log10(Tn))**2)
     
     term_O2 = 6.64e-10 * O2
     term_N2 = 6.82e-10 * N2
@@ -20,7 +19,7 @@ def nui_1(Tn, O, O2, N2):
 
 def nui_2(O, O2, N2):
     """
-    The ion-neutral collisionfrequency
+    The ion-neutral collision frequency
     by Davies et al. (1997)
     """
     
@@ -33,26 +32,46 @@ def nui_2(O, O2, N2):
     
     return term_N2 + term_O2 + term_O
 
-def effective_wind(zon, 
-                   mer, 
-                   frac_year,
-                   site):
+    
+class eff_wind(object):
+    
     """
     Effective wind along magnetic field
     """
-    d, i = run_igrf(frac_year, site = site)
-    D = np.radians(d)
-    I = np.radians(i)
     
-    return (zon *  np.cos(D) + 
-            mer *  np.sin(D)) * np.sin(I) 
+    def __init__(self, 
+                 zon, 
+                 mer, 
+                 year = 2014,
+                 site = "for"):
+    
+        d, i = run_igrf(year, site = site)
+    
+        self.D = np.radians(d)
+        self.I = np.radians(i)
+        self.zon = zon
+        self.mer = mer
+    
+    @property
+    def Jonas(self):
+        return (self.zon *  np.cos(self.D) + 
+                self.mer *  np.sin(self.D)) * np.sin(self.I) 
+    @property
+    def Carrasco(self): 
+        return (self.zon * np.cos(self.D) + 
+                self.mer * np.sin(self.D))
+    @property
+    def Nogueira(self):
+        return (self.mer * np.cos(self.D) + 
+                self.zon * np.sin(self.D)) * np.cos(self.I)
 
 def plasma_diffusion(nui):
     """
     Vertical plasma drift due to diffusion 
     """
     u_nu = pow(u.s, -1)
-    return c.g0 / nui * u_nu
+    #wd_u =  c.g0 / nui * u_nu
+    return 9.80 / nui
 
 
 def recombination(O2, N2):
@@ -65,42 +84,34 @@ def density(date, df):
     return df.loc[(df["date"] == date), "Ne"].values  
     
 
-def rangetime_winds(infile):
-
-    df = pd.read_csv(infile, index_col = "time")
-    df.index = pd.to_datetime(df.index)
+def neutral_densities(tn, o_point, o2_point, n2_point, 
+                      step,  base_height = 200.0 ):
     
-    try:
-        del df["Unnamed: 0"]
-    except:
-        pass
+
+    CO = np.zeros(len(tn))
+    CO2 = np.zeros(len(tn))                
+    CN2 = np.zeros(len(tn))                
+
     
-    return df
+    for i in range(0, len(tn)):
+        
+        Z1 = base_height + step * i
+        
+        GR = 1.0 / pow(1.0 + Z1 / 6370.0, 2)
+        
+        HO = 0.0528 * tn[i] / GR                               # scale height of O [km]
+        HO2 = 0.0264 * tn[i] / GR                              # scale height of O2 [km]
+        HN2 = 0.0302 * tn[i] / GR                              # scale height of N2 [km]
+
+        p_co = o_point / 5.33 * 8.55
+        p_co2 = o2_point / 1.67 * 4.44
+        p_cn2 = n2_point / 9.67 * 2.26
+
+        CO[i] = p_co * np.exp(-(Z1 - 335.0) / HO)           # atomic oxygen [cm-3]
+        CO2[i] = p_co2 * np.exp(-(Z1 - 335.0) / HO2)        # molecular oxygen [cm-3]
+        CN2[i] = p_cn2 * np.exp(-(Z1 - 335.0) / HN2) 
     
-def get_wind(date, 
-             year = 2014, 
-             site = "for"):    
-    
-    infile = f"database/pyglow/{site}_winds_{year}.txt"
+    return CO, CO2, CN2
 
-
-    df = rangetime_winds(infile)
-    
-    u_wind = u.m / u.s
-    
-    df = df.loc[(df.index.date == date.date())]
-    
-    U = effective_wind(df.zon, df.mer, 
-                       year, site = "for")
-   # U = U.to_frame()
-    return U.values * u_wind
-
-
-date = datetime(2014, 1, 1)
-
-u = get_wind(date)
-
-
-print(u)
 
   

@@ -1,5 +1,5 @@
 import numpy as np
-import scipy. cants as  c
+import scipy.constants as c
 
 def scale_gradient(Ne, dz = 1):
     """length scale gradiendt : Vertical variation of density"""
