@@ -5,19 +5,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 from nrlmsise00 import msise_flat
 import os
-from base.neutral import eff_wind
+from RayleighTaylor.base.neutral import eff_wind
 
-def get_ne(date_time, root = "database/density/"):
+def get_ne(date_time, hmin = 200, hmax = 300):
     
-    filename = date_time.strftime('%Y%m%d') + ".txt"
-    
-    infile = os.path.join(root, filename)
-    
+    infile = "database/pyglow/density2014.txt"
+        
+
     df = pd.read_csv(infile, index_col = 0)
-    
+
     df["date"] = pd.to_datetime(df["date"])
     
-    return df.loc[df["date"] == date_time, "Ne"]
+    alt_cond = ((df.index >= hmin) & 
+                (df.index <= hmax))
+        
+    return df.loc[(df["date"] == date_time) 
+                  & alt_cond, "Ne"]
 
 def get_pre(date):
     infile ="database/PRE/FZ_PRE_2014.txt"
@@ -31,7 +34,7 @@ def get_pre(date):
     return ts.item()
 
 
-def get_wind(date, 
+def get_wind(date, hmin = 200, hmax = 500, 
              func_wind = "Nogueira"):    
     
     infile = f"database/pyglow/winds2014.txt"
@@ -52,8 +55,8 @@ def get_wind(date,
     else:
         df["U"] = eff_wind(df.zon, df.mer).Carrasco
         
-    #date = dt.datetime(2014, 1, 1)
-    return df.loc[df.index.date == date]
+    alt_cond = ((df.alts >= hmin) & (df.alts <= hmax))
+    return df.loc[(df.index.date == date) & alt_cond]
 
 def plot_all(winds, u):
     winds.zon.plot(label = "zonal")
@@ -95,4 +98,16 @@ def run_msise(datetime,
             inplace = True)
     
     return df
+
+infile ="database/PRE/FZ_PRE_2014.txt"
+
+df = pd.read_csv(infile, index_col = 0)
+
+def pre_times():
+    
+    infile = f"database/pyglow/winds2014.txt"
+    
+    df = pd.read_csv(infile, index_col = "time")
+    
+    return pd.to_datetime(np.unique(df.index))
 
