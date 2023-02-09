@@ -5,7 +5,10 @@ from PlanetaryIndices.core import get_indices
 import datetime as dt
 from RayleighTaylor.base.neutral import R, nui_1, eff_wind
 from RayleighTaylor.base.iono import scale_gradient
+from Digisonde.drift import load_raw
 from build import paths as p
+import matplotlib.pyplot as plt
+
 
 
 def growth_rate_RT(nu, L, R, Vp, U):
@@ -53,6 +56,23 @@ def load_fpi(date):
     df["u"].plot()
     
     return df.loc[df.index == date, "u"].item()
+
+def load_drift(dn):
+    
+    infile = "C://Users//Luiz//Google Drive//My Drive//Python//data-analysis//database//Digisonde//drift//SSA//RAW//2013.txt"
+
+    df = load_raw(infile, 
+                  date = None, 
+                  smooth_values = True)
+    
+    b = dt.time(21, 0, 0)
+    e = dt.time(22, 30, 0)
+    
+    df = df.loc[(df.index.time >= b) & 
+                    (df.index.time <= e) & 
+                    (df.index.date == dn.date()), "vz"]
+        
+    return df.max()
     
 def run_msise(datetime, 
           hmin = 200, 
@@ -101,10 +121,14 @@ iri = load_iri(date)
 
 n["L"] = scale_gradient(iri["Ne"], dz = 1)
 
-n.drop(columns = [ "O", "N2", "O2"], 
-       inplace = True) 
+n.drop(columns = [ "O", "N2", "Tn", 
+                  "O2"], inplace = True) 
+
+n["u"] = load_fpi(date)
+n["vz"] = load_drift(date)
+
+n["g"] = growth_rate_RT(n.nu, n.L, n.R, 
+                        n.vz, n.u)
 
 
-u = load_fpi(date)
 
-print(u)
