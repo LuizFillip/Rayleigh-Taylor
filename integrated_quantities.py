@@ -4,7 +4,9 @@ from generic import read_iri
 
 from mag_parameters import apex_latitude, apex_range
 
-
+def dl(lat, dzeta, Re = 6.371009e6, L = 1):
+    zeta = np.sin(np.radians(lat))
+    return pow((1 + 3 * zeta**2), 0.5) * Re * L * dzeta
 
 def integrated_density(delta = 5):
     

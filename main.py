@@ -1,88 +1,70 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np 
-import setup as s
-import matplotlib.ticker as ticker
+from core import growth_rate_RT
+from common import get_wind, get_pre, get_ne, run_msise, pre_times
+from base.neutral import recombination, nui_1
+from base.iono import scale_gradient
 
-def load(infile):
+    
+    
+    
 
-    df = pd.read_csv(infile, index_col = 0)
+def make_df(date_time, func_wind = "U1"):
+
+
+    u = get_wind(date_time, func_wind =
+                 func_wind).U.values
     
-    df.index = pd.to_datetime(df.index)
+    n = run_msise(date_time, 
+                  hmin = 200, hmax = 500)
     
-    df["date"] = df.index.date
+    r  = recombination(n.O2, n.N2).values
     
+    nu = nui_1(n.Tn, n.O, n.O2, n.N2).values
+    
+    ne = get_ne(date_time, 
+                hmin = 200, hmax = 500)
+    
+    vzp = np.array([get_pre(date_time.date())] * len(n))
+    
+    l = scale_gradient(ne, dz = 1)
+    
+    g = growth_rate_RT(nu, l, r, vzp, u)
+  
+    arr = np.vstack([u, r, nu, l, vzp, g, n.index]).T
+    
+    return pd.DataFrame(arr, columns = ["u", "r", "nu", 
+                                       "l", "vz", "g", "alt"],
+                      index = [date_time] * len(n))
+
+def process_all_year(func_wind = "U1", 
+                     save = True):
+    
+    out = []
+    
+    for date_time in pre_times():
+        print(func_wind, "...", date_time)
+        try:
+            out.append(make_df(date_time, 
+                           func_wind = func_wind))
+        except:
+            continue
+    
+    df = pd.concat(out)
+    
+    if save:
+        df.to_csv(f"database/data/2014_{func_wind}.txt", 
+                  sep = ",", 
+                  index = True)
     return df
+
+def main():
     
+    for func_wind in ["U1", "U2", "U3"]:
+
+        df = process_all_year(func_wind)
     
-    
-def get_max(df, times, alts = (200, 350)):
-   
-    cond_alt = ((df.alt >= alts[0]) &
-                (df.alt <= alts[1]))
-    
-    return [df.loc[(df.index == t) & 
-            cond_alt, "g"].max() 
-            for t in times]
-    
-def get_winds(df, heigth = 300):
-    return df.loc[df.alt == heigth, "u"]
-        
+main()
 
 
-def plot_winds(ax, df, n):
-    
-    na = [r"$(U_\phi \cos D + U_\theta \sin D)\cos I$", 
-          r"$(U_\theta  \cos D + U_\phi \sin D)\sin I$",
-          r"$U_\theta \cos D + U_\phi \sin D$"]
-    
-    ws = get_winds(df)
-
-    ax.plot(ws, color = "k", label = na[n])
-    
-    ax.set(ylabel = "$U_{eff} ~(m/s)$", 
-           xlabel = "Meses")
-    
-    ax.legend()
-    
-    if n == 0:
-        ax.set(title = "Vento efetivo (300 km)")
-        
-
-def plot_gammas(ax, df, times, n):
-    gs = get_max(df, times)
-    ax.plot(times, gs, color = "k")
-
-
-    ax.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
-
-    ax.set(ylabel = "$\gamma_{RT} \\times 10^{-3} ~ s^{-1}$")
-    
-    if n == 0:
-        ax.set(title = r"$(V_{zp} - U_{eff} + \frac{g}{\nu_{in}})" +
-           "\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$")
-
-fig, ax = plt.subplots(nrows = 3, 
-                       figsize = (8, 6),
-                       sharey = True,
-                       sharex = True)    
-
-plt.subplots_adjust(hspace = 0.05)
-
-s.config_labels()
-
-for n, ax in enumerate(ax.flat):
-    
-    infile = f"database/data/2014_U{n + 1}.txt"
-
-    df = load(infile)
-    
-    times = pd.to_datetime(np.unique(df.index))
-    ax.axhline(0, color = "r", linestyle = "--")
-    
-    plot_winds(ax, df, n)
-    
-    s.format_axes_date(ax)
-    
 

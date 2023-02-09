@@ -1,9 +1,45 @@
-from core import get_max
 import matplotlib.pyplot as plt
 import numpy as np 
 import setup as s
 import matplotlib.ticker as ticker
 import pandas as pd
+
+
+### COLOCAR OS DOIS PLOTS LADO A LADO (3 x 2)
+
+
+def get_max(df, times, alts = (200, 350)):
+   
+    cond_alt = ((df.alt >= alts[0]) &
+                (df.alt <= alts[1]))
+    
+    return [df.loc[(df.index == t) & 
+            cond_alt, "g"].max() 
+            for t in times]
+    
+def get_winds(df, heigth = 300):
+    return df.loc[df.alt == heigth, "u"]
+        
+
+
+def plot_winds(ax, df, n):
+    
+    na = [r"$(U_\phi \cos D + U_\theta \sin D)\cos I$", 
+          r"$(U_\theta  \cos D + U_\phi \sin D)\sin I$",
+          r"$U_\theta \cos D + U_\phi \sin D$"]
+    
+    ws = get_winds(df)
+
+    ax.plot(ws, color = "k", label = na[n])
+    
+    ax.set(ylabel = "$U_{eff} ~(m/s)$", 
+           xlabel = "Meses")
+    
+    ax.legend()
+    
+    if n == 0:
+        ax.set(title = "Vento efetivo (300 km)")
+        
 
 def load(infile):
 

@@ -1,7 +1,6 @@
 import numpy as np
 from astropy import units as u
 from astropy import constants as c
-import pandas as pd
 from geo.core import run_igrf
 
 def nui_1(Tn, O, O2, N2):
@@ -74,14 +73,10 @@ def plasma_diffusion(nui):
     return 9.80 / nui
 
 
-def recombination(O2, N2):
+def R(O2, N2):
     """Recombination coefficient"""
     return (4.0e-11 * O2) + (1.3e-12 * N2)    
 
-  
-def density(date, df):
-    
-    return df.loc[(df["date"] == date), "Ne"].values  
     
 
 def neutral_densities(tn, o_point, o2_point, n2_point, 
