@@ -110,25 +110,53 @@ def run_msise(datetime,
 
 date = dt.datetime(2013, 1, 1, 21)
 
-n = run_msise(date) 
+def df_parameters(date):
+    
+    n = run_msise(date) 
+    
+    n["R"] = R(n.O2, n.N2)
+     
+    n["nu"] = nui_1(n.Tn, n.O, 
+                    n.O2, n.N2)
+    
+    iri = load_iri(date)
+    
+    n["L"] = scale_gradient(iri["Ne"], dz = 1)
+    
+    n.drop(columns = [ "O", "N2", "Tn", 
+                      "O2"], inplace = True) 
+    
+    n["u"] = load_fpi(date)
+    n["vz"] = load_drift(date)
+    
+    n["g"] = growth_rate_RT(n.nu, n.L, n.R, 
+                            n.vz, n.u)
+    
+    n["date"] = date.date()
+    return n
 
-n["R"] = R(n.O2, n.N2)
- 
-n["nu"] = nui_1(n.Tn, n.O, 
-                n.O2, n.N2)
 
-iri = load_iri(date)
+    
+def process_year(save = True):
+    out = []
 
-n["L"] = scale_gradient(iri["Ne"], dz = 1)
+    for date in pd.date_range("2013-01-01 21:00", 
+                          "2013-12-31 21:00", 
+                          freq = "1D"):
+        try:
+            out.append(df_parameters(date))
+        except:
+            continue
+        
 
-n.drop(columns = [ "O", "N2", "Tn", 
-                  "O2"], inplace = True) 
 
-n["u"] = load_fpi(date)
-n["vz"] = load_drift(date)
+    df = pd.concat(out)
+    
+    if save:
+        df.to_csv("gammas2.txt")
+        
+    return df
 
-n["g"] = growth_rate_RT(n.nu, n.L, n.R, 
-                        n.vz, n.u)
 
 
 
