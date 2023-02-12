@@ -27,7 +27,8 @@ def run(df):
     for date in dates:
         out.append(get_max(df, date))
         
-    return pd.to_datetime(dates), np.array(out, dtype = np.float64)
+    return (pd.to_datetime(dates), 
+            np.array(out, dtype = np.float64))
     
 
 fig, ax = plt.subplots(figsize = (8, 5), 
