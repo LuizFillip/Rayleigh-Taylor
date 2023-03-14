@@ -77,4 +77,22 @@ def get_datetime_pre(dn):
     return dt.datetime(
         dn.year, dn.month, dn.day, 
                 hour, minute)
-
+def test():
+    
+    dn = dt.datetime(2014, 1, 1)
+    
+    infile ="database/Digisonde/vzp/FZ_PRE_2014_2015.txt"
+    
+    df = pd.read_csv(infile, index_col = 0)
+    
+    df.index = pd.to_datetime(df.index)
+    
+    time_sel = df.loc[df.index == dn, "time"]
+    
+    hour, minute = split_time(time_sel.item())
+    
+    
+    print(dt.datetime(
+        dn.year, dn.month, dn.day, 
+                hour, minute)
+    )

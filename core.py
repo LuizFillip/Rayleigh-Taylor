@@ -5,9 +5,8 @@ from PlanetaryIndices.core import get_indices
 import datetime as dt
 from RayleighTaylor.base.neutral import R, nui_1, eff_wind
 from RayleighTaylor.base.iono import scale_gradient
-from Digisonde.drift import load_raw
+from Digisonde.drift import load_DRIFT
 from build import paths as p
-import matplotlib.pyplot as plt
 
 
 
@@ -16,7 +15,7 @@ def growth_rate_RT(nu, L, R, Vp, U):
     Generalized instability rate growth
     local version
     Paramaters:
-    ---------- s
+    ---------- 
     Vp: Prereversal Enhancement (PRE)
     U: Neutral wind (effective)
     nu: ion-neutral collisional frequency
@@ -59,11 +58,7 @@ def load_fpi(date):
 
 def load_drift(dn):
     
-    infile = "C://Users//Luiz//Google Drive//My Drive//Python//data-analysis//database//Digisonde//drift//SSA//RAW//2013.txt"
-
-    df = load_raw(infile, 
-                  date = None, 
-                  smooth_values = True)
+    df = load_DRIFT(smothed = True)
     
     b = dt.time(21, 0, 0)
     e = dt.time(22, 30, 0)
@@ -107,9 +102,6 @@ def run_msise(datetime,
     
     return df
 
-
-date = dt.datetime(2013, 1, 1, 21)
-
 def df_parameters(date):
     
     n = run_msise(date) 
@@ -147,9 +139,7 @@ def process_year(save = True):
             out.append(df_parameters(date))
         except:
             continue
-        
-
-
+    
     df = pd.concat(out)
     
     if save:
@@ -157,6 +147,23 @@ def process_year(save = True):
         
     return df
 
+start = dt.datetime(2013, 1, 1, 21)
+
+def timerange_msise(start):
+    
+    end = start + dt.timedelta(hours = 10)
+    
+    out = []
+    for dn in pd.date_range(start, end, freq = "10min"):
+        
+        ts = run_msise(dn, hmin = 300, hmax = 300)
+        
+        ts.index = [dn]
+        ts["R"] = R(ts.O2,  ts.N2)
+        ts["nu"] = nui_1(ts.Tn, ts.O, ts.O2,  ts.N2)
+        out.append(ts)
+    
+    return pd.concat(out)
 
 
 
