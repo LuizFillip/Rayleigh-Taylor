@@ -1,7 +1,7 @@
 import pandas as pd
 import datetime as dt
-import numpy as np
 from RayleighTaylor.base.neutral import eff_wind
+import math
 
 def get_ne(date_time, hmin = 200, hmax = 300):
     
@@ -19,7 +19,7 @@ def get_ne(date_time, hmin = 200, hmax = 300):
                   & alt_cond, "Ne"]
 
 def get_pre(date):
-    infile ="database/PRE/FZ_PRE_2014.txt"
+    infile ="database/Digisonde/vzp/FZ_PRE_2014_2015.txt"
     
     df = pd.read_csv(infile, index_col = 0)
     
@@ -59,11 +59,22 @@ def get_wind(date, hmin = 200, hmax = 500,
 
 
 
-def pre_times():
+def split_time(time):
+    frac, whole = math.modf(float(time))
+    return int(whole), round(frac * 60)
+
+def get_datetime_pre(dn):
+    infile ="database/Digisonde/vzp/FZ_PRE_2014_2015.txt"
     
-    infile = f"database/pyglow/winds2014.txt"
+    df = pd.read_csv(infile, index_col = 0)
     
-    df = pd.read_csv(infile, index_col = "time")
+    df.index = pd.to_datetime(df.index)
+   
+    time_sel = df.loc[df.index == dn, "time"]
     
-    return pd.to_datetime(np.unique(df.index))
+    hour, minute = split_time(time_sel.item())
+    
+    return dt.datetime(
+        dn.year, dn.month, dn.day, 
+                hour, minute)
 
