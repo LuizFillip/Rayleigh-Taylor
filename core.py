@@ -7,7 +7,7 @@ from RayleighTaylor.base.neutral import R, nui_1, eff_wind
 from RayleighTaylor.base.iono import scale_gradient
 from Digisonde.drift import load_DRIFT
 from build import paths as p
-
+pd.options.mode.chained_assignment = None
 
 
 def growth_rate_RT(nu, L, R, Vp, U):
@@ -56,18 +56,7 @@ def load_fpi(date):
     
     return df.loc[df.index == date, "u"].item()
 
-def load_drift(dn):
-    
-    df = load_DRIFT(smothed = True)
-    
-    b = dt.time(21, 0, 0)
-    e = dt.time(22, 30, 0)
-    
-    df = df.loc[(df.index.time >= b) & 
-                    (df.index.time <= e) & 
-                    (df.index.date == dn.date()), "vz"]
-        
-    return df.max()
+
     
 def run_msise(datetime, 
           hmin = 200, 
@@ -115,11 +104,12 @@ def df_parameters(date):
     
     n["L"] = scale_gradient(iri["Ne"], dz = 1)
     
-    n.drop(columns = [ "O", "N2", "Tn", 
-                      "O2"], inplace = True) 
+    n.drop(columns = 
+           ["O", "N2", "Tn", "O2"], 
+           inplace = True) 
     
     n["u"] = load_fpi(date)
-    n["vz"] = load_drift(date)
+    #n["vz"] = load_drift(date)
     
     n["g"] = growth_rate_RT(n.nu, n.L, n.R, 
                             n.vz, n.u)
@@ -151,7 +141,7 @@ start = dt.datetime(2013, 1, 1, 21)
 
 def timerange_msise(start):
     
-    end = start + dt.timedelta(hours = 10)
+    end = start + dt.timedelta(hours = 11)
     
     out = []
     for dn in pd.date_range(start, end, freq = "10min"):
@@ -164,6 +154,28 @@ def timerange_msise(start):
         out.append(ts)
     
     return pd.concat(out)
+
+def timerange_iri(alt = 300):
+    
+    infile = "database/IRI/SAA_2013_ne.txt"
+    
+    df = pd.read_csv(infile, index_col = 0)
+    df.index = pd.to_datetime(df.index)
+    
+    out = []
+    for time in np.unique(df.index):
+    
+        n = df.loc[df.index == time].copy()
+        
+        step = n["alt"][1] - n["alt"][0]
+        
+        n["L"] = scale_gradient(n["Ne"], dz = step)
+        
+        out.append(n.loc[n["alt"] == alt, ["Ne", "L"]])
+        
+    return pd.concat(out)
+
+
 
 
 

@@ -49,8 +49,6 @@ def Pedersen_conductivity(Ne, nu_e, nu_i, B = 0.285e-04):
     ion_term = ion_mobility(nu_i) / (1 + ion_ratio(nu_i, B = B)**2)
     
     return Ne *  c.elementary_charge * (ion_term - electron_term)
-
-
     
 def pedersen(Ne, nui, B):
     return Ne *  c.proton_mass * nui / B**2
