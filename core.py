@@ -117,31 +117,9 @@ def df_parameters(date):
     n["date"] = date.date()
     return n
 
-
-    
-def process_year(save = True):
-    out = []
-
-    for date in pd.date_range("2013-01-01 21:00", 
-                          "2013-12-31 21:00", 
-                          freq = "1D"):
-        try:
-            out.append(df_parameters(date))
-        except:
-            continue
-    
-    df = pd.concat(out)
-    
-    if save:
-        df.to_csv("gammas2.txt")
-        
-    return df
-
-start = dt.datetime(2013, 1, 1, 21)
-
 def timerange_msise(start):
     
-    end = start + dt.timedelta(hours = 11)
+    end = start + dt.timedelta(hours = 30)
     
     out = []
     for dn in pd.date_range(start, end, freq = "10min"):
@@ -175,7 +153,7 @@ def timerange_iri(alt = 300):
         
     return pd.concat(out)
 
-
-
+def main():
+    start = dt.datetime(2013, 1, 1, 21)
 
 
