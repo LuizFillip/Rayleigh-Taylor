@@ -1,19 +1,21 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime as dt
-import numpy as np
 import setup as s
 from Results.utils import get_dusk
 from Digisonde.drift import load_DRIFT
 from FabryPerot.core import load_FPI
-from RayleighTaylor.core import timerange_msise, timerange_iri, growth_rate_RT
+from RayleighTaylor.core import (timerange_msise, 
+                                 timerange_iri, 
+                                 growth_rate_RT)
+
 from RayleighTaylor.base.neutral import eff_wind
 
 def load_ROTI():
     infile = "database/Results/maximus/salu_2013.txt"
     df = pd.read_csv(infile, index_col = 0)
     df.index = pd.to_datetime(df.index)
-    return df
+    return df.interpolate()
 
 
 def filter_times(start, df):
@@ -57,10 +59,6 @@ FPI = filter_times(
     load_FPI(resample = None)
     )
 
-FPI["U"] = eff_wind(FPI.zon, 
-         FPI.mer, 
-         year = 2013, 
-         site = "saa").Nogueira
 
 
 
@@ -69,9 +67,7 @@ neu = timerange_msise(start)
 ion = timerange_iri()
 
 #%%
-print(HWM.plot())
 
-#%%
 def get_pre(dn, df):
     
     b = dt.time(21, 0, 0)
@@ -93,22 +89,40 @@ def plot_drift_part(ax, DRF):
                label = f"Vzp = {vpre} m/s")
     ax.legend()
     ax.axhline(0, linestyle = "--", color = "r")
-    ax.set(ylim = [-50, 50], 
-           ylabel = r"$V_z ~ (ms^{-1})$")
-    
+    ax.set(
+        ylim = [-50, 50], 
+        ylabel = r"$V_z ~ (ms^{-1})$"
+        )
+
+
 #----------
 
 def plot_winds_part(ax, FPI):
-    ax.plot(FPI[["zon", "mer", "U"]], 
-            label = [r"$U_\theta$ (zonal)", 
-                     r"$U_\phi$ (meridional)", 
-                     r"$(U_\phi \cos D + U_\theta \sin D)\cos I$"]
+    #check esse sinal
+    FPI["Uy"] = eff_wind(FPI.zon, FPI.mer).eff_zonal
+    FPI["Ux"] = eff_wind(FPI.zon, FPI.mer, ).eff_meridional
+    
+    ax.plot(
+        FPI[["mer", "zon", "Uy", "Ux"]], 
+        label = [r"$U_\theta$ (meridional)", 
+                 r"$U_\phi$ (zonal)", 
+                 r"$U_y = (U_\phi \cos D + U_\theta \sin D)$",
+                 r"$U_x = (U_\theta \cos D - U_\phi \sin D)\cos I$"
+                 ] #r"$U_y + U_x$"
             )
+    
     
     ax.set(ylabel = r"Velocidade $~(ms^{-1})$", 
            ylim = [-100, 200])
-    ax.axhline(0, linestyle = "--", color = "r")
-    ax.legend(loc = "upper right")
+    
+    ax.axhline(0, 
+               linestyle = "--", 
+               color = "r")
+    
+    ax.legend(
+        ncol = 2, 
+        loc = "upper right"
+        )
 
 #----------
 
@@ -142,10 +156,10 @@ def plot_gamma_part(ax,
         iono["L"], 
         neutro["R"], 
         vz, 
-        wind["U"]
+        wind["Ux"]
         ).interpolate()
     
-    eq = (r"$\gamma_{RT} = (- U_{eff} + " + 
+    eq = (r"$\gamma_{RT} = (Vz - U_{eff} + " + 
           r"\frac{g}{\nu_{in}})\frac{1}{n_e}" +
           r"\frac{\partial n_e}{\partial y} - R$")
     
@@ -173,6 +187,8 @@ def plot_iono_part(ax, ion):
     
     ax1.plot(ion["L"] * 1e5, color = "k")
     ax1.set(ylabel = "$L^{-1}~(10^{-5}~m^{-1}$)")
+    
+    
 #----------
 
 def plot_roti_part(ax, ROTI):
@@ -195,34 +211,39 @@ def plot_roti_part(ax, ROTI):
     
     ax.set(ylabel = "ROTI (TECU/min)", 
               xlabel = "Hora universal", 
-              ylim = [0, 6])
+              ylim = [0, 6], 
+              xlim = [ROTI.index[0], 
+                      ROTI.index[-1]])
     
+def plot_timeseries_parameters():
     
-fig, ax = plt.subplots(nrows = 6, 
-                       figsize = (12, 14), 
-                       sharex = True)
-
-plt.subplots_adjust(hspace = 0.1)
-
-fig.suptitle(start.strftime("%d/%m/%Y"), y = 0.9)
-
-plot_drift_part(ax[0], DRF)
-plot_winds_part(ax[1], HWM)
-plot_neutral_part(ax[2], neu)
-plot_iono_part(ax[3], ion)
-                    
-plot_gamma_part(ax[4], 
-                neu, 
-                ion,
-                0,
-                HWM)
-
-plot_roti_part(ax[5], ROTI)
-
-dusk = get_dusk(start.date())
-
-for ax in ax.flat:
-    ax.axvline(dusk, color = "k", lw = 2, 
-               label = "Terminator")
-
-ax.legend()
+    fig, ax = plt.subplots(nrows = 6, 
+                           figsize = (12, 14), 
+                           sharex = True)
+    
+    plt.subplots_adjust(hspace = 0.1)
+    
+    fig.suptitle(start.strftime("%d/%m/%Y"), y = 0.9)
+    
+    plot_drift_part(ax[0], DRF)
+    plot_winds_part(ax[1], HWM)
+    plot_neutral_part(ax[2], neu)
+    plot_iono_part(ax[3], ion)
+                        
+    plot_gamma_part(ax[4], 
+                    neu, 
+                    ion,
+                    DRF,
+                    HWM)
+    
+    plot_roti_part(ax[5], ROTI)
+    
+    dusk = get_dusk(start.date())
+    
+    for ax in ax.flat:
+        ax.axvline(dusk, color = "k", lw = 2, 
+                   label = "Terminator")
+    
+    ax.legend()
+    
+plot_timeseries_parameters()
