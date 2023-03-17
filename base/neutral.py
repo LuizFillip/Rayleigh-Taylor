@@ -34,33 +34,39 @@ def nui_2(O, O2, N2):
 class eff_wind(object):
     
     """
-    Effective wind along magnetic field
+    Effective wind along magnetic fieldÇ
+    
+    Pag. 27 e 28 (Tese da Claudia)
+    U_theta = meridional component (positiva para sul)
+    U_phi = zonal component (positiva para leste)
+    
     """
     
     def __init__(self, 
                  zon, 
                  mer, 
-                 year = 2014,
-                 site = "for"):
+                 year = 2013,
+                 site = "saa"):
     
         d, i = run_igrf(year, site = site)
     
         self.D = np.radians(d)
         self.I = np.radians(i)
-        self.zon = zon
-        self.mer = mer
+        self.zon = zon #phi, y
+        self.mer = mer #theta, x
+        
+        print(self.D, self.I)
     
+   
     @property
-    def Jonas(self):
-        return (self.zon *  np.cos(self.D) + 
-                self.mer *  np.sin(self.D)) * np.sin(self.I) 
-    @property
-    def Carrasco(self): 
+    def eff_zonal(self): 
+        # positiva para leste
         return (self.zon * np.cos(self.D) + 
                 self.mer * np.sin(self.D))
     @property
-    def Nogueira(self):
-        return (self.mer * np.cos(self.D) + 
+    def eff_meridional(self):
+        # positiva para sul
+        return (self.mer * np.cos(self.D) -
                 self.zon * np.sin(self.D)) * np.cos(self.I)
 
 def plasma_diffusion(nui):
