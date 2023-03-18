@@ -4,7 +4,7 @@ from GEO.core import run_igrf
 
 def nui_1(Tn, O, O2, N2):
     """
-    The ion-neutral collisionfrequency
+    The ion-neutral collision frequency
     by Bailey and Balan (1996)
     """
     term_O = (4.45e-11 * O * np.sqrt(Tn) * 
@@ -14,6 +14,27 @@ def nui_1(Tn, O, O2, N2):
     term_N2 = 6.82e-10 * N2
         
     return term_O + term_O2 + term_N2
+
+def nu_3(O, Tn, Ti):
+    """
+    Equation by Schunk and Nagy, 2000
+
+    Parameters
+    ----------
+    O :  float array
+        Molecular oxygen concentration
+    Tn : float array
+        neutral temperature
+    Ti : float array
+        ion temperature
+    Returns
+    -------
+    TYPE: float array
+        ion-neutral collision frequency.
+
+    """
+    Tr = (Ti + Tn) / 2
+    return 3.7e-11 * O * np.sqrt(Tr) * (1 - 0.064 * np.log10(Tr))**2
 
 def nui_2(O, O2, N2):
     """
@@ -73,8 +94,6 @@ def plasma_diffusion(nui):
     """
     Vertical plasma drift due to diffusion 
     """
-    u_nu = pow(u.s, -1)
-    #wd_u =  c.g0 / nui * u_nu
     return 9.80 / nui
 
 
@@ -84,8 +103,14 @@ def R(O2, N2):
 
     
 
-def neutral_densities(tn, o_point, o2_point, n2_point, 
-                      step,  base_height = 200.0 ):
+def neutral_constituintes(
+        tn, 
+        o_point, 
+        o2_point, 
+        n2_point, 
+        step,  
+        base_height = 200.0 
+        ):
     
 
     CO = np.zeros(len(tn))
