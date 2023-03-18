@@ -1,14 +1,29 @@
 import pandas as pd
 import numpy as np 
 from build import paths as p 
-import matplotlib.pyplot as plt
-import setup as s
-
-infile = p('RayleighTaylor').files
-
-df = pd.read_csv(infile, index_col = 0)
+from RayleighTaylor.core import df_parameters
 
 
+
+def process_year(save = True):
+    out = []
+
+    for date in pd.date_range(
+            "2013-01-01 21:00", 
+            "2013-12-31 21:00", 
+            freq = "1D"
+            ):
+        try:
+            out.append(df_parameters(date))
+        except:
+            continue
+    
+    df = pd.concat(out)
+    
+    if save:
+        df.to_csv("gammas2.txt")
+        
+    return df
 
 def get_max(df, date, alts = (250, 350)):
    
@@ -21,6 +36,9 @@ def get_max(df, date, alts = (250, 350)):
 
 
 def run(df):
+    infile = p('RayleighTaylor').files
+
+    df = pd.read_csv(infile, index_col = 0)
     dates = np.unique(df.date)
     
     out = []
@@ -31,15 +49,3 @@ def run(df):
             np.array(out, dtype = np.float64))
     
 
-fig, ax = plt.subplots(figsize = (8, 5), 
-                       sharex = True)
-dates, out = run(df)  
-
-ax.plot(dates, out * 1.0e3, lw = 2)
-
-ax.axhline(0, color = "r")
-s.format_axes_date(ax)
-
-ax.set(ylabel = "$\gamma_{RT} ~(10^{-3}~s^{-1})$",
-       xlabel = "Meses", 
-       title = "São Luis - 2013")
