@@ -1,10 +1,10 @@
 import pandas as pd
 from common import runMSISE, getPyglow
 from RTIparameters import PRE, neutrals, scale_gradient
-from datetime import datetime
 import matplotlib.pyplot as plt
-from plotConfig import *
 import matplotlib.ticker as ticker
+from RayleighTaylor.RT import growth_rate_RT
+
 
 infile = "database/PRE/FZ_PRE_2014_2015.txt"
 
@@ -35,20 +35,6 @@ l = scale_gradient(ne*1e6)
 
 alts = dat.index.values
 
-def growth_rate_RT(nu, L, R, Vp, U):
-    """
-    Generalized instability rate growth
-    Paramaters:
-    ---------- 
-    Vp: Prereversal Enhancement (PRE)
-    U: Neutral wind
-    nu: ion-neutral collisional frequency
-    L: gradient scale
-    R: Recombination
-    
-    """
-     
-    return (Vp - U + (9.81 / nu))*L - R
 
 gamma = growth_rate_RT(nu, l, r, vz, u)
 no_wind = growth_rate_RT(nu, l, r, vz, 0)
