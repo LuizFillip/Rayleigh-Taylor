@@ -1,6 +1,5 @@
 import numpy as np
 from astropy import units as u
-from GEO.core import run_igrf
 
 def nui_1(Tn, O, O2, N2):
     """

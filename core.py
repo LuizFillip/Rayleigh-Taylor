@@ -5,26 +5,37 @@ from PlanetaryIndices.core import get_indices
 import datetime as dt
 from RayleighTaylor.base.neutral import R, nui_1, eff_wind
 from RayleighTaylor.base.iono import scale_gradient
-from Digisonde.drift import load_DRIFT
 from build import paths as p
 pd.options.mode.chained_assignment = None
 
 
-def growth_rate_RT(nu, L, R, Vp, U):
-    """
-    Generalized instability rate growth
-    local version
-    Paramaters:
-    ---------- 
-    Vp: Prereversal Enhancement (PRE)
-    U: Neutral wind (effective)
-    nu: ion-neutral collisional frequency
-    L: electron density gradient scale
-    R: Recombination rate
-    g: acceleration due gravity
-    """
-     
-    return (Vp - U + (9.81 / nu))*L - R
+def load_ROTI():
+    infile = "database/Results/maximus/salu_2013.txt"
+    df = pd.read_csv(infile, index_col = 0)
+    df.index = pd.to_datetime(df.index)
+    return df.interpolate()
+
+
+def load_HWM():
+    infile = "database/HWM/saa_250_2013.txt"
+    
+    df = pd.read_csv(infile, index_col = "time")
+    df.index = pd.to_datetime(df.index)
+    del df["Unnamed: 0"]
+    
+    df["U"] = eff_wind(df["zon"], 
+             df["mer"], 
+             year = 2013, 
+             site = "saa").Nogueira
+    return df
+
+
+
+def filter_times(start, df):
+    
+    end = start + dt.timedelta(hours = 11)
+    return df.loc[(df.index >= start) & 
+                 (df.index <= end), :]
 
 coords = {"car": (-7.38, -36.528), 
           "for": (-3.73, -38.522), 
@@ -91,31 +102,16 @@ def run_msise(datetime,
     
     return df
 
-def df_parameters(date):
+def get_pre(dn, df):
     
-    n = run_msise(date) 
+    b = dt.time(21, 0, 0)
+    e = dt.time(22, 30, 0)
     
-    n["R"] = R(n.O2, n.N2)
-     
-    n["nu"] = nui_1(n.Tn, n.O, 
-                    n.O2, n.N2)
-    
-    iri = load_iri(date)
-    
-    n["L"] = scale_gradient(iri["Ne"], dz = 1)
-    
-    n.drop(columns = 
-           ["O", "N2", "Tn", "O2"], 
-           inplace = True) 
-    
-    n["u"] = load_fpi(date)
-    #n["vz"] = load_drift(date)
-    
-    n["g"] = growth_rate_RT(n.nu, n.L, n.R, 
-                            n.vz, n.u)
-    
-    n["date"] = date.date()
-    return n
+    df = df.loc[(df.index.time >= b) & 
+                (df.index.time <= e) & 
+                (df.index.date == dn.date()), ["vz"]]
+        
+    return round(df.max().item(), 2), df.idxmax().item()
 
 def timerange_msise(start):
     

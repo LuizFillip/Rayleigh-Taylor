@@ -4,38 +4,21 @@ import datetime as dt
 import setup as s
 from Results.utils import get_dusk
 from Digisonde.drift import load_DRIFT
-from FabryPerot.core import load_FPI
+from FabryPerot.core import (load_FPI, 
+                             load_HWM,
+                             filter_times, 
+                             load_ROTI)
+
 from RayleighTaylor.core import (timerange_msise, 
                                  timerange_iri, 
                                  growth_rate_RT)
 
 from RayleighTaylor.base.neutral import eff_wind
 
-def load_ROTI():
-    infile = "database/Results/maximus/salu_2013.txt"
-    df = pd.read_csv(infile, index_col = 0)
-    df.index = pd.to_datetime(df.index)
-    return df.interpolate()
 
 
-def filter_times(start, df):
-    
-    end = start + dt.timedelta(hours = 11)
-    return df.loc[(df.index >= start) & 
-                 (df.index <= end), :]
 
-def load_HWM():
-    infile = "database/HWM/saa_250_2013.txt"
-    
-    df = pd.read_csv(infile, index_col = "time")
-    df.index = pd.to_datetime(df.index)
-    del df["Unnamed: 0"]
-    
-    df["U"] = eff_wind(df["zon"], 
-             df["mer"], 
-             year = 2013, 
-             site = "saa").Nogueira
-    return df
+
 
 
 start = dt.datetime(2013, 1, 1, 20)
@@ -68,16 +51,7 @@ ion = timerange_iri()
 
 #%%
 
-def get_pre(dn, df):
-    
-    b = dt.time(21, 0, 0)
-    e = dt.time(22, 30, 0)
-    
-    df = df.loc[(df.index.time >= b) & 
-                (df.index.time <= e) & 
-                (df.index.date == dn.date()), ["vz"]]
-        
-    return round(df.max().item(), 2), df.idxmax().item()
+
 
 #----------
 
