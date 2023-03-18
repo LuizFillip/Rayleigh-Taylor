@@ -1,8 +1,10 @@
 import numpy as np 
 from GEO.core import run_igrf
 import pandas as pd
+import setup as s
 
-d, i = run_igrf(year = 2013, site = "saa")
+
+d, i = run_igrf(2013, site = "saa")
 
 class effective_wind(object):
     
@@ -32,7 +34,61 @@ class effective_wind(object):
                 ) * np.cos(I)
 
     
-winds = effective_wind()
+
+from RayleighTaylor.core import load_HWM
+import datetime as dt
+import matplotlib.pyplot as plt
+
+
+df = load_HWM()
+
+date = dt.date(2013, 6, 3)
+df = df.loc[df.index.date == date]
+
+
+U = effective_wind()
 
 
 
+def plot_zonal(ax, U, df):
+
+    for d in [-30, 0, 30]:
+        Ux = U.eff_zonal(df.zon, df.mer, d)
+        ax.plot(Ux, label = f"D = {d}°")
+        ax.legend()
+        
+    ax.axhline(0, color = "r", linestyle = "--")
+    
+    ax.set(ylabel = "Velocidade (m/s)")
+    ax.set(xlabel = "Hora universal (UT)", 
+           title = "Zonal")
+    s.format_axes_date(
+        ax, 
+        time_scale = "hour", 
+        interval = 4)
+    
+def plot_meridional(ax, U, df):
+    
+    for d in [-30, 0, 30]:
+        i = -20
+        Ux = U.eff_meridional(df.zon, df.mer, d, i)
+        ax.plot(Ux, label = f"D = {d}°, I = {i}°")
+        ax.legend()
+        
+    ax.axhline(0, color = "r", linestyle = "--")
+    
+    ax.set(xlabel = "Hora universal (UT)", 
+           title = "Meridional")
+    s.format_axes_date(
+        ax, 
+        time_scale = "hour", 
+        interval = 4)
+    
+    
+fig, ax = plt.subplots(figsize = (12, 5), 
+                       ncols = 2, 
+                       sharey = True, 
+                       sharex = True)    
+plt.subplots_adjust(wspace = 0.05)
+plot_zonal(ax[0], U, df)
+plot_meridional(ax[1], U, df)
