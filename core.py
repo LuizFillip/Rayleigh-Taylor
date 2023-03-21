@@ -3,33 +3,29 @@ import numpy as np
 from nrlmsise00 import msise_flat
 from PlanetaryIndices.core import get_indices
 import datetime as dt
-from RayleighTaylor.base.neutral import R, nui_1, eff_wind
+from RayleighTaylor.base.neutral import R, nui_1
 from RayleighTaylor.base.iono import scale_gradient
 from build import paths as p
-pd.options.mode.chained_assignment = None
+
+coords = {"car": (-7.38, -36.528), 
+          "for": (-3.73, -38.522), 
+          "saa": (-2.53, -44.296)}
 
 
-def load_ROTI():
-    infile = "database/Results/maximus/salu_2013.txt"
+def load_ROTI( infile = "database/Results/maximus/salu_2013.txt"):
     df = pd.read_csv(infile, index_col = 0)
     df.index = pd.to_datetime(df.index)
     return df.interpolate()
 
 
-def load_HWM():
-    infile = "database/HWM/saa_250_2013.txt"
-    
+def load_HWM(infile = "database/HWM/saa_250_2013.txt"):    
     df = pd.read_csv(infile, index_col = "time")
     df.index = pd.to_datetime(df.index)
-    del df["Unnamed: 0"]
-    
-    df["U"] = eff_wind(df["zon"], 
-             df["mer"], 
-             year = 2013, 
-             site = "saa").Nogueira
+    try:
+        del df["Unnamed: 0"]
+    except:
+        pass
     return df
-
-
 
 def filter_times(start, df):
     
@@ -37,11 +33,7 @@ def filter_times(start, df):
     return df.loc[(df.index >= start) & 
                  (df.index <= end), :]
 
-coords = {"car": (-7.38, -36.528), 
-          "for": (-3.73, -38.522), 
-          "saa": (-2.53, -44.296)}
-
-def load_iri(date):
+def load_IRI(date):
     infile = p("IRI").files
     
     df = pd.read_csv(infile, index_col = 0)
@@ -51,29 +43,24 @@ def load_iri(date):
     return df.loc[df.index == date]
 
 
-def load_fpi(date):
+def load_FPI(date):
     fpi = p("FabryPerot").get_files_in_dir("processed")
     
     df = pd.read_csv(fpi, index_col = 0)
     
     df.index = pd.to_datetime(df.index)
-    
-    df["u"] = eff_wind(df.zon, 
-                       df.mer, 
-                       year = 2013, 
-                       site = "saa").Nogueira
-    
-    df["u"].plot()
-    
+      
     return df.loc[df.index == date, "u"].item()
 
 
     
-def run_msise(datetime, 
-          hmin = 200, 
-          hmax = 500, 
-          step = 1, 
-          site = "saa"):
+def run_msise(
+        datetime, 
+        hmin = 200, 
+        hmax = 500, 
+        step = 1, 
+        site = "saa"
+        ):
     
     glat, glon = coords[site]
     
@@ -113,7 +100,7 @@ def get_pre(dn, df):
         
     return round(df.max().item(), 2), df.idxmax().item()
 
-def timerange_msise(start):
+def timerange_MSISE(start):
     
     end = start + dt.timedelta(hours = 30)
     
@@ -129,10 +116,11 @@ def timerange_msise(start):
     
     return pd.concat(out)
 
-def timerange_iri(alt = 300):
-    
-    infile = "database/IRI/SAA_2013_ne.txt"
-    
+def timerange_IRI( 
+        infile = "database/IRI/SAA_2013_ne.txt", 
+        alt = 300
+        ):
+
     df = pd.read_csv(infile, index_col = 0)
     df.index = pd.to_datetime(df.index)
     
@@ -149,7 +137,5 @@ def timerange_iri(alt = 300):
         
     return pd.concat(out)
 
-def main():
-    start = dt.datetime(2013, 1, 1, 21)
 
 
