@@ -1,6 +1,6 @@
 import datetime as dt
 import matplotlib.pyplot as plt
-from RayleighTaylor.core import load_HWM
+from RayleighTaylor.src.common import load
 import setup as s
 from RayleighTaylor.base.winds import effective_wind
 from GEO.core import run_igrf
@@ -67,14 +67,16 @@ def plot_effective_winds(
     colors = ["red", "black", "blue"]
     
     for n, site in enumerate(["boa", "ccb", "cgg"]):
+        
+        ts = load()
     
-        df = load_HWM(infile = f"database/HWM/HWM93/{site}3502002.txt")
+        df = ts.HWM(infile = f"database/HWM/HWM93/{site}3502002.txt")
         
         df.index = df.index - dt.timedelta(hours = 3)
         
         df = df.loc[df.index.date == date.date()]
         
-        df["mer"] = df["mer"] * (-1)
+        df["mer"] = df["mer"] * (-1) # if south is positive
         
         U = effective_wind()
         d, i = run_igrf(date, 
