@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np 
 import setup as s
 import matplotlib.ticker as ticker
 import pandas as pd
@@ -21,11 +20,10 @@ def get_winds(df, heigth = 300):
     return df.loc[df.alt == heigth, "u"]
         
 
-
 def plot_winds(ax, df, n):
     
     na = [r"$(U_\phi \cos D + U_\theta \sin D)\cos I$", 
-          r"$(U_\theta  \cos D + U_\phi \sin D)\sin I$",
+          r"$(U_\theta \cos D + U_\phi \sin D)\sin I$",
           r"$U_\theta \cos D + U_\phi \sin D$"]
     
     ws = get_winds(df)
@@ -65,25 +63,26 @@ def plot_gammas(ax, df, times, n):
         ax.set(title = r"$(V_{zp} - U_{eff} + \frac{g}{\nu_{in}})" +
            "\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$")
 
-fig, ax = plt.subplots(nrows = 3, 
-                       figsize = (8, 6),
-                       sharey = True,
-                       sharex = True)    
-
-plt.subplots_adjust(hspace = 0.05)
-
-s.config_labels()
-
-for n, ax in enumerate(ax.flat):
+def plot_gammas_end_eff_winds():
     
-    infile = f"database/data/2014_U{n + 1}.txt"
-
-    df = load(infile)
+    fig, ax = plt.subplots(nrows = 3, 
+                           figsize = (8, 6),
+                           sharey = True,
+                           sharex = True)    
     
-    times = pd.to_datetime(np.unique(df.index))
-    ax.axhline(0, color = "r", linestyle = "--")
+    plt.subplots_adjust(hspace = 0.05)
     
-    plot_winds(ax, df, n)
+    s.config_labels()
     
-    s.format_axes_date(ax)
+    for n, ax in enumerate(ax.flat):
+        
+        infile = f"database/data/2014_U{n + 1}.txt"
     
+        df = load(infile)
+        
+        ax.axhline(0, color = "r", linestyle = "--")
+        
+        plot_winds(ax, df, n)
+    
+        s.format_axes_date(ax)
+        
