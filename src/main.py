@@ -5,26 +5,6 @@ from RayleighTaylor.core import df_parameters
 
 
 
-def process_year(save = True):
-    out = []
-
-    for date in pd.date_range(
-            "2013-01-01 21:00", 
-            "2013-12-31 21:00", 
-            freq = "1D"
-            ):
-        try:
-            out.append(df_parameters(date))
-        except:
-            continue
-    
-    df = pd.concat(out)
-    
-    if save:
-        df.to_csv("gammas2.txt")
-        
-    return df
-
 def get_max(df, date, alts = (250, 350)):
    
     cond_alt = ((df.index >= alts[0]) &

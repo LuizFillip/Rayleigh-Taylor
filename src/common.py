@@ -1,84 +1,108 @@
 import pandas as pd
+from Digisonde.utils import smooth
+from RayleighTaylor.base.iono import scale_gradient
+import numpy as np
 import datetime as dt
-from RayleighTaylor.base.neutral import eff_wind
-import math
+from RayleighTaylor.base.neutral import R, nui_1
 
-def get_ne(date_time, hmin = 200, hmax = 300):
+
+
+class load(object):
     
-    infile = "database/pyglow/density2014.txt"
+    def __init__(self):
+        pass
+    
+    @staticmethod
+    def _load(infile):
+        df = pd.read_csv(infile, index_col = 0)
+        df.index = pd.to_datetime(df.index)
+        return df
+    
+    @staticmethod
+    def compute_gradient(df, alt = 350):
+        out = []
+        for time in np.unique(df.index):
+        
+            n = df.loc[df.index == time].copy()
+            
+            step = n["alt"][1] - n["alt"][0]
+            
+            n["L"] = scale_gradient(n["Ne"], dz = step)
+            
+            out.append(n.loc[n["alt"] == alt, ["Ne", "L"]])
+            
+        return pd.concat(out)
+    
+    def HWM(
+            self, 
+            infile = "database/HWM/HWM14/SAA3502013.txt"
+            ):    
+        return self._load(infile)
+    
+    def MSIS(
+            self, 
+            infile = "database/MSIS/msis_300_saa.txt",
+            computed = True
+            ):
+        ts =  self._load(infile)
+        if computed:
+            
+            ts["R"] = R(ts.O2,  ts.N2)
+            ts["nu"] = nui_1(ts["T"], ts["O"], ts["O2"],  ts["N2"])
+            return ts.loc[:, ["R", "nu"]]
+        
+        else:
+            return ts
+    
+    
+    def roti(
+            self, 
+            infile = "database/Results/maximus/salu_2013.txt"
+            ):
+        
+        return self._load(infile).interpolate()
+    
+    
+    def drift(
+            self, 
+            infile = "database/Drift/SSA/PRO_2013.txt",
+            smoothed = True,
+            cols = ["vz", "evz"]
+            ):
+        
+        df = self._load(infile)
+        if smoothed:
+            df["vx"] = smooth(df["vx"], 3)
+            df["vy"] = smooth(df["vy"], 3)
+            df["vz"] = smooth(df["vz"], 3)
+            
+        df = df.resample("5min").last().interpolate()
+        
+        return df.loc[:, cols]
+    
+    def IRI(
+        self, 
+        infile = "database/IRI/SAA_2013_ne.txt", 
+        alt = 300,
+        L = True
+        ):
+        df = self._load(infile) 
+        
+        if L:
+            return self.compute_gradient(df, alt = alt)
+        else:
+            return df
         
 
-    df = pd.read_csv(infile, index_col = 0)
 
-    df["date"] = pd.to_datetime(df["date"])
+def get_pre(dn, df):
     
-    alt_cond = ((df.index >= hmin) & 
-                (df.index <= hmax))
+    b = dt.time(21, 0, 0)
+    e = dt.time(22, 30, 0)
+    
+    df = df.loc[(df.index.time >= b) & 
+                (df.index.time <= e) & 
+                (df.index.date == dn), ["vz"]]
         
-    return df.loc[(df["date"] == date_time) 
-                  & alt_cond, "Ne"]
+    return df.idxmax().item(), round(df.max().item(), 2)
 
-def get_pre(date):
-    infile ="database/Digisonde/vzp/FZ_PRE_2014_2015.txt"
-    
-    df = pd.read_csv(infile, index_col = 0)
-    
-    df.index = pd.to_datetime(df.index)
-    
-    ts = df.loc[df.index.date == date, "vz"]
-
-    return ts.item()
-
-
-def get_wind(date, hmin = 200, hmax = 500, 
-             func_wind = "U1"):    
-    
-    infile = "database/pyglow/winds2014.txt"
-
-    df = pd.read_csv(infile, index_col = "time")
-
-    df.rename(columns = {"Unnamed: 0":  "alts"},
-              inplace = True)
-    df.index = pd.to_datetime(df.index)
-
-    if isinstance(date, dt.datetime):
-        date = date.date()
-        
-    if func_wind == "U1":
-        
-        df["U"] = eff_wind(df.zon, df.mer).Nogueira
-        
-    elif func_wind == "U2":
-        df["U"] = eff_wind(df.zon, df.mer).Jonas
-        
-    else:
-        df["U"] = eff_wind(df.zon, df.mer).Carrasco
-        
-    alt_cond = ((df.alts >= hmin) & (df.alts <= hmax))
-    return df.loc[(df.index.date == date) & alt_cond]
-
-
-
-def split_time(time):
-    frac, whole = math.modf(float(time))
-    return int(whole), round(frac * 60)
-
-def get_datetime_pre(dn):
-    infile ="database/Digisonde/vzp/FZ_PRE_2014_2015.txt"
-    
-    df = pd.read_csv(infile, index_col = 0)
-    
-    df.index = pd.to_datetime(df.index)
-   
-    time_sel = df.loc[df.index == dn, "time"]
-    
-    hour, minute = split_time(time_sel.item())
-    
-    return dt.datetime(
-        dn.year, dn.month, dn.day, 
-                hour, minute)
-
-    
-
-    
-   

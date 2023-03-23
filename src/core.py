@@ -4,34 +4,25 @@ from nrlmsise00 import msise_flat
 from PlanetaryIndices.core import get_indices
 import datetime as dt
 from RayleighTaylor.base.neutral import R, nui_1
-from RayleighTaylor.base.iono import scale_gradient
 from build import paths as p
 
 coords = {"car": (-7.38, -36.528), 
           "for": (-3.73, -38.522), 
           "saa": (-2.53, -44.296)}
 
-
-def load_ROTI( infile = "database/Results/maximus/salu_2013.txt"):
-    df = pd.read_csv(infile, index_col = 0)
-    df.index = pd.to_datetime(df.index)
-    return df.interpolate()
+ 
 
 
-def load_HWM(infile = "database/HWM/saa_250_2013.txt"):    
-    df = pd.read_csv(infile, index_col = "time")
-    df.index = pd.to_datetime(df.index)
-    try:
-        del df["Unnamed: 0"]
-    except:
-        pass
-    return df
+
+
+
+
 
 def filter_times(start, df):
     
     end = start + dt.timedelta(hours = 11)
     return df.loc[(df.index >= start) & 
-                 (df.index <= end), :]
+                  (df.index <= end), :]
 
 def load_IRI(date):
     infile = p("IRI").files
@@ -89,16 +80,7 @@ def run_msise(
     
     return df
 
-def get_pre(dn, df):
-    
-    b = dt.time(21, 0, 0)
-    e = dt.time(22, 30, 0)
-    
-    df = df.loc[(df.index.time >= b) & 
-                (df.index.time <= e) & 
-                (df.index.date == dn.date()), ["vz"]]
-        
-    return round(df.max().item(), 2), df.idxmax().item()
+
 
 def timerange_MSISE(start):
     
@@ -114,27 +96,6 @@ def timerange_MSISE(start):
         ts["nu"] = nui_1(ts.Tn, ts.O, ts.O2,  ts.N2)
         out.append(ts)
     
-    return pd.concat(out)
-
-def timerange_IRI( 
-        infile = "database/IRI/SAA_2013_ne.txt", 
-        alt = 300
-        ):
-
-    df = pd.read_csv(infile, index_col = 0)
-    df.index = pd.to_datetime(df.index)
-    
-    out = []
-    for time in np.unique(df.index):
-    
-        n = df.loc[df.index == time].copy()
-        
-        step = n["alt"][1] - n["alt"][0]
-        
-        n["L"] = scale_gradient(n["Ne"], dz = step)
-        
-        out.append(n.loc[n["alt"] == alt, ["Ne", "L"]])
-        
     return pd.concat(out)
 
 
