@@ -1,7 +1,7 @@
 import datetime as dt
 import matplotlib.pyplot as plt
 from RayleighTaylor.src.common import load
-import setup as s
+import settings as s
 from RayleighTaylor.base.winds import effective_wind
 from GEO.core import run_igrf
 
@@ -22,7 +22,7 @@ def plot_winds_sasonality():
         sharex = True, 
         figsize = (10, 8)
         )
-    
+    s.config_labels()
     for n, ax in enumerate(ax.flat):
     
         df1 = df.loc[df.index.time == times[n]]

@@ -34,7 +34,6 @@ def apex_range(h, num = 200):
     return latitudes, apex_height(latitudes, h)
     
 
-
 def main():
     dz = 50
         

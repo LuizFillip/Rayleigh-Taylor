@@ -1,7 +1,7 @@
 import datetime as dt
 import matplotlib.pyplot as plt
 from RayleighTaylor.src.common import load
-import setup as s
+import settings as s
 from RayleighTaylor.base.winds import effective_wind
 from GEO.core import run_igrf
 
@@ -15,12 +15,18 @@ mag = {
             "cgg": (-15.1, -22.3) # Campo Grande
               }  
   
-def plot_zonal(ax, U, df, d, site, color):
+def plot_zonal(ax, df, d, name = "Sao Luis", **kargs):
+    
+    U = effective_wind()
+    
+    d, i = run_igrf(**kargs)
 
     Uy = U.eff_zonal(df["zon"], df["mer"], d)
     
-    ax.plot(Uy, label = f"{site}: D = {d}°", color = color)
-    ax.legend(loc = "lower left")
+    d = round(d, 2)
+    
+    ax.plot(Uy, label = f"{name}: D = {d}°", lw = 2, color = "k")
+    ax.legend(loc = "upper right")
         
     ax.grid()
     ax.set(xlabel = "Hora local", 
@@ -32,23 +38,48 @@ def plot_zonal(ax, U, df, d, site, color):
         time_scale = "hour", 
         interval = 4)
     
-def plot_meridional(ax, U, df, d, i, site, color):
+    return Uy
 
+
+kargs = dict(date = 2013, 
+             site = "saa", 
+             alt = 300)
+    
+def plot_meridional(
+        ax, 
+        df, 
+        name = "Sao Luis", 
+        **kargs
+        ):
+    
+    U = effective_wind()
+    
+    d, i = run_igrf(**kargs)
+    
     Ux = U.eff_meridional(df.zon, df.mer, d, i)
-    ax.plot(Ux, label = f"{site}: D = {d}°, I = {i}°", color = color)
-    ax.legend(loc = "lower left")
+    
+    d, i = round(d, 2), round(i, 2)
+    
+    ax.plot(Ux, 
+            label = f"{name}: D = {d}°, I = {i}°", 
+            lw = 2, 
+            color = "k"
+            )
+    ax.legend(loc = "upper right")
         
     ax.grid()
-    
-    ax.set(xlabel = "Hora local", 
-           ylabel = "Velocidade meridional [+S] (m/s)", 
-           ylim = [-120, 120])
+     
+    ax.set(
+        ylabel = "$U_y^{ef}$ (m/s)", 
+        ylim = [-10, 50]
+        )
     
     s.format_axes_date(
         ax, 
         time_scale = "hour", 
         interval = 4
         )
+    return Ux 
     
 def plot_effective_winds(
         date = dt.datetime(2002, 10, 11), 
@@ -76,7 +107,7 @@ def plot_effective_winds(
         
         df = df.loc[df.index.date == date.date()]
         
-        df["mer"] = df["mer"] * (-1) # if south is positive
+        #df["mer"] = df["mer"] * (-1) # if south is positive
         
         U = effective_wind()
         d, i = run_igrf(date, 
@@ -87,13 +118,13 @@ def plot_effective_winds(
         
         #d, i = mag[site]
         
-        plot_meridional(ax[0], U, df, d, i, names[n], colors[n])
-        plot_zonal(ax[1], U, df, d, names[n], colors[n])
+        plot_meridional(ax[0], df, d, i, names[n], colors[n])
+        plot_zonal(ax[1], df, d, names[n], colors[n])
         
     fig.suptitle(date.strftime("%d/%m/%Y - (%j)") + " - HWM93")
     return fig
 
-plot_effective_winds(
-        date = dt.datetime(2002, 10, 11), 
-        alt = 350
-        )
+# plot_effective_winds(
+#         date = dt.datetime(2002, 10, 11), 
+#         alt = 350
+#         )
