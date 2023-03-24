@@ -11,13 +11,6 @@ coords = {"car": (-7.38, -36.528),
           "saa": (-2.53, -44.296)}
 
  
-
-
-
-
-
-
-
 def filter_times(start, df):
     
     end = start + dt.timedelta(hours = 11)
@@ -82,14 +75,16 @@ def run_msise(
 
 
 
-def timerange_MSISE(start):
-    
-    end = start + dt.timedelta(hours = 30)
-    
-    out = []
-    for dn in pd.date_range(start, end, freq = "10min"):
+def timerange_MSISE(dn, fixed_alt = 300):
         
-        ts = run_msise(dn, hmin = 300, hmax = 300)
+    out = []
+    for dn in pd.date_range(
+            dn, 
+            periods = 67, 
+            freq = "10min"
+            ):
+        
+        ts = run_msise(dn, hmin = fixed_alt, hmax = fixed_alt)
         
         ts.index = [dn]
         ts["R"] = R(ts.O2,  ts.N2)
@@ -97,6 +92,7 @@ def timerange_MSISE(start):
         out.append(ts)
     
     return pd.concat(out)
+
 
 
 

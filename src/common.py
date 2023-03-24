@@ -19,7 +19,7 @@ class load(object):
         return df
     
     @staticmethod
-    def compute_gradient(df, alt = 350):
+    def timeseries_grad(df, alt = 350):
         out = []
         for time in np.unique(df.index):
         
@@ -89,7 +89,7 @@ class load(object):
         df = self._load(infile) 
         
         if L:
-            return self.compute_gradient(df, alt = alt)
+            return self.timeseries_grad(df, alt = alt)
         else:
             return df
         
