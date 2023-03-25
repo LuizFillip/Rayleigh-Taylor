@@ -94,6 +94,11 @@ class load(object):
             return df
         
 
+def SET(dn, df):
+    end = dn + dt.timedelta(hours = 11)
+    return df.loc[(df.index >= dn ) & 
+                  (df.index <= end) , :]
+
 
 def get_pre(dn, df):
     

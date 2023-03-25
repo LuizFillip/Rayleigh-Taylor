@@ -4,6 +4,8 @@ from build import paths as p
 import os 
 from AllSky.labeling import save_img
 import datetime as dt
+from RayleighTaylor.plotting.plot_timeseries_parameters import plot_timeseries_parameters
+
 
 def get_max(df, date, alts = (250, 350)):
    
@@ -31,7 +33,8 @@ def run(df):
 
 def save_timeseries_parameters(
         iri_infile = "D:\\ne\\2013\\",
-        save_in = "D:\\plots\\"):
+        save_in = "D:\\plots\\"
+        ):
     
     
     files = os.listdir(iri_infile)

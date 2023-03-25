@@ -66,8 +66,7 @@ def run_msise(
     df = pd.DataFrame(res[0], index = alts, 
                       columns = columns)
     
-    df.drop(["He", "Ar", 
-             "mass", "H", "N", "AnO", "Tex"], 
+    df.drop(["Ar", "mass", "N", "AnO"], 
             axis = 1, 
             inplace = True)
     
