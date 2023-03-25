@@ -34,34 +34,54 @@ def ion_ratio(nu_i, B = 0.285e-04):
     """Ion ratio cyclotron frequency and collision"""
     return ion_cyclotron(B) / nu_i
 
-    
-def parallel_conductivity(Ne, nu_e, nu_i):
-    """conductivity along magnetic field"""
-    ion_term = 1 / ( c.proton_mass * nu_i)
-    electron_term  = 1 / ( c.electron_mass * nu_e)
-    return (Ne *  c.elementary_charge**2 * (electron_term + ion_term))
 
-
-def Pedersen_conductivity(Ne, nu_e, nu_i, B = 0.285e-04):
-    """Conductivity along the electric field and perpendicular to the magnetic field"""
-    electron_term = electron_mobility(nu_e) / (1 + electron_ratio(nu_e, B = B)**2)
-    
-    ion_term = ion_mobility(nu_i) / (1 + ion_ratio(nu_i, B = B)**2)
-    
-    return Ne *  c.elementary_charge * (ion_term - electron_term)
-    
 def pedersen(Ne, nui, B):
     return Ne *  c.proton_mass * nui / B**2
 
-   
-def Hall_conductivity(Ne, nu_e, nu_i, B = 0.285e-04):
-    """Conductivity perpendicular to both electric and magnetic field"""
-    electron_term = (electron_ratio(nu_e, B = B)**2 / 
-                     (1 + electron_ratio(nu_e, B = B)**2))
+class conductivity:
     
-    ion_term =  ion_ratio(nu_i, B = B)**2 / (1 + ion_ratio(nu_i, B = B)**2)
+    def __init__(
+            self, 
+            Ne, nu_e, nu_i, 
+            B = 0.285e-04
+            ):
+        
+        self.Ne = Ne
+        self.nu_e = nu_e
+        self.nu_i = nu_i
+        self.B = B
+        
+    @property
+    def parallel(self):
+        """conductivity along magnetic field"""
+        ion_term = 1 / ( c.proton_mass * self.nu_i)
+        electron_term  = 1 / ( c.electron_mass * self.nu_e)
+        return (self.Ne *  c.elementary_charge**2 * 
+                (electron_term + ion_term))
     
-    return (Ne *  c.elementary_charge / B) * (electron_term - ion_term)
+    @property
+    def Pedersen(self): 
+        """Conductivity along the electric field and perpendicular to the magnetic field"""
+        electron_term = (electron_mobility( self.nu_e) / 
+                         (1 + electron_ratio( self.nu_e, B = self.B)**2))
+        
+        ion_term = (ion_mobility( self.nu_i) / 
+                    (1 + ion_ratio(self.nu_i, B = self.B)**2))
+        
+        return self.Ne * c.elementary_charge * (ion_term - electron_term)
+        
+    @property
+    def Hall(self):
+        """Conductivity perpendicular to both electric and magnetic field"""
+        
+        electron_term = (electron_ratio( self.nu_e, B =  self.B)**2 / 
+                         (1 + electron_ratio( self.nu_e, B =  self.B)**2))
+        
+        ion_term = (ion_ratio( self.nu_i, B =  self.B)**2 / 
+                    (1 + ion_ratio( self.nu_i, B =  self.B)**2))
+        
+        return ( self.Ne * c.elementary_charge / 
+                self.B) * (electron_term - ion_term)
 
 
 
