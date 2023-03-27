@@ -62,6 +62,13 @@ class load(object):
         
         return self._load(infile).interpolate()
     
+    def pre(
+            self, 
+            infile = "database/Results/maximus/salu_2013.txt"
+            ):
+        
+        return self._load(infile)
+    
     
     def drift(
             self, 
@@ -110,4 +117,40 @@ def get_pre(dn, df):
                 (df.index.date == dn), ["vz"]]
         
     return df.idxmax().item(), round(df.max().item(), 2)
+
+def get_pre_in_year():
+        
+    ts = load()
+    dates = pd.date_range("2013-1-1", 
+                          "2013-12-31", freq = "1D")
+    out = {"vp": [], 
+           "time": []}
+    df = ts.drift()
+    
+    
+    for dn in dates:
+        
+        try:
+            df1 = df.loc[df.index.date == dn.date()]
+            tpre, vpre = get_pre(dn.date(), df1)
+            
+            out["vp"].append(vpre)
+            out["time"].append(tpre)
+        except:
+            out["vp"].append(np.nan)
+            out["time"].append(np.nan)
+            continue
+        
+        
+    ds = pd.DataFrame(out, index = dates)
+    
+    
+    ds.loc[(ds.index.month <= 4) 
+           & (ds["vp"] < 10), "vp"] = np.nan
+    
+    ds.loc[ (ds.index.month > 9)
+           & (ds["vp"] < 10), "vp"] = np.nan
+    
+    return ts
+
 
