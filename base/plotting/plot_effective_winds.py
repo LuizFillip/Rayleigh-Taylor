@@ -15,7 +15,9 @@ mag = {
             "cgg": (-15.1, -22.3) # Campo Grande
               }  
   
-def plot_zonal(ax, df, d, name = "Sao Luis", **kargs):
+def plot_zonal(ax, df, d, **kargs):
+     
+    eq = r"$U_y = (U_\phi \cos D + U_\theta \sin D)$"
     
     U = effective_wind()
     
@@ -25,13 +27,14 @@ def plot_zonal(ax, df, d, name = "Sao Luis", **kargs):
     
     d = round(d, 2)
     
-    ax.plot(Uy, label = f"{name}: D = {d}°", lw = 2, color = "k")
+    ax.plot(Uy, label = f"{eq}\nD = {d}°", 
+            lw = 2, color = "k")
     ax.legend(loc = "upper right")
         
     ax.grid()
-    ax.set(xlabel = "Hora local", 
-           ylabel = "Velocidade zonal [+L] (m/s)", 
-           ylim = [-200, 240])
+    ax.set(
+           ylabel = "$U_x^{ef}$ (m/s)", 
+           ylim = [-100, 200])
     
     s.format_axes_date(
         ax, 
@@ -48,36 +51,37 @@ kargs = dict(date = 2013,
 def plot_meridional(
         ax, 
         df, 
-        name = "Sao Luis", 
         **kargs
         ):
     
     U = effective_wind()
     
-    d, i = run_igrf(**kargs)
+    #d, i = run_igrf(**kargs)\\
+        
+    d, i = -19.6, -6
     
     Ux = U.eff_meridional(df.zon, df.mer, d, i)
     
     d, i = round(d, 2), round(i, 2)
     
+    eq = r"$U_x = (U_\theta \cos D + U_\phi \sin D)\cos I$"
+    
     ax.plot(Ux, 
-            label = f"{name}: D = {d}°, I = {i}°", 
+            label = f"{eq}\nD = {d}°, I = {i}°", 
             lw = 2, 
             color = "k"
             )
     ax.legend(loc = "upper right")
-        
-    ax.grid()
-     
+             
     ax.set(
         ylabel = "$U_y^{ef}$ (m/s)", 
-        ylim = [-10, 50]
+        ylim = [-100, 100]
         )
     
     s.format_axes_date(
         ax, 
         time_scale = "hour", 
-        interval = 4
+        interval = 1
         )
     return Ux 
     

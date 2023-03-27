@@ -53,7 +53,7 @@ class conductivity:
         
     @property
     def parallel(self):
-        """conductivity along magnetic field"""
+        """Along magnetic field (B)"""
         ion_term = 1 / ( c.proton_mass * self.nu_i)
         electron_term  = 1 / ( c.electron_mass * self.nu_e)
         return (self.Ne *  c.elementary_charge**2 * 
@@ -61,7 +61,7 @@ class conductivity:
     
     @property
     def Pedersen(self): 
-        """Conductivity along the electric field and perpendicular to the magnetic field"""
+        """Along the electric field and perpendicular to B"""
         electron_term = (electron_mobility( self.nu_e) / 
                          (1 + electron_ratio( self.nu_e, B = self.B)**2))
         
@@ -72,7 +72,7 @@ class conductivity:
         
     @property
     def Hall(self):
-        """Conductivity perpendicular to both electric and magnetic field"""
+        """Perpendicular to both electric and B"""
         
         electron_term = (electron_ratio( self.nu_e, B =  self.B)**2 / 
                          (1 + electron_ratio( self.nu_e, B =  self.B)**2))

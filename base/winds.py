@@ -1,9 +1,4 @@
 import numpy as np 
-from RayleighTaylor.src.common import load
-import datetime as dt
-from GEO.core import run_igrf
-import matplotlib.pyplot as plt
-
 
 class effective_wind(object):
     
