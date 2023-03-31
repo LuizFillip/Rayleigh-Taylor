@@ -46,9 +46,9 @@ def save_timeseries_parameters(
             )
         
         dn = date + dt.timedelta(hours = 20)
-        
+        iri_file = os.path.join(iri_infile, filename)
         try:
-            iri_file = os.path.join(iri_infile, filename)
+               
             fig = plot_timeseries_parameters(
                     dn, iri_file)
             print("saving...", dn)
@@ -59,3 +59,6 @@ def save_timeseries_parameters(
                      )
         except:
             continue
+    return 
+        
+save_timeseries_parameters()

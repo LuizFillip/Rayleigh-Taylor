@@ -2,14 +2,28 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import settings as s
 from Results.utils import get_dusk
-from RayleighTaylor.src.common import get_pre, load
+from RayleighTaylor.src.common import  load, SET
 from RayleighTaylor.src.RT import growth_rate_RT
+from RayleighTaylor.src.core import timerange_MSISE
 from RayleighTaylor.base.plotting.plot_effective_winds import plot_meridional
 
-def SET(dn, df):
-    end = dn + dt.timedelta(hours = 11)
-    return df.loc[(df.index >= dn ) & 
-                  (df.index <= end) , :]
+
+
+def plot_terminators(ax, dn):
+
+    ax[0].text(0.03, 1.03, "0 km", 
+               transform = ax[0].transAxes)
+    ax[0].text(0.13, 1.03, "300 km", 
+               transform = ax[0].transAxes)
+    
+    for ax in ax.flat:
+        
+        sunset, dusk = get_dusk(dn.date())
+        args = dict(lw = 2,  color = "k")
+        ax.axvline(sunset, **args)
+        ax.axvline(dusk, linestyle = "--", **args)
+        
+        ax.grid()
 
 def plot_gamma_part(
         ax,
@@ -19,10 +33,8 @@ def plot_gamma_part(
           r"\frac{g}{\nu_{in}})\frac{1}{n_e}" +
           r"\frac{\partial n_e}{\partial y} - R$")
     
-    ax.text(0.55, 0.8, eq, transform = ax.transAxes)
-    
-    ax.grid()
-    
+    ax.text(0.65, 0.8, eq, transform = ax.transAxes)
+        
     ax.plot(gamma * 1e3, 
             color = "k",
             marker = "o",
@@ -37,13 +49,14 @@ def plot_gamma_part(
 
 
 def plot_roti_part(ax, ROTI):
-    y = ROTI["roti"].values
+    y = ROTI.iloc[:, 0].values
     x = ROTI.index.values 
     ax.bar(x, y, width = 0.001, color = "k")   
+    
     ax.axhline(1, 
                linestyle = "-", 
                color = "r", 
-               lw = 2, 
+               lw = 1, 
                label = "1 TECU/min"
                )
     ax.legend(loc = "upper right")
@@ -51,75 +64,68 @@ def plot_roti_part(ax, ROTI):
     s.format_axes_date(
         ax, 
         time_scale = "hour", 
-        interval = 2
+        interval = 1
         )
-    
-    ax.grid()
-    
+        
     ax.set(ylabel = "ROTI (TECU/min)", 
               xlabel = "Hora universal", 
               ylim = [0, 6], 
               xlim = [ROTI.index[0], 
                       ROTI.index[-1]])
 
-def plot_timeseries_parameters(
-        dn = dt.datetime(2013, 1, 1, 20, 0)
-        ):
+def plot_timeseries_parameters(dn, iri_file):
     
     ts = load()
     
-    label = [r"$U_\theta$ (meridional)", 
-             r"$U_\phi$ (zonal)", 
-             r"$U_y = (U_\phi \cos D + U_\theta \sin D)$",
-             r"$U_x = (U_\theta \cos D - U_\phi \sin D)\cos I$"
-             ]
+    df = ts.pre(infile = "SAA_PRE.txt")
     
-    df = ts.drift()
+    df = df.loc[df.index.date == dn.date(), "vp"]
     
-    df = df.loc[df.index.date == dn.date()]
-    
-    tpre, vpre = get_pre(dn.date(), df)
-    
-    
+    vpre = df.item()
     wd = SET(dn, ts.HWM())
     
+    msis = timerange_MSISE(dn, fixed_alt = 300)
     
-    fig, ax = plt.subplots(figsize = (12, 8), 
-                           sharex = True, 
-                           nrows = 3)
+    fig, ax = plt.subplots(
+        figsize = (10, 8), 
+        sharex = True, 
+        nrows = 3
+        )
     
     plt.subplots_adjust(hspace = 0.1)
     
     U = plot_meridional(ax[0], wd)
+
     
     gamma =  growth_rate_RT(
-          SET(dn, ts.MSIS())["nu"], 
-          ts.IRI()["L"], 
-          SET(dn, ts.MSIS())["R"], 
+          msis["nu"], 
+          ts.IRI(infile = iri_file)["L"], 
+          msis["R"], 
           vpre, 
           U
           )
     
-    plot_gamma_part(
-            ax[1],
-            
-            gamma
-            )
+    ax[1].text(
+        0.8, 0.2, 
+        f"Vzp = {vpre} m/s", 
+        transform = ax[1].transAxes
+        )
+    
+    plot_gamma_part(ax[1], gamma)
     
     plot_roti_part(ax[2], SET(dn, ts.roti()))
     
-    for ax in ax.flat:
-        
-        sunset, dusk = get_dusk(dn.date())
-        args = dict(lw = 2,  color = "k")
-        ax.axvline(sunset, **args)
-        ax.axvline(dusk, linestyle = "--", **args)
-        
-        
-    fig.suptitle(
-        dn.strftime("%d/%m/%Y"), y = 0.92
+    plot_terminators(ax, dn)
+
+    fig.suptitle( 
+        "São Luis - " + 
+        dn.strftime("%d/%m/%Y"), 
+        y = 0.92
         )
-        
-plot_timeseries_parameters(
-        dn = dt.datetime(2013, 1, 1, 20, 0)
-        )
+    
+    return fig
+
+
+dn = dt.datetime(2013, 1, 1, 20, 0)
+iri_file = "database/IRI/SAA/20130101.txt"
+plot_timeseries_parameters(dn, iri_file)
