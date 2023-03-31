@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from RayleighTaylor.RT import growth_rate_RT
 import locale
 import numpy as np
-import setup as s
+import setttings as s
 
 def plot_collision_freq(ax, nu, alts):
     
@@ -108,7 +108,7 @@ def plot_profiles_parameters(date):
                            nrows = 2,
                            sharey = True)
     
-    plt.rc('text', usetex = True)
+    #plt.rc('text', usetex = True)
     plt.subplots_adjust(wspace = 0.2)
     
     s.text_painels(ax, x = 0.05, y = 0.94)
@@ -117,4 +117,5 @@ def plot_profiles_parameters(date):
     locale.setlocale(locale.LC_ALL, 'pt_pt.UTF-8')
     time_str = date.strftime("%d de %B de %Y, %H:%M UT")
     fig.suptitle(f"Parâmetros da taxa de crescimento Rayleigh-Taylor, \n {time_str}", y = 0.93)
-    
+
+plot_profiles_parameters(date)

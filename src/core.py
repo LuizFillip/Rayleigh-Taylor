@@ -3,8 +3,9 @@ import numpy as np
 from nrlmsise00 import msise_flat
 from PlanetaryIndices.core import get_indices
 import datetime as dt
-from RayleighTaylor.base.neutral import R, nui_1
 from build import paths as p
+from RayleighTaylor.src.common import R, nui
+
 
 coords = {"car": (-7.38, -36.528), 
           "for": (-3.73, -38.522), 
@@ -87,7 +88,7 @@ def timerange_MSISE(dn, fixed_alt = 300):
         
         ts.index = [dn]
         ts["R"] = R(ts.O2,  ts.N2)
-        ts["nu"] = nui_1(ts.Tn, ts.O, ts.O2,  ts.N2)
+        ts["nu"] = nui(ts.Tn, ts.O, ts.O2,  ts.N2)
         out.append(ts)
     
     return pd.concat(out)

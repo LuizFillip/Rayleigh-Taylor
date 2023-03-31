@@ -1,9 +1,26 @@
 import pandas as pd
 from Digisonde.utils import smooth
-from RayleighTaylor.base.iono import scale_gradient
+from base.iono import scale_gradient
 import numpy as np
 import datetime as dt
-from RayleighTaylor.base.neutral import R, nui_1
+#from base.src.neutral import R
+
+def R(O2, N2):
+    """Recombination coefficient"""
+    return (4.0e-11 * O2) + (1.3e-12 * N2)    
+
+def nui(Tn, O, O2, N2):
+    """
+    The ion-neutral collision frequency
+    by Bailey and Balan (1996)
+    """
+    term_O = (4.45e-11 * O * np.sqrt(Tn) * 
+              (1.04 - 0.067 * np.log10(Tn))**2)
+    
+    term_O2 = 6.64e-10 * O2
+    term_N2 = 6.82e-10 * N2
+        
+    return term_O + term_O2 + term_N2
 
 
 
@@ -48,12 +65,12 @@ class load(object):
         if computed:
             
             ts["R"] = R(ts.O2,  ts.N2)
-            ts["nu"] = nui_1(ts["T"], ts["O"], ts["O2"],  ts["N2"])
+            ts["nu"] = nui(ts["T"], ts["O"], ts["O2"],  ts["N2"])
             return ts.loc[:, ["R", "nu"]]
         
         else:
             return ts
-    
+
     
     def roti(
             self, 
