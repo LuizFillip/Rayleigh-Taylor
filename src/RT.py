@@ -1,3 +1,5 @@
+import numpy as np
+
 
 def growth_rate_RT(nu, L, R, Vp, U):
     """
