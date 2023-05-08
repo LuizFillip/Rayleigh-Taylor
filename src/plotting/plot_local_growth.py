@@ -1,65 +1,68 @@
-import pandas as pd
-from common import runMSISE, getPyglow
-from RTIparameters import PRE, neutrals, scale_gradient
 import matplotlib.pyplot as plt
+from GEO import load_meridian
+import datetime as dt
+import ionosphere as io
 import matplotlib.ticker as ticker
-from RayleighTaylor.RT import growth_rate_RT
+from utils import order_magnitude
 
 
-infile = "database/PRE/FZ_PRE_2014_2015.txt"
+def plot_local_growth_rate(
+        gamma, 
+        alts, 
+        factor = 1e4, 
+        xlim = 0.5
+        ):
 
-pre = PRE(infile)
-i = 0
+    fig, ax = plt.subplots(dpi = 300)
+    
+    ax.plot(gamma, alts)
+    
+    ax.axvline(0, linestyle = "--")
+    
+    gmax = round(gamma.max(), 5)
 
-date = pre.times[i]
+    ax.set(ylabel = "Altura (km)", 
+           xlabel = "$\gamma_{RT} ~(s^{-1})$", 
+           xlim = [-gmax, gmax])
+    
+    factor = pow(10, order_magnitude(gmax))
+    
+    ax.xaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/factor)))
+    
+    
+def local_growth_rate(dn):
+    
+    mlon, mlat, _, _, = load_meridian()
 
-vz = pre.pre[i]
-
-pyglow = getPyglow(date)
-
-
-ne = pyglow.density()
-u = pyglow.winds()
-dat = runMSISE(date)
-
-
-neutral = neutrals(dat.Tn.values, 
-                              dat.O.values, 
-                              dat.O2.values, 
-                              dat.N2.values)
-
-nu = neutral.collision
-r = neutral.recombination
-
-l = scale_gradient(ne*1e6)
-
-alts = dat.index.values
-
-
-gamma = growth_rate_RT(nu, l, r, vz, u)
-no_wind = growth_rate_RT(nu, l, r, vz, 0)
-no_r = growth_rate_RT(nu, l, 0, vz, u)
-no_r_wind = growth_rate_RT(nu, l, 0, vz, 0)
-local = growth_rate_RT(nu, l, 0, 0, 0)
+    kwargs = dict(
+         dn = dn, 
+         glat = mlat, 
+         glon = mlon,
+         hmin = 150,
+         hmax = 500
+         )
+     
+    base = io.test_data(**kwargs)
+    
+    return ((9.81/ base["nui"]) * io.scale_gradient(base["ne"]))
+    
 
 
-fig, ax = plt.subplots(figsize = (15, 15))
+dn = dt.datetime(2013, 1, 1, 21, 0) 
 
-args = dict(lw = 3)
-ax.plot(gamma, alts, **args, label = r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$")
-ax.plot(no_wind, alts, **args, label = r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$")
-ax.plot(no_r, alts, **args, label = r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$")
-ax.plot(no_r_wind, alts, **args, label = r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$")
-ax.plot(local, alts, **args, label = r"$ (\frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$")
 
-ax.legend(fontsize = 30)
-ax.set(xlim = [-3e-3, 3e-3],
-       ylabel = "Altitude (km)",
-       xlabel = r"$\gamma_{RT}~(10^{-3} s^{-1})$")
+gamma = local_growth_rate(dn)
+alts = gamma.index
 
-ax.axvline(0, lw = 2, color = "k", linestyle = "--")
-ax.xaxis.set_major_formatter(
-    ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
-infile = "G:\\Meu Drive\\Doutorado\\Modelos_Latex_INPE\\docs\\Proposal\\Figures\\methods\\"
-fig.savefig(infile + "\\growth_rates_profiles.png")
-plt.show()
+plot_local_growth_rate(
+        gamma, 
+        alts, 
+        factor = 1e4, 
+        xlim = 0.5
+        )
+
+
+
+
+
