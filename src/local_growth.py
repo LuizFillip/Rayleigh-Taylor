@@ -15,14 +15,12 @@ mlon, mlat, _, _, = load_meridian()
 
 def timeseries_local(start, end, alt):
     
-    times = pd.date_range(dt.datetime(2013, 1, 1, 0, 0), 
-                          dt.datetime(2013, 1, 1, 23, 50),
-                          freq = "10min")
+    times = pd.date_range(start, end, freq = "10min")
     
     out = []
     
     for time in times:
-
+        print(time)
         kwargs = dict(
              dn = time, 
              glat = mlat, 
@@ -37,3 +35,8 @@ def timeseries_local(start, end, alt):
         out.append(gamma[base.index == alt])
         
     return out, times
+
+start = dt.datetime(2013, 1, 1, 0, 0)
+end = dt.datetime(2013, 1, 2, 23, 50)
+alt = 300
+out, times = timeseries_local(start, end, alt)
