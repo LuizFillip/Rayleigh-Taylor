@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import setup as s
+import settings as s
 import matplotlib.ticker as ticker
 import pandas as pd
 

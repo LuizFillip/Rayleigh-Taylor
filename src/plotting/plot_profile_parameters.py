@@ -2,8 +2,7 @@ import matplotlib.pyplot as plt
 from RayleighTaylor.RT import growth_rate_RT
 import locale
 import numpy as np
-import setttings as s
-
+import settings as s
 
     
 def plot_recombination_freq(ax, r, alts):
@@ -37,30 +36,7 @@ def plot_winds(ax, u, alts):
         )
     ax.legend(loc = "upper right")
     
-def plot_electron_density(ax, ne, l, alts):
-    
-    name = "Densidade eletrônica"
-    symbol = "$n_0$"
-    units = "$cm^{-3}$"
-    
-    ax.plot(ne, alts, color = "k", lw = 2)
-    ax.set(
-        title = name,
-        xscale = "log", 
-        xlabel = (f"{symbol} ({units})"), 
-        ylabel = "Altitude (km)"
-        )
-    
-    name = "Gradiente de escala"
-    symbol = "$L^{-1}$"
-    units = "$10^{-3} m^{-1}$"
-    ax1 = ax.twiny()
-    ax1.plot(l, alts, color = "k", lw = 2)
-    ax1.set(
-        title = name,
-        xlabel = (f"{symbol} ({units})")
-        )
-    
+
     
 def plot_growth_rate_RT(
         ax, 

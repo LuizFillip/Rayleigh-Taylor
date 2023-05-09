@@ -1,12 +1,12 @@
 import pandas as pd
-import setup as s
+import settings as s
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 infile = "database/growthRates/reco_and_vp_alltimes.txt"
 
-def GammaRTContourf(infile):
+def plot_gamma_climatology(infile):
     
     df = pd.read_csv(infile, index_col = 0)
     
