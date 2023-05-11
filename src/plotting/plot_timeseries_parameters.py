@@ -1,13 +1,10 @@
 import matplotlib.pyplot as plt
 import datetime as dt
 import settings as s
-from Results.utils import get_dusk
-from RayleighTaylor.src.common import  load, SET
-from RayleighTaylor.src.RT import growth_rate_RT
-from RayleighTaylor.src.core import timerange_MSISE
-#from base.plotting.plot_effective_winds import plot_meridional
 import numpy as np
-
+import pandas as pd
+import os
+from results import plot_roti_maximus
 
 
 def plot_terminators(ax, dn):
@@ -26,107 +23,87 @@ def plot_terminators(ax, dn):
         
         ax.grid()
 
+
 def plot_gamma_part(
         ax,
-        gamma
+        df
         ):
-    eq = (r"$\gamma_{RT} = (V_{zp} - U_y^{ef} + " + 
-          r"\frac{g}{\nu_{in}})\frac{1}{n_e}" +
-          r"\frac{\partial n_e}{\partial y} - R$")
-    
-    ax.text(0.65, 0.8, eq, transform = ax.transAxes)
-        
-    ax.plot(gamma * 1e3, 
-            color = "k",
-            marker = "o",
-            linestyle = "-")
-    ax.set(ylim = [-1.5, 1.5], 
-           ylabel = "$\gamma_{RT} ~ (10^{-3}s^{-1})$")
 
+    df = df * 1e4
+    ax.plot(df.index, df)
+    
+    gmax = 10
+    ax.set(ylim = [-gmax, gmax], 
+           ylabel = "$\gamma_{RT} ~ (10^{-4} ~s^{-1})$")
+    
     ax.axhline(0, 
                color = "r", 
                linestyle = "--")
+    
+    
+    ax.legend(["$U_{ef}^N$", "$U_{ef}^S$", 
+               "$U_{y}^N$", "$U_{y}^S$"], 
+              ncols = 2, loc = "upper right")
+    
+    name = "$\gamma_{FT} = \\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}(-U_L^P + \\frac{g_e}{\\nu_{eff}^{F}})K^F$"    
+    
+    ax.text(0.02, 0.85, name, transform = ax.transAxes)      
 
 
 
-def plot_roti_part(ax, ROTI):
-    y = ROTI.iloc[:, 0].values
-    x = ROTI.index.values 
-    ax.bar(x, y, width = 0.001, color = "k")   
+def plot_timeseries_parameters():
     
-    ax.axhline(1, 
-               linestyle = "-", 
-               color = "r", 
-               lw = 1, 
-               label = "1 TECU/min"
-               )
-    ax.legend(loc = "upper right")
+    ...
     
-    s.format_axes_date(
-        ax, 
-        time_scale = "hour", 
-        interval = 1
-        )
-        
-    ax.set(ylabel = "ROTI (TECU/min)", 
-              xlabel = "Hora universal", 
-              ylim = [0, 6], 
-              xlim = [ROTI.index[0], 
-                      ROTI.index[-1]])
 
-def plot_timeseries_parameters(dn, iri_file):
+def set_data(infile = "02_11.txt", alt = 300, month = 2):
+    df = pd.read_csv(infile, index_col=0)
     
-    ts = load()
+    df["dn"] = pd.to_datetime(df["dn"])
     
-    df = ts.pre(infile = "database/Drift/PRE/SAA/2013.txt")
+    df = df.loc[(df.index == alt) ]
     
-    df = df.loc[df.index.date == dn.date(), "vp"]
+    df = df.set_index("dn")
     
-    vpre = df.item()
-    wd = SET(dn, ts.HWM())
-    
-    msis = timerange_MSISE(dn, fixed_alt = 300)
-    
-    fig, ax = plt.subplots(
-        figsize = (10, 8), 
-        sharex = True, 
-        nrows = 3
-        )
-    
-    plt.subplots_adjust(hspace = 0.1)
-    
-    U = plot_meridional(ax[0], wd)
+    df["nui"] = 9.81 / df["nui"]
 
-    
-    gamma =  growth_rate_RT(
-          msis["nu"], 
-          ts.IRI(infile = iri_file)["L"], 
-          msis["R"], 
-          vpre, 
-          U
-          )
-    
-    ax[1].text(
-        0.8, 0.2, 
-        f"Vzp = {vpre} m/s", 
-        transform = ax[1].transAxes
-        )
-    
-    plot_gamma_part(ax[1], gamma)
-    
-    plot_roti_part(ax[2], SET(dn, ts.roti()))
-    
-    plot_terminators(ax, dn)
-
-    fig.suptitle( 
-        "São Luis - " + 
-        dn.strftime("%d/%m/%Y"), 
-        y = 0.92
-        )
-    
-    return fig
+    return df.loc[df.index.month == month]
 
 
-dn = dt.datetime(2013, 1, 1, 20, 0)
-iri_file = "database/IRI/SAA/20130101.txt"
-plot_timeseries_parameters(dn, iri_file)
+fig, ax = plt.subplots(
+    figsize = (12, 6), 
+    sharex = True,
+    nrows = 4, 
+    ncols = 2,
+    dpi = 300
+    )
+
+
+df = set_data(alt = 250)
+
+df = df[df.index < dt.datetime(2013, 2, 3, 0)]
+
+new_index = pd.date_range(
+    df.index[0] - dt.timedelta(minutes = 10), 
+    df.index[-1], freq = "10min"
+    )
+
+df = df.reindex(new_index).interpolate()
+
+s.set_mi_ma_axis(ax[3, 0])
+s.set_mi_ma_axis(ax[3, 1])
+
+ax[0, 0].plot(df["ratio"])
+ax[1, 0].plot(df["nui"])
+ax[2, 0].plot(df["N"])
+ax[3, 0].plot(df["K"])
+
+infile = "database/Results/maximus/2013.txt"
+
+#plot_roti_maximus(ax[1], infile, df.index[0], delta_hours = df.index[-1])
+
+ax[0, 1].plot(df[['zon_ef', "zon"]])
+ax[1, 1].plot(df['gamma_g'])
+ax[2, 1].plot(df[['gamma_zon', 'gamma_zon_ef']])
+
+

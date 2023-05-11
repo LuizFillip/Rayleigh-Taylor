@@ -1,60 +1,40 @@
 import FluxTube as ft
 import ionosphere as io
-import matplotlib.pyplot as plt
-
-def effects_due_to_gravity(ds):
-    
-    alts = ds.index
-    
-    K = ft.gradient_integrated(ds["N"], alts)
-    
-    gamma = ds["ratio"] * ((9.81 / ds["nui"])) * K 
-    return alts, gamma
-
-def compute_parameters(infile, hemisphere):
-    base = io.load_calculate(infile)
-    ds = ft.IntegratedParameters(
-        base, 
-        hemisphere = hemisphere
-        )
-
-    r = ft.ratio(base)
-    
-    if  hemisphere == "north":
-        ds["ratio"] =  r.north.dropna()
-    else:
-        ds["ratio"] =  r.south.dropna()
-
-    return ds    
-
-
 from utils import datetime_from_fn
 import os 
 import pandas as pd
 
+
+
+
+
+
 infile = "D:\\FluxTube\\"
 
-files = os.listdir(infile)
 
-gmax = {
-        "north": [], 
-        "south": []}
-idx = []
+def run_each_hemisphere(infile):
+    files = os.listdir(infile)
 
-for filename in files:
-    print(filename)
-    path = os.path.join(infile, filename)
+    gmax = {
+            "north": [], 
+            "south": []
+            }
+    idx = []
     
-    idx.append(datetime_from_fn(filename))
-    
-    for hm in ["north", "south"]:
+    for filename in files:
         
-        ds = compute_parameters(path, hm)
+        print(filename)
         
-        alts, gamma = effects_due_to_gravity(ds)
+        path = os.path.join(infile, filename)
         
-        gmax[f"{hm}"].append(gamma[alts == 300])
+        idx.append(datetime_from_fn(filename))
+        
+        for hm in ["north", "south"]:
             
-df = pd.DataFrame(gmax, index = idx)
-
-print(df)
+            ds = compute_parameters(path, hm)
+            
+            alts, gamma = effects_due_to_gravity(ds)
+            
+            gmax[f"{hm}"].append(gamma[alts == 300].item())
+                
+    return pd.DataFrame(gmax, index = idx)
