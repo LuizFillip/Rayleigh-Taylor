@@ -4,6 +4,7 @@ import ionosphere as io
 import matplotlib.pyplot as plt
 import pandas as pd
 from utils import datetime_from_fn
+from utils import smooth2, translate
 
 def effects_due_to_gravity(ds):
     return  ds["ratio"] * ((9.81 / ds["nui"])) * ds["K"]
@@ -27,9 +28,12 @@ def load(infile, hemisphere = "north"):
 
     return ds    
 
-def build(infile, filename):
+def build(infile, filename = None, 
+          hemisphere = "north",
+          remove_smooth = None):
     
-    df = load(os.path.join(infile, filename))
+    df = load(infile, 
+              hemisphere = hemisphere)
     
     df["gamma_g"] = effects_due_to_gravity(df)
     
@@ -37,21 +41,32 @@ def build(infile, filename):
         df[f"gamma_{wind}"] = effects_due_to_winds(
             df, wind_type = wind)
     
-    df["dn"] = datetime_from_fn(filename)
+    if filename is not None:
+        df["dn"] = datetime_from_fn(filename)
+        
+    df["nui"] = 9.81 / df["nui"] 
+    
+    if remove_smooth is not None:
+        for col in df.columns:
+            df[col] =  smooth2(df[col], remove_smooth)
+            
+        df = df[:-remove_smooth]
+        
     return df
 
+def run(infile):
 
-infile = "D:\\TubeFlux\\"
-infile = "F:\\FluxTube\\01\\"
-
-out = []
-files = os.listdir(infile)
-
-for filename in files:
+    infile = "D:\\TubeFlux\\"
+    infile = "F:\\FluxTube\\01\\"
     
-
-    print("processing", filename)
-    out.append(build(infile, filename))
+    out = []
+    files = os.listdir(infile)
     
+    for filename in files:
+        
     
-pd.concat(out).to_csv("01.txt")
+        print("processing", filename)
+        out.append(build(os.path.join(infile, filename)))
+        
+        
+    pd.concat(out).to_csv("01.txt")

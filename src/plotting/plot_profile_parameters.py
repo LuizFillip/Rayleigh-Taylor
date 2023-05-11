@@ -1,15 +1,12 @@
 import matplotlib.pyplot as plt
-from RayleighTaylor.RT import growth_rate_RT
-import locale
+from labels import Labels
 import numpy as np
 import settings as s
-
+from RayleighTaylor import build
     
 def plot_recombination_freq(ax, r, alts):
     
-    name = "Taxa de recombinação" 
-    symbol = "$\nu_R$"
-    units = "$s^{-1}$"
+    
     
     
     ax.plot(r, alts, color = "k", lw = 2) 
@@ -64,18 +61,54 @@ def plot_growth_rate_RT(
         )
     
 def plot_profiles_parameters(date):
-    fig, ax = plt.subplots(figsize = (17, 20), 
-                           ncols = 3,
-                           nrows = 2,
-                           sharey = True)
-    
-    plt.subplots_adjust(wspace = 0.2)
-    
-    s.text_painels(ax, x = 0.05, y = 0.94)
-    
-  
-    locale.setlocale(locale.LC_ALL, 'pt_pt.UTF-8')
-    time_str = date.strftime("%d de %B de %Y, %H:%M UT")
-    fig.suptitle(f"Parâmetros da taxa de crescimento Rayleigh-Taylor, \n {time_str}", y = 0.93)
+    infile = "database/FluxTube/201301012100.txt"
 
-# plot_profiles_parameters(date)
+    
+
+
+    fig, ax = plt.subplots(
+        figsize = (12, 6), 
+        sharey = True,
+        ncols = 5,
+        dpi = 300)
+
+    plt.subplots_adjust(wspace = 0.05)
+
+    def adding_labels(ax):
+
+        cols = ['ratio', 'K', 'nui', "U", "U"]
+        other =  ["", "", "", "\ngeográfico", "\nefetivo"]
+        l = Labels().infos
+        for i, col in enumerate(cols):
+            info = l[col]
+         
+            ax[i].set(title = info["name"] + other[i],
+                xlabel = f"{info['symbol']} ({info['units']})")
+        
+       
+        
+    for hem in ["north", "south"]:
+
+        cols = ['ratio', 'K', 'nui', 'zon', 'zon_ef']
+        
+        ds = build(infile, hemisphere = hem, 
+                   remove_smooth = 15)
+            
+        for i, col in enumerate(cols):
+            
+            ax[i].plot(ds[col], ds.index, 
+                       label = translate(hem).title())
+            
+            ax[i].legend(loc = "upper left")
+            
+            if "zon" in col:
+                ax[i].set(xlim = [-50, 50])
+           
+                
+
+    adding_labels(ax)
+    ax[0].set(ylabel  = "Altura de apex (km)", 
+              yticks = np.arange(210, 600, 50), 
+              ylim = [210, 600])
+
+    plt.show()
