@@ -1,27 +1,19 @@
 from utils import translate
 import matplotlib.pyplot as plt
 import RayleighTaylor as rt
-from settings import axes_hour_format, secondary_axis, axes_date_format
-from results import plot_roti_maximus
 from utils import save_but_not_show
 import os
+import numpy as np
+from common import plot_roti, plot_terminators
 
-def plot_roti(ax, ds):
-    
-    plot_roti_maximus(
+
+def plot_winds_ts(
         ax, 
-        "database/Results/maximus/2013.txt", 
-        start = ds.index[0], 
-        delta_hours = ds.index[-1],
-        station = "salu")
-    
-    axes_hour_format(ax, hour_locator = 6, tz = "UTC")
-    
-    ax1 = secondary_axis(ax)
-    ax.set(xlabel = "Hora universal")
-    axes_date_format(ax1)
-
-def plot_winds_ts(ax, ds, cols, sign = -1):
+        ds, 
+        cols, 
+        sign = -1, 
+        effect = "winds"
+        ):
     
     if "zon" in cols:
         coord =  "Zonal"
@@ -29,10 +21,18 @@ def plot_winds_ts(ax, ds, cols, sign = -1):
         coord = "Meridional"
 
     for wd in cols:
-        gamma = rt.effects_due_to_winds(
-                ds, 
-                wind = wd,
-                sign = sign)
+        if effect == "winds":
+            
+            gamma = rt.effects_due_to_winds(
+                    ds, 
+                    wind = wd,
+                    sign = sign)
+        else:
+        
+            gamma = rt.effects_due_to_recombination(
+                    ds, 
+                    wind = wd,
+                    sign = sign)
         
         if "ef" in wd:
             label = f"{coord} efetivo"
@@ -43,18 +43,53 @@ def plot_winds_ts(ax, ds, cols, sign = -1):
         
     ax.legend(loc = "lower left")
     
-
     ax.axhline(0, linestyle = "--")
         
-    ax.set(ylim = [-15, 15])
+    ax.set(ylim = [-20, 20], 
+           xlim = [ds.index[0], 
+                   ds.index[-1]]
+           )
     
+def plot_by_sign(
+        ax, col, ds, 
+        wind_sign = "positive", 
+        effect = "winds"
+        ):
     
+    if wind_sign == "positive":
+        sign = 1
+    else:
+        sign = -1
+        
+    eq = rt.EquationsFT(
+        wind_sign = wind_sign
+        )
+    
+    if effect == "winds":
+        title = eq.winds
+    else:
+        title = eq.recombination
+        
+    ax[0, col].set(title = title)
+    
+    plot_winds_ts(ax[0, col], ds, ["zon", "zon_ef"], 
+                  sign = sign, effect = effect)
+    plot_winds_ts(ax[1, col], ds, ["mer", "mer_ef"], 
+                  sign = sign, effect = effect)
+    
+    if col == 0:
+        for num in range(2):
+            ax[num, col].set(ylabel = eq.label)
 
 
-def plot_winds_and_roti(infile, hemisphere):
+def plot_winds_effect_and_recombination(
+        infile, 
+        hemisphere, 
+        effect = "recombination"
+        ):
     
     fig, ax = plt.subplots(
-        figsize = (12, 8), 
+        figsize = (15, 8), 
         sharex = True,
         sharey = "row",
         ncols = 2, 
@@ -63,34 +98,24 @@ def plot_winds_and_roti(infile, hemisphere):
         )
         
     plt.subplots_adjust(
-        wspace = 0.05, hspace = 0.05)
+        wspace = 0.05, 
+        hspace = 0.05
+        )
     
     ds = rt.set_data(infile, hemisphere, alt = 300)
             
-    eq = rt.EquationsFT(wind_sign = "negative")
+    plot_by_sign(
+            ax, 0, ds, 
+            wind_sign = "negative", 
+            effect =  effect 
+            )
     
-        
-    for num in range(2):
-        ax[num, 0].set(ylabel = eq.label)
-        
-    eq = rt.EquationsFT(
-        wind_sign = "negative"
-        )
+    plot_by_sign(
+            ax, 1, ds, 
+            wind_sign = "positive", 
+            effect =  effect 
+            )
     
-    ax[0, 0].set(title = eq.winds)
-    
-    plot_winds_ts(ax[0, 0], ds, ["zon", "zon_ef"])
-    plot_winds_ts(ax[1, 0], ds, ["mer", "mer_ef"])
-    
-    eq = rt.EquationsFT(
-        wind_sign = "positive"
-        )
-    
-    ax[0, 1].set(title = eq.winds)
-    
-    plot_winds_ts(ax[0, 1], ds, ["zon", "zon_ef"], sign = 1)
-    plot_winds_ts(ax[1, 1], ds, ["mer", "mer_ef"], sign = 1)
-
     plot_roti(ax[2, 0], ds)
     plot_roti(ax[2, 1], ds)
     
@@ -98,20 +123,36 @@ def plot_winds_and_roti(infile, hemisphere):
     
     fig.suptitle(translate(hemisphere.title()))
     
+    for ax in ax.flat:
+        plot_terminators(ax, ds)
+    
+    plt.show()
     return fig
     
-infile = "database/RayleighTaylor/process/"
-filename = "12.txt"
 
 
-for hemisphere in ["south", "north"]:
+def save_plot(infile, filename, to_folder):
     
-    fig = plot_winds_and_roti(
-        os.path.join(infile, filename), 
-        hemisphere)
+    effect = to_folder.split("_")[0]
     
-    FigureName = filename.replace(".txt", ".png")
-    save_in = f"D:\\plots\\winds_effect\\{hemisphere}_{FigureName}"
+    for hemisphere in ["south", "north"]:
+        
+        fig = plot_winds_effect_and_recombination(
+            os.path.join(infile, filename), 
+            hemisphere, effect = effect)
+        
+        FigureName = filename.replace(".txt", ".png")
+        save_in = f"D:\\plots\\{to_folder}\\{hemisphere}_{FigureName}"
+        
+        save_but_not_show(fig, save_in)
+        
+  
+def main():
+    infile = "database/RayleighTaylor/process/"
     
-    save_but_not_show(fig, save_in)
-
+    for to_folder in ["winds_effect",
+                      "recombination_winds_effect"]:
+    
+        for filename in os.listdir(infile):
+            print("saving...", filename)
+            save_plot(infile, filename, to_folder)

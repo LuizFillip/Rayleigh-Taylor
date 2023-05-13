@@ -1,11 +1,7 @@
 import FluxTube as ft
 import ionosphere as io
 import matplotlib.pyplot as plt
-from tqdm import tqdm
-import os 
 import pandas as pd
-import datetime as dt
-from utils import dn2fname
 from models import altrange_msis
 from GEO import sites
 

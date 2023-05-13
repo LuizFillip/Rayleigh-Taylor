@@ -3,68 +3,14 @@ from labels import Labels
 import numpy as np
 import settings as s
 from RayleighTaylor import build
-    
-def plot_recombination_freq(ax, r, alts):
-    
-    
-    
-    
-    ax.plot(r, alts, color = "k", lw = 2) 
-    ax.set(
-        title = name,
-        xlabel = (f"{symbol} ({units})"),
-        xscale = "log", 
-        xlim = [1e-10, 1e3]
-            )
+from utils import translate
 
-def plot_winds(ax, u, alts):
-    name = "Ventos termosféricos"
-    units = "m/s"
-    symbol = "U"
-    
-    ax.plot(u, alts, color = "k", lw = 2)
-    ax.axvline(0, linestyle = "--", color = "r", lw = 2)
-    
-    ax.set(
-        title = name,
-        xlabel = (f"{symbol} ({units})"), 
-        xlim = [-120, 120], 
-        xticks = np.arange(-120, 140, 40)
-        )
-    ax.legend(loc = "upper right")
     
 
     
-def plot_growth_rate_RT(
-        ax, 
-        nu, l, r, vz, u, alts
-        ):
-    
-    name = "Taxa de crescimento Rayleigh-Taylor"
-    symbol = "$\gamma_{RT}$"
-    units = "$10^{-3} s^{-1}$"
-    
-    ax.plot(growth_rate_RT(nu, l, r, vz, u), alts, 
-               color = "k", lw = 2)
-    
-    ax.plot(growth_rate_RT(nu, l, 0, vz, u), alts, 
-               label = r"$R = 0 $", lw = 2)
-    
-    ax.plot(growth_rate_RT(nu, l, r, vz, 0), alts, 
-               label = r"$U = 0 $", lw = 2)
-    
-    ax.legend()
-    ax.set(
-        title = name,
-        xlim = [-6e-3, 6e-3], 
-        xlabel = (f"{symbol} ({units})")
-        )
-    
+
 def plot_profiles_parameters(date):
     infile = "database/FluxTube/201301012100.txt"
-
-    
-
 
     fig, ax = plt.subplots(
         figsize = (12, 6), 

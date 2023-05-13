@@ -19,51 +19,41 @@ def generalized_rate_growth(nu, L, R, Vp, U):
 
 
 
-class GrowthRate:
-    
-    def __init__(self, ne):
+
         
-        self.ne = ne
-        
-    def wind():
-        ...
+def effects_due_to_gravity(ds):
     
-    def vzp():
-        ...
+    return  ds["ratio"] * ((9.81 / ds["nui"])) * ds["K"]
+
+def effects_due_to_winds(
+        ds, 
+        wind = "zon",
+        sign = -1):
     
-    def g():
-        ...
+    return ds["ratio"] * (sign * ds[wind] + (9.81 / ds["nui"])
+        ) * ds["K"] 
+
+
+def effects_due_to_recombination(
+        ds, 
+        wind = "zon",
+        sign = -1):
     
-    def nui():
-        ...
-        
-        
-class LabelsRT:
+    return ds["ratio"] * (
+        sign * ds[wind] + (9.81 / ds["nui"])
+        ) * ds["K"] - ds["RT"]
+
+def effects_due_to_drift(
+        ds, 
+        recom = False, 
+        col = "vz"
+        ):
     
-    @property
-    def complete():
-        return  r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$"
+    if recom:
+        return ds["ratio"] * (ds[col] + (9.81 / ds["nui"])) * ds["K"] - ds["RT"]
     
-    @property
-    def wind():
-        return r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$"
-    
-    @property
-    def vzp():
-        return r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$"
-    
-    @property
-    def recombination():
-        return r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$"
-    
-    @property
-    def gravity():
-        return r"$ (\frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$"
+    else:
+        return ds["ratio"] * (ds[col] + (9.81 / ds["nui"])) * ds["K"] 
         
 
-names = [r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$",
-            r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$", 
-            r"$(- U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$ - R", 
-            r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$", 
-            r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$", ]
-  
+

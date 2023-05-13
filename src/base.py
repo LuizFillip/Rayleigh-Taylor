@@ -1,11 +1,9 @@
 import pandas as pd
-import numpy as np 
-import os 
-import datetime as dt
-import matplotlib.pyplot as plt
-import settings as s
+import numpy as np
+import digisonde as dg
 
-def get_max(df, date, alts = (250, 350)):
+
+def gamma_max_from_filter(df, date, alts = (250, 350)):
    
     cond_alt = ((df.index >= alts[0]) &
                 (df.index <= alts[1]))
@@ -14,24 +12,8 @@ def get_max(df, date, alts = (250, 350)):
     
     return df.loc[cond_alt & cond_time, "g"].max()
 
-        
-def set_data(infile = "02_11_north.txt", alt = 300, month = 2):
+def gamma_maximus(infile = "02_11_north.txt"):
     
-    df = pd.read_csv(infile, index_col=0)
-    
-    df["dn"] = pd.to_datetime(df["dn"])
-    
-    df = df.loc[(df.index == alt) ]
-    
-    df = df.set_index("dn")
-    
-    df["nui"] = 9.81 / df["nui"]
-
-    return df.loc[df.index.month == month]
-
-
-def maximus():
-    infile = "02_11_north.txt"
     df = pd.read_csv(infile, index_col=0)
     dat = {
            "gamma_zon" : [], 
@@ -58,44 +40,39 @@ def maximus():
    
     
     
-    fig, ax = plt.subplots(
-        figsize = (12, 4), 
-        
-                           dpi = 300)
+ 
+def add_drift_pre(df):
+    pre = "database/Drift/PRE/SAA/2013.txt"
     
-    g = "gamma_g"
-    img = plt.scatter(ts.index, 
-                      ts[f"z_{g}"], 
-                      c = ts[g]*1e4)
+    ds = pd.read_csv(pre, index_col = 0)
+    ds.index = pd.to_datetime(ds.index)
     
-    
-    cb = plt.colorbar(img)
-    cb.set_label("$\gamma_{FT} ~(\\times 10^{-4}~s^{-1})$")
-    
-    
-    s.format_axes_date(
-        ax, time_scale = "hour", interval = 4
-        )
-    
-    
-    ax.set(title = "gravidade", ylabel = "Altura de Apex (km)")
-    
-    
-    ax.set_xlabel("Hora universal", 
-                     rotation = 0, 
-                     labelpad = 25)
-    
-def date_under_axis(ax, dn, miny = 210, delta = 3.5):
-    delta = dt.timedelta(hours = delta)
-    
-    text_date = dn.strftime("%d/%m/%Y")
+    for date in np.unique(df.index.date):
+        vp = ds.loc[ds.index.date == date]
+        df.loc[df.index.date == date, "vzp"] = vp["vp"].item()
 
-    ax.text(dn - delta, miny, text_date, 
-            transform = ax.transData)
+    return df
+
+        
+def set_data(infile = "02_11_north.txt", 
+             hemisphere = "north",
+             alt = 300
+             ):
     
-def midnight_points(df):
-    return df.loc[df.index.time == dt.time(0, 0)].index
+    df = pd.read_csv(infile, index_col=0)
     
-for dn in midnight_points(ts):
+    df = df.loc[(df.index == alt) & 
+                (df["hem"] == hemisphere)]
     
-    date_under_axis(ax, dn)
+    df = df.set_index("dn")
+    
+    df.index = pd.to_datetime(df.index)
+    
+    drift_file = "database/Drift/SSA/PRO_2013.txt"
+
+    drift = dg.load_drift(drift_file)
+
+    df["vz"] = drift["vz"].copy()
+    df = add_drift_pre(df)
+    return df
+

@@ -1,0 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri May 12 17:56:14 2023
+
+@author: Luiz
+"""
+
+10 dias com EPBs
+10 dias sem ``
+
+- 

@@ -1,88 +1,108 @@
+from utils import translate
 import matplotlib.pyplot as plt
-import settings as s
-import matplotlib.ticker as ticker
-import pandas as pd
+import RayleighTaylor as rt
+from utils import save_but_not_show
+import os
+from common import plot_roti, plot_terminators
 
 
-### COLOCAR OS DOIS PLOTS LADO A LADO (3 x 2)
 
-
-def get_max(df, times, alts = (200, 350)):
-   
-    cond_alt = ((df.alt >= alts[0]) &
-                (df.alt <= alts[1]))
+def plot_drift_ts(
+        ax, 
+        ds, 
+        recom = False,
+        effect = "vz"
+        ):
     
-    return [df.loc[(df.index == t) & 
-            cond_alt, "g"].max() 
-            for t in times]
+    gamma = rt.effects_due_to_drift(
+                    ds, 
+                    recom = recom, 
+                    col = effect
+                    )
     
-def get_winds(df, heigth = 300):
-    return df.loc[df.alt == heigth, "u"]
+    eq = rt.EquationsFT()
+    
+    label = eq.drift(recom = recom)
+    
+    ax.plot(gamma * 1e4, 
+            label = label)
+                
+    ax.set(ylim = [-20, 20], 
+           xlim = [ds.index[0], 
+                   ds.index[-1]]
+           )
+    
+    ax.axhline(0, linestyle = "--")
+
+def plot_drift_effect(infile, alt = 300):
+    
+    fig, ax = plt.subplots(
+        figsize = (12, 8), 
+        sharex = True,
+        sharey = "row",
+        ncols = 2, 
+        nrows = 3, 
+        dpi = 300
+        )
+    
+    plt.subplots_adjust(
+        wspace = 0.05, 
+        hspace = 0.05
+        )
+    
+    
+    for col, hem in enumerate(["north", "south"]):
         
-
-def plot_winds(ax, df, n):
-    
-    na = [r"$(U_\phi \cos D + U_\theta \sin D)\cos I$", 
-          r"$(U_\theta \cos D + U_\phi \sin D)\sin I$",
-          r"$U_\theta \cos D + U_\phi \sin D$"]
-    
-    ws = get_winds(df)
-
-    ax.plot(ws, color = "k", label = na[n])
-    
-    ax.set(ylabel = "$U_{eff} ~(m/s)$", 
-           xlabel = "Meses")
-    
-    ax.legend()
-    
-    if n == 0:
-        ax.set(title = "Vento efetivo (300 km)")
+        ds = rt.set_data(infile, hem, alt = alt)
         
-
-def load(infile):
-
-    df = pd.read_csv(infile, index_col = 0)
-    
-    df.index = pd.to_datetime(df.index)
-    
-    df["date"] = df.index.date
-    
-    return df
-
-def plot_gammas(ax, df, times, n):
-    gs = get_max(df, times)
-    ax.plot(times, gs, color = "k")
-
-
-    ax.yaxis.set_major_formatter(
-        ticker.FuncFormatter(lambda y, _: '{:g}'.format(y/1e-3)))
-
-    ax.set(ylabel = "$\gamma_{RT} \\times 10^{-3} ~ s^{-1}$")
-    
-    if n == 0:
-        ax.set(title = r"$(V_{zp} - U_{eff} + \frac{g}{\nu_{in}})" +
-           "\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$")
-
-def plot_gammas_end_eff_winds():
-    
-    fig, ax = plt.subplots(nrows = 3, 
-                           figsize = (8, 6),
-                           sharey = True,
-                           sharex = True)    
-    
-    plt.subplots_adjust(hspace = 0.05)
-    
-    s.config_labels()
-    
-    for n, ax in enumerate(ax.flat):
+        ax[0, col].set(title = translate(hem.title()))
         
-        infile = f"database/data/2014_U{n + 1}.txt"
+        ax[col, 0].set_ylabel(rt.EquationsFT().label)
+        
+        plot_roti(ax[2, col], ds)
+        
+        names = ["Variação da deriva", 
+                 "Pico pré reversão"]
+        
+        for row, effect in enumerate(["vz", "vzp"]):
+            
+            ax[row, col].text(
+                0.05, 0.8, 
+                f"{names[row]} ({effect})", 
+                transform = ax[row, col].transAxes
+                )
+            
+            plot_drift_ts(ax[row, col], ds, 
+                      effect = effect)
+        
+            plot_drift_ts(ax[row, col], ds, 
+                      effect = effect, recom = True)
+        
     
-        df = load(infile)
-        
-        ax.axhline(0, color = "r", linestyle = "--")
-        
-        plot_winds(ax, df, n)
+    ax[0, 0].legend(loc = "upper left", 
+                    ncols = 2, 
+                    bbox_to_anchor=(0.35, 1.4))
     
-        s.format_axes_date(ax)
+    
+    ax[2, 1].set(ylabel = "")
+    
+    for ax in ax.flat:
+        plot_terminators(ax, ds)
+    
         
+    plt.show()
+    
+    return fig
+
+
+infile = "database/RayleighTaylor/process/"
+to_folder = "drift_effect"
+
+for filename in os.listdir(infile):
+    FigureName = filename.replace("txt", "png")
+    save_in = f"D:\\plots\\{to_folder}\\{FigureName}"
+    fig = plot_drift_effect(
+        os.path.join(infile, filename), 
+        alt = 300
+        )
+    save_but_not_show(fig, save_in)

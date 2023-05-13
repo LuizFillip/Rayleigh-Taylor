@@ -34,3 +34,5 @@ def plot_gamma_climatology(infile):
            xlabel = "Dia do ano")
     
     s.format_axes_date(ax)
+    
+    
