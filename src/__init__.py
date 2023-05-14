@@ -1,7 +1,8 @@
 from .RT import (
     effects_due_to_winds, 
-    effects_due_to_recombination, 
-    effects_due_to_drift
+    effects_due_to_winds_drift, 
+    effects_due_to_drift,
+    effects_due_to_gravity
     )
 from .plotting import *
 from .fluxtube import load

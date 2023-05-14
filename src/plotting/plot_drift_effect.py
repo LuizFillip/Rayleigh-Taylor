@@ -99,10 +99,13 @@ infile = "database/RayleighTaylor/process/"
 to_folder = "drift_effect"
 
 for filename in os.listdir(infile):
+    
     FigureName = filename.replace("txt", "png")
     save_in = f"D:\\plots\\{to_folder}\\{FigureName}"
+    
     fig = plot_drift_effect(
         os.path.join(infile, filename), 
         alt = 300
         )
+    
     save_but_not_show(fig, save_in)

@@ -1,7 +1,4 @@
-import numpy as np
-
-
-def generalized_rate_growth(nu, L, R, Vp, U):
+def generalized_rate_growth(nui, L, R, Vp, U):
     """
     Generalized instability rate growth
     local version
@@ -15,45 +12,70 @@ def generalized_rate_growth(nu, L, R, Vp, U):
     g: acceleration due gravity
     """
      
-    return (Vp - U + (9.81 / nu))*L - R
-
-
+    return (Vp - U + (9.81 / nui))*L - R
 
 
         
-def effects_due_to_gravity(ds):
+def effects_due_to_gravity(
+        ds, 
+        recom = False
+        ):
     
-    return  ds["ratio"] * ((9.81 / ds["nui"])) * ds["K"]
+    gamma = ds["ratio"] * ((ds["ge"] / ds["nui"])) * ds["K"]
+    
+    if recom:
+        return gamma - ds["R"]
+    else:
+        return gamma
 
 def effects_due_to_winds(
         ds, 
         wind = "zon",
-        sign = -1):
-    
-    return ds["ratio"] * (sign * ds[wind] + (9.81 / ds["nui"])
-        ) * ds["K"] 
-
-
-def effects_due_to_recombination(
-        ds, 
-        wind = "zon",
-        sign = -1):
-    
-    return ds["ratio"] * (
-        sign * ds[wind] + (9.81 / ds["nui"])
-        ) * ds["K"] - ds["RT"]
-
-def effects_due_to_drift(
-        ds, 
-        recom = False, 
-        col = "vz"
+        sign_wd = -1, 
+        recom = False
         ):
     
-    if recom:
-        return ds["ratio"] * (ds[col] + (9.81 / ds["nui"])) * ds["K"] - ds["RT"]
+    gamma = ds["ratio"] * (sign_wd * ds[wind] + (ds["ge"] / ds["nui"])
+        ) * ds["K"] 
     
+    if recom:
+        return gamma - ds["R"]
     else:
-        return ds["ratio"] * (ds[col] + (9.81 / ds["nui"])) * ds["K"] 
+        return gamma 
+
+
+def effects_due_to_winds_drift(
+        ds, 
+        wind = "zon",
+        sign_wd = -1, 
+        drift = "vz", 
+        recom = False
+        ):
+    
+    gamma = ds["ratio"] * (ds[drift] +
+        sign_wd * ds[wind] + (ds["ge"] / ds["nui"])
+        ) * ds["K"]
+    
+    if recom:
+        return gamma - ds["R"]
+    else:
+        return gamma
+    
+    
+def effects_due_to_drift(
+        ds, 
+        col = "vz",
+        recom = False
+        ):
+    
+    gamma = ds["ratio"] * (
+        ds[col] + (ds["ge"] / ds["nui"])
+        ) * ds["K"]
+    
+    if recom:
+        return gamma - ds["R"]
+    else:
+        return gamma 
         
 
 

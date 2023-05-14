@@ -22,24 +22,15 @@ class EquationsRT:
         
 class EquationsFT:
     
-    def __init__(self, wind_sign = "positive"):
+    def __init__(self):
         
-        if wind_sign == "positive":
-            
-            self.wd = "+ U_L^P"
-        else:
-            self.wd = "- U_L^P"
-            
-    
         self.ge = "\\frac{g_e}{\\nu_{eff}^{F}}"
         self.re = "R_T"
         self.kf = "K^F"
         self.vp = "V_P"
         self.ratio = "\\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}"
     
-    @property
-    def complete(self):
-        return f"$\gamma_{{FT}} = {self.ratio}({self.vp} {self.wd} + {self.ge}){self.kf} - {self.re}$"
+    
     
     
     def drift(self, recom = False):
@@ -48,18 +39,31 @@ class EquationsFT:
         else:
             return f"$\gamma_{{FT}} = {self.ratio}({self.vp} + {self.ge}){self.kf}$"
     
-    @property
-    def gravity(self):
-        return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf}$"
+    def gravity(self, recom = False):
+        if recom:
+            return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf} - {self.re}$" 
+        else:
+            return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf}$"
     
     @property
-    def winds(self):
-        return f"$\gamma_{{FT}} = {self.ratio}({self.wd} + {self.ge}){self.kf}$"
+    def complete(self):
+        return f"$\gamma_{{FT}} = {self.ratio}({self.vp} {self.wd} + {self.ge}){self.kf} - {self.re}$"
     
-    @property
-    def recombination(self):
-        return f"$\gamma_{{FT}} = {self.ratio}({self.wd} + {self.ge}){self.kf} - {self.re}$"
+    def winds(self, 
+              wind_sign = -1, 
+              recom = False):
+        
+        if wind_sign == 1:     
+            wd = "+ U_L^P"
+        else:
+            wd = "- U_L^P"
+            
+        if recom:
+            return f"$\gamma_{{FT}} = {self.ratio}({wd} + {self.ge}){self.kf} - {self.re}$"
+        else:
+            return f"$\gamma_{{FT}} = {self.ratio}({wd} + {self.ge}){self.kf}$"
     
+
     @property
     def label(self):
         return f"$\gamma_{{FT}} ~(\\times 10^{{-4}}~s^{{-1}})$"
