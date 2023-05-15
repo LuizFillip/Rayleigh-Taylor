@@ -1,34 +1,8 @@
 import os
 import pandas as pd
-import RayleighTaylor as rt
 from utils import datetime_from_fn
 import FluxTube as ft
 import datetime as dt
-
-
-def run(infile, month):
-    
-    out = []
-    
-    for filename in os.listdir(infile):
-        
-        print("processing...", filename)
-        
-        for hem in ["south", "north"]:
-
-            out.append(rt.load(
-                infile, 
-                filename, 
-                hemisphere = hem)
-                )
-
-    df = pd.concat(out)
-           
-    save_in = "database/RayleighTaylor/process/"
-    filename = f"{month}.txt"
-    df.to_csv(os.path.join(save_in, filename))
-    return df
-
 
 
 infile = "D:\\FluxTube\\"
@@ -54,8 +28,14 @@ def concat_save(infile, mon):
     
     df.to_csv(os.path.join(save_in, filename))
     
-for mon in os.listdir(infile):
-    if int(mon) == 4:
-        pass
-    else:
-        concat_save(os.path.join(infile, mon), mon)
+infile = "D:\\FluxTube\\"    
+
+mons = ["01", "02", "03"]
+mons = ["04", "05", "06"]
+mons = ["07", "08", "09"]
+mons = ["10", "11", "12"]
+
+
+mon = "07"
+#for mon in mons:
+concat_save(os.path.join(infile, str(mon)), mon)
