@@ -30,9 +30,6 @@ class EquationsFT:
         self.vp = "V_P"
         self.ratio = "\\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}"
     
-    
-    
-    
     def drift(self, recom = False):
         if recom:
             return f"$\gamma_{{FT}} = {self.ratio}({self.vp} + {self.ge}){self.kf} - {self.re}$"
@@ -45,9 +42,21 @@ class EquationsFT:
         else:
             return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf}$"
     
-    @property
-    def complete(self):
-        return f"$\gamma_{{FT}} = {self.ratio}({self.vp} {self.wd} + {self.ge}){self.kf} - {self.re}$"
+    def complete(self, 
+              wind_sign = -1, 
+              recom = False):
+        
+        if wind_sign == 1:     
+            wd = "+ U_L^P"
+        else:
+            wd = "- U_L^P"
+            
+        if recom:
+            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} {wd} + {self.ge}){self.kf} - {self.re}$"
+        else:
+            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} {wd} + {self.ge}){self.kf}$"
+        
+      
     
     def winds(self, 
               wind_sign = -1, 
