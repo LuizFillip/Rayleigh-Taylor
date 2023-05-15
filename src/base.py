@@ -21,15 +21,13 @@ def add_drift_pre(df):
 
         
 def set_data(infile = "02_11_north.txt", 
-             hemisphere = "north",
              alt = 300,
-             delta = dt.timedelta(days = 5, minutes = 20)
+             
              ):
     
     df = pd.read_csv(infile, index_col=0)
     
-    df = df.loc[(df.index == alt) & 
-                (df["hem"] == hemisphere)]
+    df = df.loc[(df.index == alt) ]
     
     df = df.set_index("dn")
     
@@ -43,6 +41,9 @@ def set_data(infile = "02_11_north.txt",
     
     df = add_drift_pre(df)
     
-    return df[df.index < df.index[0] +  delta]
+    return df
+
+infile = "database/RayleighTaylor/process2/1.txt"
+# df = set_data(infile)
 
 
