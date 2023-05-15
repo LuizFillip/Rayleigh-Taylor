@@ -1,4 +1,4 @@
-from utils import translate
+from utils import translate, fname_to_save
 import matplotlib.pyplot as plt
 import RayleighTaylor as rt
 from utils import save_but_not_show
@@ -50,10 +50,11 @@ def plot_drift_effect(infile, alt = 300):
         hspace = 0.05
         )
     
+    df = rt.set_data(infile, alt = alt)
     
     for col, hem in enumerate(["north", "south"]):
         
-        ds = rt.set_data(infile, hem, alt = alt)
+        ds = df.loc[df["hem"] == hem]
         
         ax[0, col].set(title = translate(hem.title()))
         
@@ -89,23 +90,24 @@ def plot_drift_effect(infile, alt = 300):
     for ax in ax.flat:
         plot_terminators(ax, ds)
     
+    return fig, fname_to_save(ds)
+
+
+def save():
+    
+    save_in = "D:\\plots\\drift_effect\\"
+    
+    path = "database/RayleighTaylor/process3/"
+    
+    for filename in os.listdir(path):
+    
+        infile = os.path.join(path, filename) 
+            
+        print("saving...", filename)
         
-    plt.show()
+        fig, fname = plot_drift_effect(infile)
     
-    return fig
-
-
-infile = "database/RayleighTaylor/process/"
-to_folder = "drift_effect"
-
-for filename in os.listdir(infile):
-    
-    FigureName = filename.replace("txt", "png")
-    save_in = f"D:\\plots\\{to_folder}\\{FigureName}"
-    
-    fig = plot_drift_effect(
-        os.path.join(infile, filename), 
-        alt = 300
-        )
-    
-    save_but_not_show(fig, save_in)
+        save_but_not_show(
+                fig, 
+                os.path.join(save_in, fname)
+                )

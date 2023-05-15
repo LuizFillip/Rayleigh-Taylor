@@ -1,116 +1,149 @@
 import matplotlib.pyplot as plt
-import datetime as dt
-import settings as s
-from settings import axes_hour_format, secondary_axis, axes_date_format
-from results import plot_roti_maximus
-from GEO import dawn_dusk
-
-
-
-
-
-
-def plot_timeseries_parameters(df, alt, hemisphere):
-    fig, ax = plt.subplots(
-        figsize = (8, 8), 
-        sharex = True,
-        nrows = 4, 
-        dpi = 300
-        )
-    
-    plt.subplots_adjust(hspace= 0.1)
-    
-    infile = "database/Results/maximus/2013.txt"
-    
-    
-    ax[1].plot(df['gamma_g'] * 1e4)
-    
-    ax[1].set(ylim = [-5, 5], 
-              ylabel = "$\gamma_{FT} ~(\\times 10^{-4}~s^{-1})$"
-              )
-    
-    name = "$\gamma_{FT} = \\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}(\\frac{g_e}{\\nu_{eff}^{F}})K^F$"
-    
-    ax[1].text(0.05, 0.8, name, transform = ax[1].transAxes)
-    
-    
-    ax[2].plot(df[['gamma_zon', 'gamma_zon_ef']] * 1e4)
-    
-    ax[2].legend(["Geográfico", "Efetivo"], 
-                 loc = "upper right",
-                 ncol = 2)
-    
-    name = "$\gamma_{FT} = \\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}(-U_L^P + \\frac{g_e}{\\nu_{eff}^{F}})K^F$"
-    
-    ax[2].text(0.05, 0.8, name, transform = ax[2].transAxes)
-    
-    ax[2].set(ylim = [-17, 17], 
-              ylabel = "$\gamma_{FT} ~(\\times 10^{-4}~s^{-1})$"
-              )
-    
-    
-    plot_roti_maximus(
-        ax[3], "database/Results/maximus/2013.txt", 
-        start = df.index[0], 
-        delta_hours = df.index[-1]
-        )
-     
-
-
-
+from utils import translate
 import RayleighTaylor as rt
+import os
+from common import plot_roti, plot_terminators
+from utils import save_but_not_show, fname_to_save
 
-eq = rt.EquationsFT(wind_sign = "positive")
 
-eqs_gamma = [eq.gravity, eq.winds, eq.drift]
-col_gamma = ["gamma_g", "gamma_zon_ef", "gamma_vp"]
 
-infile = "database/RayleighTaylor/winds_positive/02_north.txt"
-
-df = rt.set_data(infile, alt = 300)
-
-df = df.loc[(df.index >= df.index[0]) & 
-       (df.index <= df.index[0] + dt.timedelta(days = 5))]
-
+def plot_gamma(
+        ax, 
+        ds, 
+        cols, 
+        sign = -1, 
+        recom = False,
+        hem = "north",
+        drift = "vz"
+        ):
     
-fig, ax = plt.subplots(
-    figsize = (12, 8), 
-    sharex = True,
-    nrows = 4, 
-    dpi = 300 
-    )
+    hem = translate(hem)
+    
+    if "zon" in cols:
+        coord =  "Zonal"
+    else:
+        coord = "Meridional"
 
-plt.subplots_adjust(hspace= 0.1)
-
-plot_roti_maximus(
-    ax[3], "database/Results/maximus/2013.txt", 
-    start = df.index[0], 
-    delta_hours = df.index[-1]
-    )
-
-
+    for wd in cols:
+                    
+        gamma = rt.all_effects(
+                ds, 
+                wind = wd,
+                drift = drift, 
+                sign_wd = sign, 
+                recom = recom)
+      
+        if "ef" in wd:
+            label = f"efetivo ({hem})"
+        else:
+            label = f"Geográfico ({hem})"
         
+        ax.plot(gamma * 1e4, label = label)
         
-axes_hour_format(ax[3], hour_locator = 6)
-
-ax1 = secondary_axis(ax[3])
-
-axes_date_format(ax1)
-
-for num, ax in enumerate(ax.flat):
-
-
-     if num < 3:
-         ax.text(
-             0.03, 0.8, eqs_gamma[num], 
-             transform = ax.transAxes
-             )
+    ax.legend(ncol= 2, loc = "lower left")
+    ax.text(0.05, 0.85, coord, transform = ax.transAxes)
+    
+    ax.axhline(0, linestyle = "--")
         
-         ax.plot(df[col_gamma[num]] * 1e4)
-         
-         ax.set(ylabel = eq.label, ylim = [-5, 20])
-         
-         
-         
+    ax.set(ylim = [-20, 20], 
+           xlim = [ds.index[0], 
+                   ds.index[-1]]
+           )
+    return ax
 
 
+def plot_all_effects(infile, alt, recom, drift = "vz"):
+
+
+    fig, ax = plt.subplots(
+           figsize = (20, 12), 
+           sharex = True,
+           sharey = "row",
+           ncols = 2, 
+           nrows = 3, 
+        )
+    
+    plt.subplots_adjust(
+        hspace= 0.1, 
+        wspace = 0.1)
+    
+
+    eq = rt.EquationsFT()
+    
+    df = rt.set_data(infile, alt = alt)
+    
+    for hem in ["north", "south"]:
+        
+        ds = df.loc[df["hem"] == hem]
+        
+        for row, wd in enumerate(["zon", "mer"]):
+        
+            cols = [wd, f"{wd}_ef"]
+            
+            ax[row, 0].set_ylabel(eq.label)
+            
+            for col, sign in enumerate([1, -1]):
+                
+                plot_gamma(ax[row, col], ds, cols, 
+                              sign = sign, 
+                              recom = recom, 
+                              hem = hem, 
+                              drift=drift)
+                
+                title = eq.complete(
+                    wind_sign = sign, 
+                    recom = recom
+                    )
+                
+                ax[0, col].set(title = title)
+    
+    
+    
+    plot_roti(ax[2, 0], ds)
+    plot_roti(ax[2, 1], ds)
+    
+    ax[2, 1].set(ylabel = "")
+    
+    for ax in ax.flat:
+        plot_terminators(ax, ds)
+        
+    if drift == "vz":
+        fig.suptitle("Assumindo $V_P = V_z$ (variando no tempo)")
+    else:
+        fig.suptitle("Assumindo $V_P = V_{zp}$ (Pico pré reversão)")
+
+    return fig, fname_to_save(ds)
+
+
+
+def save(
+        drift = "vz", recom = False, alt = 300
+        ):
+    
+    if recom:
+        w = "with_recombination"
+    else:
+        w = "without_recombination"
+    
+    save_in = f"D:\\plots\\all_effect_{w}\\{drift}\\"
+    
+    path = "database/RayleighTaylor/process3/"
+    
+    for filename in os.listdir(path):
+    
+        infile = os.path.join(path, filename) 
+        
+        recom = True
+        
+        print("saving...", filename)
+        
+        fig, fname = plot_all_effects(infile, alt, recom, drift = drift)
+    
+        save_but_not_show(
+                fig, 
+                os.path.join(save_in, fname)
+                )
+     
+for vz in ["vz", "vzp"]:
+    for rc in [True, False]:
+        save(drift = vz, recom  = rc)

@@ -1,19 +1,10 @@
-import pandas as pd
+import os
 from common import load, plot_times_axes
 import numpy as np
 import matplotlib.pyplot as plt
 import settings as s
 from labels import Labels
-
-def plot_winds(ax, df):
-    ax.plot(df[['zon_ef', "zon"]])
-    
-    ax.set(ylim = [-150, 150], 
-           ylabel = "Velocidade\n zonal (m/s)")
-    
-    ax.legend(["Geográfico", "Efetivo"], 
-                 loc = "upper right",
-                 ncol = 2)
+from utils import fname_to_save, save_but_not_show
 
 
 
@@ -45,10 +36,10 @@ def plot_contour(ax, ds, val):
     
     ax.set(title = f"{name}")
     
-def plot_iono_parameters(infile):
+def plot_input_parameters(infile, cols):
     fig, ax = plt.subplots(
         dpi = 300,
-        figsize = (12, 8),
+        figsize = (15, 8),
         ncols = 2,
         nrows = 2,
         sharex = True,
@@ -56,26 +47,48 @@ def plot_iono_parameters(infile):
         )
     
     plt.subplots_adjust(
-        hspace = 0.1, 
+        hspace = 0.3, 
         wspace = 0.3
         )
     
-   
-    
-    cols = ["N", "K", "nui", "ratio"]
     
     for i in range(2):
         ax[i, 0].set(ylabel = "Altura de Apex (km)")
     
     for index, ax in enumerate(ax.flat):
         
-        ds = load(infile, parameter = cols[index])
+        fname, ds = load(infile, parameter = cols[index])
         
         plot_contour(ax, ds, cols[index])
         
         if index == 2 or index == 3:
             plot_times_axes(ax)
             plot_times_axes(ax)
-        
+            
+    return fig, fname
 
-infile = "database/RayleighTaylor/process2/4.txt"
+def save():
+
+    cols = ["zon", "zon_ef", "mer", "mer_ef"]
+    #cols = ["N", "K", "nui", "ratio"]
+    
+    
+    path = "database/RayleighTaylor/process3/"
+    save_in = "D:\\plots\\parameters\\winds\\"
+    
+    for filename in os.listdir(path):
+    
+        infile = os.path.join(path, filename) 
+        
+        
+        print("saving...", filename)
+        try:
+            
+            fig, fname = plot_input_parameters(infile, cols)
+        
+            save_but_not_show(
+                    fig, 
+                    os.path.join(save_in, fname)
+                    )
+        except:
+            continue

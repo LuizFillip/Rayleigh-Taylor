@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import RayleighTaylor as rt
 import os
 from common import plot_roti, plot_terminators
+from utils import save_but_not_show, fname_to_save
 
 def plot_winds_ts(
         ax, 
@@ -28,28 +29,26 @@ def plot_winds_ts(
                 recom = recom)
       
         if "ef" in wd:
-            label = f"{coord} efetivo ({hem})"
+            label = f"Efetivo ({hem})"
         else:
-            label = f"{coord} geográfico ({hem})"
+            label = f"Geográfico ({hem})"
         
         ax.plot(gamma * 1e4, label = label)
         
-    ax.legend(ncol= 2, loc = "upper left")
-    
+    ax.legend(ncol= 2, loc = "lower left")
+    ax.text(0.05, 0.85, coord, transform = ax.transAxes)
     ax.axhline(0, linestyle = "--")
         
     ax.set(ylim = [-20, 20], 
            xlim = [ds.index[0], 
                    ds.index[-1]]
            )
+    return ax
+
+def plot_winds_effect(df, recom = False, alt = 300):
     
-
-
-
-
-def plot_winds_effect(infile, filename, recom):
     fig, ax = plt.subplots(
-        figsize = (17, 10), 
+        figsize = (20, 12), 
         sharex = True,
         sharey = "row",
         ncols = 2, 
@@ -62,13 +61,11 @@ def plot_winds_effect(infile, filename, recom):
         hspace = 0.05
         )
     
-    infile = os.path.join(infile, filename)
-            
     eq = rt.EquationsFT()
-    
+        
     for hem in ["north", "south"]:
         
-        ds = rt.set_data(infile, hem, alt = 300)
+        ds = df.loc[df["hem"] == hem]
         
         for row, wd in enumerate(["zon", "mer"]):
         
@@ -96,17 +93,52 @@ def plot_winds_effect(infile, filename, recom):
     
     ax[2, 1].set(ylabel = "")
     
-    
     for ax in ax.flat:
         plot_terminators(ax, ds)
         
     return fig
 
-def main():
-    infile = "database/RayleighTaylor/process/"
-    filename = "04.txt"
-    recom = True
+import pandas as pd
+
+
+def save(recom = True):
     
-    fig = plot_winds_effect(infile, filename, recom)
+    if recom:
+        save_in = "D:\\plots\\recombination_winds_effect\\"
+        
+    else:
+        save_in = "D:\\plots\\winds_effect\\"
     
-    plt.show()
+    path = "database/RayleighTaylor/process2/"
+    
+    for filename in os.listdir(path):
+    
+        infile = os.path.join(path, filename) 
+        
+        print("saving...", filename)
+        
+
+        df = pd.read_csv(infile, index_col = 0).sort_index()
+
+        df.index = pd.to_datetime(df.index)
+
+        times = pd.date_range(
+            df.index[0], df.index[-1], freq = "5D"
+            )
+
+        last = len(times) - 1
+
+        for i in range(last):
+            
+            ds = df[(df.index >= times[i]) & 
+                    (df.index <= times[i + 1])]
+                    
+            fig = plot_winds_effect(ds, recom = recom)
+        
+            save_but_not_show(
+                    fig, 
+                    os.path.join(save_in, fname_to_save(ds))
+                    )
+            
+for rc in [True, False]:      
+    save(recom = rc)
