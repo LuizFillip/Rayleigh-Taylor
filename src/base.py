@@ -1,13 +1,12 @@
 import pandas as pd
 import numpy as np
 import digisonde as dg
-import datetime as dt
-
+import FluxTube as ft
 
     
     
  
-def add_drift_pre(df):
+def add_drift_pre(df, apex = 300):
     pre = "database/Drift/PRE/SAA/2013.txt"
     
     ds = pd.read_csv(pre, index_col = 0)
@@ -15,9 +14,20 @@ def add_drift_pre(df):
     
     for date in np.unique(df.index.date):
         vp = ds.loc[ds.index.date == date]
-        df.loc[df.index.date == date, "vzp"] = vp["vp"].item()
+        vzp_fluxtube = vp["vp"].item() * ft.factor_height(apex)**3
+        df.loc[df.index.date == date, "vzp"] =  vzp_fluxtube
 
     return df
+
+def vertical_drift(df):
+
+    drift_file = "database/Drift/SSA/PRO_2013.txt"
+
+    drift = dg.load_drift(drift_file)
+
+    df["vz"] = drift["vz"].copy()
+    
+    return add_drift_pre(df)
 
         
 def set_data(infile = "02_11_north.txt", 
@@ -33,17 +43,26 @@ def set_data(infile = "02_11_north.txt",
     
     df.index = pd.to_datetime(df.index)
     
-    drift_file = "database/Drift/SSA/PRO_2013.txt"
+    return vertical_drift(df)
 
-    drift = dg.load_drift(drift_file)
 
-    df["vz"] = drift["vz"].copy()
+def load_process(infile, apex = 300):
+    df = pd.read_csv(infile, index_col = 0).sort_index()
+
+    df.index = pd.to_datetime(df.index)
     
-    df = add_drift_pre(df)
-    
+    for vz in ["vz", "vzp"]:
+        df[vz] = df[vz] * ft.factor_height(apex)**3
+        
     return df
 
-infile = "database/RayleighTaylor/process2/1.txt"
-# df = set_data(infile)
 
+def separeting_times(df, freq = "5D"):
+          
+    ts = pd.date_range(
+        df.index[0], df.index[-1], freq = freq
+        )
+    
+    return [df[(df.index >= ts[i]) & 
+               (df.index <= ts[i + 1])] for i in range(len(ts) - 1)]
 
