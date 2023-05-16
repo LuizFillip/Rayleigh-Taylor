@@ -34,7 +34,7 @@ def plot_drift_ts(
     
     ax.axhline(0, linestyle = "--")
 
-def plot_drift_effect(infile, alt = 300):
+def plot_drift_effect(df):
     
     fig, ax = plt.subplots(
         figsize = (12, 8), 
@@ -49,8 +49,6 @@ def plot_drift_effect(infile, alt = 300):
         wspace = 0.05, 
         hspace = 0.05
         )
-    
-    df = rt.set_data(infile, alt = alt)
     
     for col, hem in enumerate(["north", "south"]):
         
@@ -82,7 +80,7 @@ def plot_drift_effect(infile, alt = 300):
     
     ax[0, 0].legend(loc = "upper left", 
                     ncols = 2, 
-                    bbox_to_anchor=(0.35, 1.4))
+                    bbox_to_anchor = (0.25, 1.4))
     
     
     ax[2, 1].set(ylabel = "")
@@ -90,24 +88,30 @@ def plot_drift_effect(infile, alt = 300):
     for ax in ax.flat:
         plot_terminators(ax, ds)
     
-    return fig, fname_to_save(ds)
+    return fig
 
 
 def save():
     
     save_in = "D:\\plots\\drift_effect\\"
     
-    path = "database/RayleighTaylor/process3/"
+    infile = "database/RayleighTaylor/reduced/300km.txt"
+    df = rt.load_process(infile, apex = 300)
     
-    for filename in os.listdir(path):
+    for ds in rt.separeting_times(df):
+        fig = plot_drift_effect(ds)
     
-        infile = os.path.join(path, filename) 
+        save_it = os.path.join(save_in, fname_to_save(ds))
+        save_but_not_show(fig, save_it)
             
-        print("saving...", filename)
-        
-        fig, fname = plot_drift_effect(infile)
-    
-        save_but_not_show(
-                fig, 
-                os.path.join(save_in, fname)
-                )
+            
+# save()
+
+infile = "database/RayleighTaylor/reduced/300km.txt"
+df = rt.load_process(infile, apex = 300)
+
+ds = rt.separeting_times(df)[0]
+fig = plot_drift_effect(ds)
+
+
+plt.show()
