@@ -77,15 +77,3 @@ class EquationsFT:
     def label(self):
         return f"$\gamma_{{FT}} ~(\\times 10^{{-4}}~s^{{-1}})$"
     
-    
-def main():
-
-    import matplotlib.pyplot as plt
-    
-    la = EquationsFT(wind_sign="negative")
-    
-    final = la.winds
-    
-    fig, ax = plt.subplots(dpi = 300)
-    
-    

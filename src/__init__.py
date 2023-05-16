@@ -5,7 +5,7 @@ from .RT import (
     effects_due_to_gravity
     )
 from .plotting import *
-from .base import set_data
+from .base import set_data, load_process, separeting_times
 from .LabelsRT import EquationsFT
 
 import settings as s 
@@ -13,3 +13,5 @@ import settings as s
 s.config_labels()
 
 from .plotting import *
+
+s.language_mode()

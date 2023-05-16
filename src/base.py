@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import digisonde as dg
 import FluxTube as ft
-
+import os
     
     
  
@@ -30,14 +30,14 @@ def vertical_drift(df):
     return add_drift_pre(df)
 
         
-def set_data(infile = "02_11_north.txt", 
-             alt = 300,
-             
-             ):
+def set_data(
+        infile = "02_11_north.txt", 
+        alt = 300
+        ):
     
     df = pd.read_csv(infile, index_col=0)
     
-    df = df.loc[(df.index == alt) ]
+    df = df.loc[df.index == alt]
     
     df = df.set_index("dn")
     
@@ -56,6 +56,8 @@ def load_process(infile, apex = 300):
         
     return df
 
+def remove_lowers(ds):
+    return [i for i in ds if len(i) > 10]
 
 def separeting_times(df, freq = "5D"):
           
@@ -63,6 +65,32 @@ def separeting_times(df, freq = "5D"):
         df.index[0], df.index[-1], freq = freq
         )
     
-    return [df[(df.index >= ts[i]) & 
-               (df.index <= ts[i + 1])] for i in range(len(ts) - 1)]
+    return remove_lowers([df[(df.index >= ts[i]) & 
+                             (df.index <= ts[i + 1])]
+            for i in range(len(ts) - 1)])
+
+
+
+
+def reduced_data_in_altitude(
+        infile, altitude = 300
+        ):
+    out = []
+    for filename in os.listdir(infile):
+        month = filename.replace(".txt", "")
+        
+        if int(month) <= 6:
+            out.append(set_data(
+                infile + filename, alt = altitude)
+                )
+            
+    df = pd.concat(out).sort_index()
+    
+    save_in = 'database/RayleighTaylor/reduced/'
+    df.to_csv(f"{save_in}{altitude}.txt")
+    return df
+
+
+    
+
 

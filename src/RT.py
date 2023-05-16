@@ -21,7 +21,7 @@ def effects_due_to_gravity(
         recom = False
         ):
     
-    gamma = ds["ratio"] * ((ds["ge"] / ds["nui"])) * ds["K"]
+    gamma = ds["ratio"] * (ds["ge"] / ds["nui"]) * ds["K"]
     
     if recom:
         return gamma - ds["R"]
@@ -35,7 +35,8 @@ def effects_due_to_winds(
         recom = False
         ):
     
-    gamma = ds["ratio"] * (sign_wd * ds[wind] + (ds["ge"] / ds["nui"])) * ds["K"] 
+    gamma = ds["ratio"] * (
+        sign_wd * ds[wind] + (ds["ge"] / ds["nui"])) * ds["K"] 
     
     if recom:
         return gamma - ds["R"]
