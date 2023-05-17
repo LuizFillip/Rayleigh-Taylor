@@ -1,33 +1,43 @@
 import pandas as pd
-import numpy as np
 import digisonde as dg
 import FluxTube as ft
 import os
-    
+import datetime as dt
+
     
  
-def add_drift_pre(df, apex = 300):
-    pre = "database/Drift/PRE/SAA/2013.txt"
+
+def repeat_by_day(ds, dn):
     
-    ds = pd.read_csv(pre, index_col = 0)
-    ds.index = pd.to_datetime(ds.index)
+    index = pd.date_range(
+        dn, dn + dt.timedelta(
+            hours = 23, 
+            minutes = 50), 
+        freq = "10min")
     
-    for date in np.unique(df.index.date):
-        vp = ds.loc[ds.index.date == date]
-        vzp_fluxtube = vp["vp"].item() * ft.factor_height(apex)**3
-        df.loc[df.index.date == date, "vzp"] =  vzp_fluxtube
+    value = ds[ds.index == dn]["vp"].item()
+    
+    return pd.DataFrame(
+        {"vzp": [value] * len(index)}, 
+        index = index
+        )
 
-    return df
+def pre_drift():
+    
+    pre_file = "database/Drift/PRE/SAA/2013.txt"
+    
+    pre = pd.read_csv(pre_file, index_col = 0)
+    pre.index = pd.to_datetime(pre.index)
+    
+    out = [repeat_by_day(pre, dn) for dn in pre.index]
+    
+    return pd.concat(out)
 
-def vertical_drift(df):
-
+def vertical_drift():
     drift_file = "database/Drift/SSA/PRO_2013.txt"
-
-    drift = dg.load_drift(drift_file)
-
-    df["vz"] = drift["vz"].copy()
     
-    return add_drift_pre(df)
+    drift = dg.load_drift(drift_file)
+    return drift.resample("10min").asfreq().bfill()
 
         
 def set_data(
@@ -43,7 +53,11 @@ def set_data(
     
     df.index = pd.to_datetime(df.index)
     
-    return vertical_drift(df)
+    df["vz"] = vertical_drift()["vz"].copy()
+     
+    df["vzp"] = pre_drift()["vzp"].copy()
+    
+    return df
 
 
 def load_process(infile, apex = 300):
@@ -70,19 +84,16 @@ def separeting_times(df, freq = "5D"):
             for i in range(len(ts) - 1)])
 
 
-
-
 def reduced_data_in_altitude(
         infile, altitude = 300
         ):
     out = []
     for filename in os.listdir(infile):
-        month = filename.replace(".txt", "")
-        
-        if int(month) <= 6:
-            out.append(set_data(
-                infile + filename, alt = altitude)
-                )
+        print("processing...", filename)
+        #if int(month) <= 6:
+        out.append(set_data(
+            infile + filename, alt = altitude)
+            )
             
     df = pd.concat(out).sort_index()
     
@@ -91,6 +102,6 @@ def reduced_data_in_altitude(
     return df
 
 
-    
-
+infile = "database/RayleighTaylor/process/"
+reduced_data_in_altitude(infile)
 
