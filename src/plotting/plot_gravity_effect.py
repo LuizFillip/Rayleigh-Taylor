@@ -97,7 +97,7 @@ def create_months_folders():
     import pandas as pd
     
     ts = pd.date_range("2013-1-1", "2013-12-31", freq = "1M")
-    infile = "D:\\plots\\parameters"
+    infile = "D:\\plots\\total"
     #for folder in os.listdir(infile):
       
     for dn in ts:
@@ -112,3 +112,4 @@ def create_months_folders():
 
 # save()
 
+# create_months_folders()

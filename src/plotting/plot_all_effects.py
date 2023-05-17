@@ -121,14 +121,10 @@ def plot_all_effects(df, recom, drift = "vz"):
 
 
 
-def save(
-        drift = "vz", recom = False
-        ):
+def save(drift = "vz", recom = False):
     
-    if recom:
-        w = "with"
-    else:
-        w = "without"
+    if recom: w = "with" 
+    else: w = "without"
     
     save_in = f"D:\\plots\\neutral_winds_and_{drift}_{w}_rec"
         
@@ -139,28 +135,31 @@ def save(
         
         name_to_save = fname_to_save(ds)
         
-        print(name_to_save)
+        dn = ds.index[0]
+        print("saving...", name_to_save)
+        month_name = dn.strftime("%m")
+        
         fig = plot_all_effects(ds, recom, drift = drift)
         
-        save_it = os.path.join(save_in, name_to_save )
+        save_it = os.path.join(
+            save_in, month_name, name_to_save 
+            )
         save_but_not_show(fig, save_it)
                 
      
      
-# for vz in ["vz", "vzp"]:
-    # vz = "vz"
-    # for rc in [True, False]:
-    #     save(drift = vz, recom = rc)
+for drift in ["vz", "vzp"]:
+    for recom in [True, False]:
+        save(drift = drift, recom = recom)
 
 
-infile = "database/RayleighTaylor/reduced/300km.txt"
-df = rt.load_process(infile, apex = 300)
+
  
-ds = rt.separeting_times(df)[0]
-drift = "vz"
-recom = True
-fig = plot_all_effects(ds, recom, drift = drift)
+# ds = rt.separeting_times(df)[0]
+# drift = "vz"
+# recom = True
+# fig = plot_all_effects(ds, recom, drift = drift)
 
-plt.show()
+# plt.show()
 
-"Efeitos dos ventos neutros e de Vz (variando no tempo)"
+# "Efeitos dos ventos neutros e de Vz (variando no tempo)"
