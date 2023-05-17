@@ -36,33 +36,35 @@ def local_growth_rate(**kwargs):
     
 
 
-dn = dt.datetime(2013, 1, 1, 21, 0) 
 
-mlon, mlat, _, _, = load_meridian()
-
-fig, ax = plt.subplots(figsize = (5, 4), 
-                       dpi = 300)
-
-
-for lat in [-5, round(mlat, 3), 5]:
+def plot_local_effect():
+    dn = dt.datetime(2013, 1, 1, 21, 0) 
     
-    kwargs = dict(
-         dn = dn, 
-         glat = lat, 
-         glon = mlon,
-         hmin = 100,
-         hmax = 500
-         )
-    gamma = local_growth_rate(**kwargs)
-    alts = gamma.index
-
-    plot_local_growth_rate(
-        ax,
-        gamma, 
-        alts, 
-        label = f"latitude: {lat}°")
+    mlon, mlat, _, _, = load_meridian()
     
-
-
-
-
+    fig, ax = plt.subplots(figsize = (5, 4), 
+                           dpi = 300)
+    
+    
+    for lat in [-5, round(mlat, 3), 5]:
+        
+        kwargs = dict(
+             dn = dn, 
+             glat = lat, 
+             glon = mlon,
+             hmin = 100,
+             hmax = 500
+             )
+        gamma = local_growth_rate(**kwargs)
+        alts = gamma.index
+    
+        plot_local_growth_rate(
+            ax,
+            gamma, 
+            alts, 
+            label = f"latitude: {lat}°")
+        
+    
+    
+    
+    
