@@ -1,13 +1,10 @@
-from utils import translate, fname_to_save
 import matplotlib.pyplot as plt
 import RayleighTaylor as rt
-from utils import save_but_not_show
-import os
 from common import plot_roti, plot_terminators
 
 
 
-def plot_drift_ts(
+def plot_drift(
         ax, 
         ds, 
         recom = False,
@@ -28,90 +25,75 @@ def plot_drift_ts(
             label = label)
                 
     ax.set(ylim = [-20, 20], 
-           xlim = [ds.index[0], 
-                   ds.index[-1]]
+           xlim = [ds.index[0], ds.index[-1]]
            )
     
     ax.axhline(0, linestyle = "--")
 
-def plot_drift_effect(df):
+def plot_drift_effect(df, station = "salu"):
     
     fig, ax = plt.subplots(
-        figsize = (12, 8), 
+        figsize = (12, 13), 
         sharex = True,
         sharey = "row",
-        ncols = 2, 
-        nrows = 3, 
+        ncols = 1, 
+        nrows = 5, 
         dpi = 300
         )
-    
-    plt.subplots_adjust(
-        wspace = 0.05, 
-        hspace = 0.05
-        )
-    
-    for col, hem in enumerate(["north", "south"]):
+
+    plt.subplots_adjust(hspace = 0.1)
+
+    cols = [("north", "vz"), 
+            ("north", "vzp"),
+            ("south", "vz"),
+            ("south", "vzp")]
+
+    for row, col in enumerate(cols):
+        
+        hem, drift = col
         
         ds = df.loc[df["hem"] == hem]
         
-        ax[0, col].set(title = translate(hem.title()))
+        if hem == "north":
+            title = "Norte"
+        else:
+            title = "Sul"
         
-        ax[col, 0].set_ylabel(rt.EquationsFT().label)
+        ax[row].text(
+            0.01, 0.8, 
+            f"$V_P = ${drift.title()} ({title})", 
+            transform = ax[row].transAxes
+            )
         
-        plot_roti(ax[2, col], ds)
+        ax[row].set_ylabel(rt.EquationsFT().label)
         
-        names = ["Variação da deriva", 
-                 "Pico pré reversão"]
+        plot_drift(ax[row], ds, effect = drift)
+
+        plot_drift(ax[row], ds, effect = drift, recom = True)
         
-        for row, effect in enumerate(["vz", "vzp"]):
-            
-            ax[row, col].text(
-                0.05, 0.8, 
-                f"{names[row]} ({effect})", 
-                transform = ax[row, col].transAxes
-                )
-            
-            plot_drift_ts(ax[row, col], ds, 
-                      effect = effect)
-        
-            plot_drift_ts(ax[row, col], ds, 
-                      effect = effect, recom = True)
-        
-    
-    ax[0, 0].legend(loc = "upper left", 
-                    ncols = 2, 
-                    bbox_to_anchor = (0.25, 1.4))
-    
-    
-    ax[2, 1].set(ylabel = "")
+    ax[0].legend(
+        loc = "upper center", 
+        ncol = 2, 
+        bbox_to_anchor = (0.5, 1.45)
+        )
+
+    plot_roti(ax[4], ds, station = station)
     
     for ax in ax.flat:
         plot_terminators(ax, ds)
+        
+    fig.suptitle(
+        "Efeitos devido à deriva vertical: constante (Vzp) e variando no tempo (Vz)"
+        )
     
     return fig
 
 
-def save():
-    
-    save_in = "D:\\plots\\drift_effect\\"
-    
-    infile = "database/RayleighTaylor/reduced/300km.txt"
+def main():
+    infile = "database/RayleighTaylor/reduced/300.txt"
     df = rt.load_process(infile, apex = 300)
-    
-    for ds in rt.separeting_times(df):
-        fig = plot_drift_effect(ds)
-    
-        save_it = os.path.join(save_in, fname_to_save(ds))
-        save_but_not_show(fig, save_it)
-            
-            
-# save()
-
-infile = "database/RayleighTaylor/reduced/300km.txt"
-df = rt.load_process(infile, apex = 300)
-
-ds = rt.separeting_times(df)[0]
-fig = plot_drift_effect(ds)
+    ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
+    fig = plot_drift_effect(ds)
+        
 
 
-plt.show()

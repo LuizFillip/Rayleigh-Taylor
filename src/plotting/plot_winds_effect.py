@@ -1,9 +1,6 @@
-from utils import translate
 import matplotlib.pyplot as plt
 import RayleighTaylor as rt
-import os
 from common import plot_roti, plot_terminators
-from utils import save_but_not_show, fname_to_save
 
 def plot_winds_ts(
         ax, 
@@ -11,15 +8,14 @@ def plot_winds_ts(
         cols, 
         sign = -1, 
         recom = False,
-        hem = "north"):
+        hem = "north"
+        ):
     
-    hem = translate(hem)
-    
-    if "zon" in cols:
-        coord =  "Zonal"
+    if hem == "north":
+        title = "Norte"
     else:
-        coord = "Meridional"
-
+        title = "Sul"
+    
     for wd in cols:
             
         gamma = rt.effects_due_to_winds(
@@ -29,116 +25,100 @@ def plot_winds_ts(
                 recom = recom)
       
         if "ef" in wd:
-            label = f"Efetivo ({hem})"
+            label = f"Efetivo ({title})"
         else:
-            label = f"Geográfico ({hem})"
+            label = f"Geográfico ({title})"
         
         ax.plot(gamma * 1e4, label = label)
         
-    ax.legend(ncol= 2, loc = "lower left")
-    ax.text(0.05, 0.85, coord, transform = ax.transAxes)
     ax.axhline(0, linestyle = "--")
         
     ax.set(ylim = [-20, 20], 
-           xlim = [ds.index[0], 
-                   ds.index[-1]]
+           xlim = [ds.index[0], ds.index[-1]]
            )
     return ax
 
-def plot_winds_effect(df, recom = False, alt = 300):
+def plot_winds_effect(
+        df, recom = False, alt = 300, station = "salu"
+        ):
     
     fig, ax = plt.subplots(
-        figsize = (20, 12), 
+        figsize = (14, 11), 
         sharex = True,
-        sharey = "row",
-        ncols = 2, 
-        nrows = 3, 
+        sharey = "row", 
+        nrows = 5, 
         dpi = 300
         )
         
-    plt.subplots_adjust(
-        wspace = 0.08, 
-        hspace = 0.05
-        )
-    
+    plt.subplots_adjust(hspace = 0.4)
+
     eq = rt.EquationsFT()
-        
+
     for hem in ["north", "south"]:
         
         ds = df.loc[df["hem"] == hem]
         
-        for row, wd in enumerate(["zon", "mer"]):
+        cols = [("zon", 1), ("zon", -1),
+                ("mer", 1), ("mer", -1)]
+           
+        for row, col in enumerate(cols):
+            
+            wd, sign = col
         
             cols = [wd, f"{wd}_ef"]
             
-            ax[row, 0].set_ylabel(eq.label)
             
-            for col, sign in enumerate([1, -1]):
-         
-                plot_winds_ts(ax[row, col], ds, cols, 
-                              sign = sign, 
-                              recom = recom, 
-                              hem = hem)
-                
-                title = eq.winds(
-                    wind_sign = sign, 
-                    recom = recom
-                    )
-                
-                ax[0, col].set(title = title)
+            title = eq.winds(
+                wind_sign = sign, 
+                recom = recom
+                )
+            
+            ax[row].set(title = title)
         
-    
-    plot_roti(ax[2, 0], ds)
-    plot_roti(ax[2, 1], ds)
-    
-    ax[2, 1].set(ylabel = "")
+        
+            plot_winds_ts(ax[row], ds, cols, 
+                          sign = sign, 
+                          recom = recom, 
+                          hem = hem)
+            
+            if "zon" in cols:
+                coord =  "Zonal"
+            else:
+                coord = "Meridional"
+                
+                
+            ax[row].text(0.01, 0.8, coord, 
+                         transform = ax[row].transAxes)
+        
+    ax[0].legend(
+        ncol= 4, 
+        bbox_to_anchor = (.5, 1.7),
+        loc = "upper center")
+
+    plot_roti(ax[4], ds, station = station)
     
     for ax in ax.flat:
         plot_terminators(ax, ds)
         
+    if recom:
+        w = "com"
+    else:
+        w = "sem"
+        
+    fig.suptitle(f"Efeitos devido aos ventos neutros {w} recombinação")
     return fig
 
-import pandas as pd
-
-
-def save(recom = True):
-    
-    if recom:
-        save_in = "D:\\plots\\recombination_winds_effect\\"
-        
-    else:
-        save_in = "D:\\plots\\winds_effect\\"
-    
-    path = "database/RayleighTaylor/process2/"
-    
-    for filename in os.listdir(path):
-    
-        infile = os.path.join(path, filename) 
-        
-        print("saving...", filename)
-        
-
-        df = pd.read_csv(infile, index_col = 0).sort_index()
-
-        df.index = pd.to_datetime(df.index)
-
-        times = pd.date_range(
-            df.index[0], df.index[-1], freq = "5D"
-            )
-
-        last = len(times) - 1
-
-        for i in range(last):
             
-            ds = df[(df.index >= times[i]) & 
-                    (df.index <= times[i + 1])]
-                    
-            fig = plot_winds_effect(ds, recom = recom)
-        
-            save_but_not_show(
-                    fig, 
-                    os.path.join(save_in, fname_to_save(ds))
-                    )
-            
-for rc in [True, False]:      
-    save(recom = rc)
+
+
+def main():
+    infile = "database/RayleighTaylor/reduced/300.txt"
+    df = rt.load_process(infile, apex = 300)
+    
+    ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
+    fig = plot_winds_effect(ds, recom = False)
+    
+    
+# main()
+
+

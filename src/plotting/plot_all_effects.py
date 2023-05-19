@@ -1,9 +1,7 @@
 import matplotlib.pyplot as plt
-from utils import translate
 import RayleighTaylor as rt
-import os
 from common import plot_roti, plot_terminators
-from utils import save_but_not_show, fname_to_save
+
 
 
 
@@ -17,7 +15,11 @@ def plot_gamma(
         drift = "vz"
         ):
     
-    hem = translate(hem)
+    if hem == "north":
+        hem = "Norte"
+    else:
+        hem = "Sul"
+        
     
     if "zon" in cols:
         coord =  "Zonal"
@@ -41,7 +43,7 @@ def plot_gamma(
         ax.plot(gamma * 1e4, label = label)
         
     
-    ax.text(0.05, 0.85, coord, transform = ax.transAxes)
+    #ax.text(0.05, 0.85, coord, transform = ax.transAxes)
     
     ax.axhline(0, linestyle = "--")
         
@@ -52,22 +54,17 @@ def plot_gamma(
     return ax
 
 
-def plot_all_effects(df, recom, drift = "vz"):
+def plot_all_effects(df, recom, drift = "vz", station = "salu"):
 
 
     fig, ax = plt.subplots(
            figsize = (14, 12), 
            sharex = True,
-           sharey = "row",
-           ncols = 2, 
-           nrows = 3, 
-           dpi = 300
+           nrows = 5, 
+           #dpi = 300
         )
     
-    plt.subplots_adjust(
-        hspace= 0.1, 
-        wspace = 0.1
-        )
+    plt.subplots_adjust(hspace = 0.4)
     
     eq = rt.EquationsFT()
     
@@ -75,37 +72,45 @@ def plot_all_effects(df, recom, drift = "vz"):
         
         ds = df.loc[df["hem"] == hem]
         
-        for row, wd in enumerate(["zon", "mer"]):
+        cols = [("zon", 1), ("zon", -1),
+                ("mer", 1), ("mer", -1)]
+           
+        for row, col in enumerate(cols):
+            
+            wd, sign = col
         
             cols = [wd, f"{wd}_ef"]
             
-            ax[row, 0].set_ylabel(eq.label)
             
-            for col, sign in enumerate([1, -1]):
+            title = eq.complete(
+                wind_sign = sign, 
+                recom = recom
+                )
+            
+            ax[row].set(title = title)
+        
+        
+            plot_gamma(ax[row], ds, cols, 
+                          sign = sign, 
+                          recom = recom, 
+                          hem = hem)
+            
+            if "zon" in cols:
+                coord =  "Zonal"
+            else:
+                coord = "Meridional"
                 
-                plot_gamma(ax[row, col], ds, cols, 
-                              sign = sign, 
-                              recom = recom, 
-                              hem = hem, 
-                              drift = drift
-                              )
                 
-                title = eq.complete(
-                    wind_sign = sign, 
-                    recom = recom
-                    )
-                
-                ax[0, col].set(title = title)
+            ax[row].text(0.01, 0.8, coord, 
+                         transform = ax[row].transAxes)
 
-    plot_roti(ax[2, 0], ds)
-    plot_roti(ax[2, 1], ds)
+    plot_roti(ax[4], ds, station = station)
     
-    ax[0, 0].legend(
-        ncol= 4, 
-        bbox_to_anchor = (1., 1.35),
+    ax[0].legend(
+        ncol = 4, 
+        bbox_to_anchor = (0.5, 1.7),
         loc = "upper center")
     
-    ax[2, 1].set(ylabel = "")
     
     for ax in ax.flat:
         plot_terminators(ax, ds)
@@ -115,51 +120,17 @@ def plot_all_effects(df, recom, drift = "vz"):
     else:
         r = "sem"
         
-    fig.suptitle(f"$V_P = ${drift} e {r} efeitos de recombinação")
+    fig.suptitle(f"Efeitos devido aos ventos neutros, $V_P = ${drift} e {r} recombinação")
 
     return fig
 
-
-
-def save(drift = "vz", recom = False):
-    
-    if recom: w = "with" 
-    else: w = "without"
-    
-    save_in = f"D:\\plots\\neutral_winds_and_{drift}_{w}_rec"
-        
-    infile = "database/RayleighTaylor/reduced/300km.txt"
+def main():
+    infile = "database/RayleighTaylor/reduced/300.txt"
     df = rt.load_process(infile, apex = 300)
     
-    for ds in rt.separeting_times(df):
-        
-        name_to_save = fname_to_save(ds)
-        
-        dn = ds.index[0]
-        print("saving...", name_to_save)
-        month_name = dn.strftime("%m")
-        
-        fig = plot_all_effects(ds, recom, drift = drift)
-        
-        save_it = os.path.join(
-            save_in, month_name, name_to_save 
-            )
-        save_but_not_show(fig, save_it)
-                
-     
-     
-for drift in ["vz", "vzp"]:
-    for recom in [True, False]:
-        save(drift = drift, recom = recom)
-
-
-
- 
-# ds = rt.separeting_times(df)[0]
-# drift = "vz"
-# recom = True
-# fig = plot_all_effects(ds, recom, drift = drift)
-
-# plt.show()
-
-# "Efeitos dos ventos neutros e de Vz (variando no tempo)"
+    ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
+    recom  = False
+    plot_all_effects(ds, recom, drift = "vz")
+    
+    
+main()

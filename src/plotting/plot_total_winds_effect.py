@@ -5,7 +5,6 @@ from common import plot_roti, plot_terminators
 
 
 
-
 def sum_gammas(df, sign = 1, wind = "zon", recom = False):
     res = []
     for hem in ["south", "north"]:
@@ -47,11 +46,6 @@ def plot_gamma(ax, df, coord = "zonal", rc = False, sign = 1):
     return ax
 
 
-infile = "database/RayleighTaylor/reduced/300km.txt"
-df = rt.load_process(infile)
-
-df = rt.split_by_freq(df)[0]
-
 
 def plot_total_winds_effect(df, rc = False):
     
@@ -75,7 +69,7 @@ def plot_total_winds_effect(df, rc = False):
                                  "meridional"]):
         
         ax[row, 0].set_ylabel(eq.label)
-        plot_roti(ax[2, row], df)
+        
     
         for col, sign in enumerate([1, -1]):
             
@@ -86,7 +80,9 @@ def plot_total_winds_effect(df, rc = False):
                 ax[row, col], df, 
                 coord = coord, rc = rc, sign = sign
                 )
-            
+         
+    plot_roti(ax[2, 0], df)
+    plot_roti(ax[2, 1], df)
     ax[0, 0].legend(
         ncol = 4, 
         bbox_to_anchor = (1., 1.35),
@@ -106,5 +102,7 @@ def plot_total_winds_effect(df, rc = False):
     fig.suptitle(f"Taxas de crescimento totais devido aos ventos neutros {w} recombinação")
     plt.show()
     
+    return fig
     
-plot_total_winds_effect(df, rc = True)
+    
+
