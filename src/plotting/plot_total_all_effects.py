@@ -72,15 +72,11 @@ def plot_total_all_effects(
     fig, ax = plt.subplots(
         figsize = (14, 13),
         nrows = 5,
-        ncols = 1,
         dpi = 300,
         sharex = True,
-        sharey = "row"
         )
 
-    plt.subplots_adjust(
-        hspace = 0.3
-       )
+    plt.subplots_adjust(hspace = 0.3)
 
 
     eq = rt.EquationsFT()
@@ -88,8 +84,6 @@ def plot_total_all_effects(
     cols = [("zonal", 1), ("zonal", -1),
             ("meridional", 1), ("meridional", -1)]
 
-    rc = True
-    drift = "vz"
     for row, col in enumerate(cols):
         
         coord, sign = col
@@ -137,9 +131,6 @@ def plot_total_all_effects(
     
 
  
-
-
-
 def main():
     rc = False
     infile = "database/RayleighTaylor/reduced/300.txt"

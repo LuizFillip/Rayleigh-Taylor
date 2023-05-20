@@ -61,7 +61,7 @@ def plot_all_effects(df, recom, drift = "vz", station = "salu"):
            figsize = (14, 12), 
            sharex = True,
            nrows = 5, 
-           #dpi = 300
+           dpi = 300
         )
     
     plt.subplots_adjust(hspace = 0.4)
@@ -133,4 +133,4 @@ def main():
     plot_all_effects(ds, recom, drift = "vz")
     
     
-main()
+# main()

@@ -15,27 +15,21 @@ def repeat_by_day(ds, dn):
             minutes = 50), 
         freq = "10min")
     
-    value = ds[ds.index == dn]["vp"].item()
+    values = [ds[ds.index == dn]["vp"].item()] * len(index)
     
-    return pd.DataFrame(
-        {"vzp": [value] * len(index)}, 
-        index = index
-        )
+    return pd.DataFrame({"vzp": values}, index = index)
 
-def pre_drift():
-    
-    pre_file = "database/Drift/PRE/SAA/2013.txt"
+def pre_drift(pre_file = "database/Drift/PRE/SAA/2013.txt"):
     
     pre = pd.read_csv(pre_file, index_col = 0)
     pre.index = pd.to_datetime(pre.index)
     
-    out = [repeat_by_day(pre, dn) for dn in pre.index]
+    dfs = [repeat_by_day(pre, dn) for dn in pre.index]
     
-    return pd.concat(out)
+    return pd.concat(dfs)
 
-def vertical_drift():
-    drift_file = "database/Drift/SSA/PRO_2013.txt"
-    
+def vertical_drift(drift_file = "database/Drift/SSA/PRO_2013.txt"):
+
     drift = dg.load_drift(drift_file)
     return drift.resample("10min").asfreq().bfill()
 
@@ -68,21 +62,22 @@ def load_process(infile, apex = 300):
     for vz in ["vz", "vzp"]:
         df[vz] = df[vz] * ft.factor_height(apex)**3
         
-    return df
+    return df[df.index.year == 2013]
 
-def remove_lowers(ds):
-    return [i for i in ds if len(i) > 10]
 
-def separeting_times(df, freq = "5D"):
+def split_by_freq(df, freq_per_split = "5D"):
           
-    ts = pd.date_range(
-        df.index[0], df.index[-1], freq = freq
+    groups = df.groupby(pd.Grouper(
+        freq=freq_per_split)
         )
-    
-    return remove_lowers([df[(df.index >= ts[i]) & 
-                             (df.index <= ts[i + 1])]
-            for i in range(len(ts) - 1)])
+    split_dfs = []
 
+    for group_key, group_df in groups:
+        
+        if len(group_df) != 0:
+            split_dfs.append(group_df)
+        
+    return split_dfs
 
 def reduced_data_in_altitude(
         infile, altitude = 300
@@ -90,7 +85,6 @@ def reduced_data_in_altitude(
     out = []
     for filename in os.listdir(infile):
         print("processing...", filename)
-        #if int(month) <= 6:
         out.append(set_data(
             infile + filename, alt = altitude)
             )
@@ -101,7 +95,26 @@ def reduced_data_in_altitude(
     df.to_csv(f"{save_in}{altitude}.txt")
     return df
 
+def main():
+    infile = "database/RayleighTaylor/process/"
+    reduced_data_in_altitude(infile)
+    infile = "database/RayleighTaylor/reduced/300.txt"
+    df =  load_process(infile, apex = 300)
+    #df = df[df.index.month == 9]
+    for ds in split_by_freq(df):
+    
+        if ds.index[0].month == 11:
+            print(ds)
+            
+    
+# infile = "database/RayleighTaylor/process/"
+# reduced_data_in_altitude(infile)
 
-infile = "database/RayleighTaylor/process/"
-reduced_data_in_altitude(infile)
+# infile = "database/RayleighTaylor/reduced/300.txt"
+# df =  load_process(infile, apex = 300)
 
+# df = df[df.index.month >= 11]
+
+# df["N"].plot()
+
+# plt.show()

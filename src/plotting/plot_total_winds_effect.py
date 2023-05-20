@@ -47,52 +47,41 @@ def plot_gamma(ax, df, coord = "zonal", rc = False, sign = 1):
 
 
 
-def plot_total_winds_effect(df, rc = False):
+def plot_total_winds_effect(ds, rc = False, station = "salu"):
     
     fig, ax = plt.subplots(
-        figsize = (14, 10),
-        nrows = 3,
-        ncols = 2,
+        figsize = (14, 13),
+        nrows = 5,
         dpi = 300,
         sharex = True,
-        sharey = "row"
         )
-    
-    plt.subplots_adjust(
-        wspace = 0.08, 
-        hspace = 0.05
-       )
-    
+
+    plt.subplots_adjust(hspace = 0.4)
+
     eq = rt.EquationsFT()
-    
-    for row, coord in enumerate(["zonal", 
-                                 "meridional"]):
+
+    cols = [("zonal", 1), ("zonal", -1),
+            ("meridional", 1), ("meridional", -1)]
+
+    for row, col in enumerate(cols):
         
-        ax[row, 0].set_ylabel(eq.label)
-        
-    
-        for col, sign in enumerate([1, -1]):
+        coord, sign = col
             
-            ax[0, col].set(
-                title = eq.winds(wind_sign = sign, recom = rc)
-                )
-            plot_gamma(
-                ax[row, col], df, 
-                coord = coord, rc = rc, sign = sign
-                )
+        title = eq.winds(wind_sign = sign, recom = rc)
+        
+        ax[row].set(title = title)
+        
+        plot_gamma(ax[row], ds, coord = coord, rc = rc, sign = sign) 
+        
+
+    ax[0].legend(ncol= 4, 
+        bbox_to_anchor = (.5, 1.7),
+        loc = "upper center")
          
-    plot_roti(ax[2, 0], df)
-    plot_roti(ax[2, 1], df)
-    ax[0, 0].legend(
-        ncol = 4, 
-        bbox_to_anchor = (1., 1.35),
-        loc = "upper center"
-        )
-    
-    ax[2, 1].set(ylabel = "")
-    
+    plot_roti(ax[4], ds, station = station)
+
     for ax in ax.flat:
-        plot_terminators(ax, df)
+        plot_terminators(ax, ds)
         
     if rc:
         w = "com"
@@ -104,5 +93,10 @@ def plot_total_winds_effect(df, rc = False):
     
     return fig
     
-    
+def main():
+    infile = "database/RayleighTaylor/reduced/300.txt"
+    df = rt.load_process(infile, apex = 300)
+    ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
+    fig = plot_total_winds_effect(ds, rc = False)
+
 

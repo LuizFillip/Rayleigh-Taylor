@@ -4,8 +4,7 @@ from .RT import (
     effects_due_to_drift,
     effects_due_to_gravity
     )
-from .plotting import *
-from .base import set_data, load_process, separeting_times
+from .base import set_data, split_by_freq, load_process
 from .LabelsRT import EquationsFT
 
 import settings as s 

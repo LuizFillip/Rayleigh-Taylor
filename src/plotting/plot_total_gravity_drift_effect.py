@@ -1,4 +1,3 @@
-from utils import translate
 import matplotlib.pyplot as plt
 import RayleighTaylor as rt
 from common import plot_roti, plot_terminators
@@ -36,16 +35,22 @@ def sum_drift(df, recom  = False, drift = "vz"):
 
 def plot_gravity(ax, ds, recom  = False):
     
+    eq = rt.EquationsFT()
+    
     gamma = sum_gravity(ds, recom = recom)
      
-    ax.plot(gamma * 1e4)
+    ax.plot(gamma * 1e4, label = eq.gravity(recom = recom))
                 
-    ax.set(ylim = [-40, 40], 
+    ax.set(ylim = [-40, 40], ylabel = eq.label,
            xlim = [ds.index[0], ds.index[-1]])
     
     ax.axhline(0, linestyle = "--")
-    ax.text(0.05, 0.85, "Efeitos devido apenas a gravidade", 
+    
+    ax.text(0.05, 0.8, "Efeito à gravidade",
             transform = ax.transAxes)
+    ax.legend(ncol = 2, 
+              bbox_to_anchor = (0.5, 1.45),
+              loc = "upper center")
 
 
 def plot_drift(
@@ -54,60 +59,50 @@ def plot_drift(
         recom = False,
         drift = "vz"
         ):
-    
+    eq = rt.EquationsFT()
+
     gamma = sum_drift(ds, drift = drift, recom = recom)
      
-    ax.plot(gamma * 1e4, label = f"$V_P = {drift}$")
+    ax.plot(gamma * 1e4, label = eq.drift(recom = recom))
                 
-    ax.set(ylim = [-40, 40], 
+    ax.set(ylim = [-40, 40], ylabel = eq.label,
            xlim = [ds.index[0], ds.index[-1]])
     
     ax.axhline(0, linestyle = "--")
-    ax.text(0.05, 0.85, "Efeitos devido a deriva vertical", 
+    ax.text(0.05, 0.8, f"$V_P = $ {drift.title()}", 
             transform = ax.transAxes)
-    ax.legend(loc = "lower left")
+    
+    ax.legend(ncol = 2, 
+              bbox_to_anchor = (0.5, 1.45),
+              loc = "upper center")
 
 
 
-
-def plot_total_gravity_drift_effect(ds):
+def plot_total_gravity_drift_effect(
+        ds, station = "salu"
+        ):
+    
     fig, ax = plt.subplots(
         figsize = (14, 10),
-        nrows = 3,
-        ncols = 2,
+        nrows = 4,
         dpi = 300,
         sharex = True,
-        sharey = "row"
         )
-    
-    plt.subplots_adjust(
-        wspace = 0.08, 
-        hspace = 0.22
-       )
 
-    eq = rt.EquationsFT()
-    
-    for col, rc in enumerate([False, True]):
+    plt.subplots_adjust(hspace = 0.4)
+
+    for row, rc in enumerate([False, True]):
         
-        ax[0, col].set(title = eq.gravity(recom = rc))
-        plot_gravity(ax[0, col], ds, recom = rc)
-        
-        ax[1, col].set(title = eq.drift(recom = rc))
-        
-        ax[col, 0].set(ylabel = eq.label)
-        for drift in ["vz", "vzp"]:
-            plot_drift(ax[1, col], ds, recom = rc, drift = drift)
-            
-            
-    plot_roti(ax[2, 0], ds)
-    plot_roti(ax[2, 1], ds)
-    
-    ax[2, 1].set(ylabel = '')
+        plot_gravity(ax[0], ds, recom = rc)
+        plot_drift(ax[1], ds, recom = rc, drift = "vz")
+        plot_drift(ax[2], ds, recom = rc, drift = "vzp")
+
+    plot_roti(ax[3], ds, station = station)
     
     for ax in ax.flat:
         plot_terminators(ax, ds)
         
-    fig.suptitle("Efeitos devidos a gravidade e a deriva vertical")
+    fig.suptitle("Taxa de crescimento totais devido à gravidade e a deriva vertical")
         
     return fig
 
@@ -117,8 +112,8 @@ def main():
     
     df = rt.load_process(infile, apex = 300)
     
-    ds = rt.split_by_freq(df)[0]
-    fig = plot_total_gravity_drift_effect(ds)
+    ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
+    fig = plot_total_gravity_drift_effect(ds, station = "salu")
     
     plt.show()
     

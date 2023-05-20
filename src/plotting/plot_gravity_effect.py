@@ -8,8 +8,6 @@ def plot_gravity_effect(df, station = "salu"):
     fig, ax = plt.subplots(
        figsize = (12, 8), 
        sharex = True,
-       sharey = "row",
-       ncols = 1, 
        nrows = 3, 
        dpi = 300
        )

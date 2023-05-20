@@ -67,14 +67,9 @@ def plot_winds_effect(
         
             cols = [wd, f"{wd}_ef"]
             
+            title = eq.winds(wind_sign = sign, recom = recom)
             
-            title = eq.winds(
-                wind_sign = sign, 
-                recom = recom
-                )
-            
-            ax[row].set(title = title)
-        
+            ax[row].set(title = title, ylabel = eq.label)
         
             plot_winds_ts(ax[row], ds, cols, 
                           sign = sign, 
