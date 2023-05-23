@@ -20,11 +20,7 @@ def plot_gamma(
     else:
         hem = "Sul"
         
-    
-    if "zon" in cols:
-        coord =  "Zonal"
-    else:
-        coord = "Meridional"
+
 
     for wd in cols:
                     
@@ -42,8 +38,6 @@ def plot_gamma(
         
         ax.plot(gamma * 1e4, label = label)
         
-    
-    #ax.text(0.05, 0.85, coord, transform = ax.transAxes)
     
     ax.axhline(0, linestyle = "--")
         
@@ -81,18 +75,15 @@ def plot_all_effects(df, recom, drift = "vz", station = "salu"):
         
             cols = [wd, f"{wd}_ef"]
             
-            
-            title = eq.complete(
+            ax[row].set(title =eq.complete(
                 wind_sign = sign, 
-                recom = recom
-                )
-            
-            ax[row].set(title = title)
+                recom = recom ))
         
         
             plot_gamma(ax[row], ds, cols, 
                           sign = sign, 
                           recom = recom, 
+                          drift = drift,
                           hem = hem)
             
             if "zon" in cols:
@@ -130,7 +121,7 @@ def main():
     
     ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
     recom  = False
-    plot_all_effects(ds, recom, drift = "vz")
+    plot_all_effects(ds, recom, drift = "vzp")
     
     
-# main()
+# 

@@ -138,7 +138,6 @@ def main():
     ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
     fig = plot_total_all_effects(ds, rc =  rc)
     
-# main()
 
 
 
