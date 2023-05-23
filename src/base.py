@@ -105,16 +105,18 @@ def main():
     
         if ds.index[0].month == 11:
             print(ds)
-            
+
+
+
+dates = pd.date_range(dt.datetime(2013, 2, 1, 7, 0),
+                      dt.datetime(2013, 12, 31, 7, 0), freq = "1D")
+
+
+date = dates[0]
     
-# infile = "database/RayleighTaylor/process/"
-# reduced_data_in_altitude(infile)
-
-# infile = "database/RayleighTaylor/reduced/300.txt"
-# df =  load_process(infile, apex = 300)
-
-# df = df[df.index.month >= 11]
-
-# df["N"].plot()
-
-# plt.show()
+times = pd.date_range(
+     "2013-1-1 07:00",
+     "2013-1-1 20:00", 
+     freq = "10min" 
+ )
+print(len(times))

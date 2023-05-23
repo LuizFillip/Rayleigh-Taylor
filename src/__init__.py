@@ -5,7 +5,7 @@ from .RT import (
     effects_due_to_gravity
     )
 from .base import set_data, split_by_freq, load_process
-from .LabelsRT import EquationsFT
+from .LabelsRT import EquationsFT, EquationsRT
 
 import settings as s 
 

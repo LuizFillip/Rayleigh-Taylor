@@ -116,51 +116,48 @@ def save_3():
         else:
             station = "ceeu"
         
-            
-       
-        
-        # if dn.month >= 11:
+     
         
         print("saving...", dn)
         
-        save(
-            rt.plot_gravity_effect(ds, station = station), 
-            fname, "gravity"
-            )
+        # save(
+        #     rt.plot_gravity_effect(ds, station = station), 
+        #     fname, "gravity"
+        #     )
         
         
-        save(
-            rt.plot_drift_effect(ds, station = station), 
-            fname, "vertical_drift"
-            )
+        # save(
+        #     rt.plot_drift_effect(ds, station = station), 
+        #     fname, "vertical_drift"
+        #     )
         
     
-        save(rt.plot_total_gravity_drift_effect(ds, station = station), 
-              fname, "total_gravity_drift", root = "D:\\plots3\\")
+        # save(rt.plot_total_gravity_drift_effect(ds, station = station), 
+        #       fname, "total_gravity_drift", root = "D:\\plots3\\")
         
-        for recom in [True, False]:
+        for recom in [False]:
             
             if recom: 
                 w = "with" 
             else: 
                 w = "without"
                             
-            save(
-                rt.plot_winds_effect(
-                    ds, recom = recom, station = station), 
-                    fname, f"winds_{w}_rec"
-                    )
+            # save(
+            #     rt.plot_winds_effect(
+            #         ds, recom = recom, station = station), 
+            #         fname, f"winds_{w}_rec"
+            #         )
             
         
-            save(rt.plot_total_winds_effect(
-                ds, rc = recom, station = station),  
-                fname, f"total_winds_{w}_rec", root = "D:\\plots3\\")
+            # save(rt.plot_total_winds_effect(
+            #     ds, rc = recom, station = station),  
+            #     fname, f"total_winds_{w}_rec", root = "D:\\plots3\\")
             
             for drift in ["vz", "vzp"]:
                 
-                save(rt.plot_all_effects(
-                    ds, recom, drift = drift, station = station,
-                    ), fname, f"winds_and_{drift}_{w}_rec")
+                # save(rt.plot_all_effects(
+                #     ds, recom, drift = drift, station = station,
+                #     ), fname, f"winds_and_{drift}_{w}_rec")
                     
                
                 save(rt.plot_total_all_effects(

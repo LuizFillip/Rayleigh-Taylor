@@ -46,4 +46,13 @@ def add_month_folder():
     create_months_folders(root)
         
         
-add_month_folder()
+# add_month_folder()
+
+
+infile = "D:\\drift\\SAA\\2013\\"
+
+def create_b_int():
+    for month_name in range(355, 366):
+       make_dir(
+           os.path.join(infile, str(month_name))
+           )

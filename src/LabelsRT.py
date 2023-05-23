@@ -1,24 +1,46 @@
 class EquationsRT:
+    def __init__(self):
+        
+        self.L = "\\frac{1}{n_e}  \\frac{\partial n_e}{\partial y}"
+        self.g = "\\frac{g}{\\nu_{in}}"
+        self.vp = "V_z"
+        
+    def winds(self, sign = 1, rc = False):
+        if sign == 1:
+            self.wd = "+ U"
+        else:
+            self.wd = "- U"
+        if rc:
+            return  f"$\gamma_{{RT}} = ({self.wd} + {self.g}){self.L} - R$"
+        else:
+            return  f"$\gamma_{{RT}} = ({self.wd} + {self.g}){self.L}$"
     
-    @property
-    def complete():
-        return  r"$(V_{zp} - U + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$"
+    def complete(self, sign = 1, rc = False):
+        if sign == 1:
+            self.wd = "+ U"
+        else:
+            self.wd = "- U"
+            
+        if rc:
+            return f"$\gamma_{{RT}} = ({self.vp} {self.wd} + {self.g}){self.L} - R$"
+        else:
+            return f"$\gamma_{{RT}} = ({self.vp} {self.wd} + {self.g}){self.L}$"
     
-    @property
-    def wind():
-        return r"$(V_{zp} + \frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$"
+    def drift(self, rc = False):
+        if rc:
+            return f"$\gamma_{{RT}} = ({self.vp} + {self.g}){self.L} - R$"
+        else:
+            return f"$\gamma_{{RT}} = ({self.vp} + {self.g}){self.L}$"
     
+    def gravity(self, rc = False):
+        if rc:
+            return  f"$\gamma_{{RT}} = {self.g}{self.L} - R$"
+        else:
+            return  f"$\gamma_{{RT}} = {self.g}{self.L}$"
+        
     @property
-    def vzp():
-        return r"$(V_{zp} + \\frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$"
-    
-    @property
-    def recombination():
-        return r"$(V_{zp} - U + \\frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y}$"
-    
-    @property
-    def gravity():
-        return "$(\\frac{g}{\nu_{in}})\frac{1}{n_e} \frac{\partial n_e}{\partial y} - R$"
+    def label(self):
+        return "$\gamma_{RT} ~(\\times 10^{-4}~s^{-1})$"
         
 class EquationsFT:
     
