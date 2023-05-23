@@ -69,7 +69,7 @@ def join_hwm_fpi():
         
     filled_df = wd.copy()
     filled_df["zon"] = filled_df["zon"].fillna(df["zon"])
-
+    filled_df["mer"] = filled_df["mer"].fillna(df["mer"])
 
     return filled_df
 
@@ -157,18 +157,50 @@ def compute_parameters2(ne, start):
     return ds
 
 
-ne = pd.read_csv("scale_plasma.txt", index_col = 0)
-ne.index = pd.to_datetime(ne.index)
+def run_from_pyglow():
 
-out = []
-
-for time in ne.index.unique():
-
-    out.append(compute_parameters2(ne, time))
+    ne = pd.read_csv("scale_plasma.txt", index_col = 0)
+    ne.index = pd.to_datetime(ne.index)
     
+    out = []
+    
+    for time in ne.index.unique():
+    
+        out.append(compute_parameters2(ne, time))
+        
+    
+    df = pd.concat(out)
+    
+    df.to_csv("gamma_parameters.txt")
+    return df
 
-df = pd.concat(out)
 
-df
+wd = join_hwm_fpi()
+import matplotlib.pyplot as plt
+import settings as s
+from common import plot_terminators
 
 
+fig, ax = plt.subplots(
+    sharey = True, sharex = True,
+    nrows = 2, dpi = 300, 
+    figsize = (10, 8)
+    )
+
+ds = wd[wd.index < dt.datetime(2013, 1, 10)].copy()
+
+ax[0].plot(ds["mer"])
+ax[1].plot(ds["zon"])
+
+ax[0].set(ylabel = "Vento meridional (m/s)")
+ax[1].set(ylabel = "Vento zonal (m/s)")
+
+s.format_time_axes(
+        ax[1], 
+        hour_locator = 12, 
+        day_locator = 1, 
+        tz = "UTC"
+        )
+
+for ax in ax.flat:
+    plot_terminators(ax, ds)

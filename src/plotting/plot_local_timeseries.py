@@ -1,46 +1,55 @@
 import matplotlib.pyplot as plt
 from common import plot_roti, plot_terminators
 import RayleighTaylor as rt
-
-
-def plot_local_timeseries(df):
     
+import pandas as pd
+import datetime as dt
+
+def plot_local_timeseries(df, alt = 250):
+        
     fig, ax = plt.subplots(
-        figsize = (8, 6),
-        sharex = True,
-        nrows = 2, dpi = 300)
-    
-    # df = df.dropna()
-    # ax[0].plot(df * 1e4)
-    
+                figsize = (8, 10),
+                sharex = True,
+                nrows = 4,
+                dpi = 300
+                )
 
-    ax[0].set(ylabel = eq.label, 
-              title = title
-              )
+    plt.subplots_adjust(hspace = 0.3)
     
-    plot_roti(ax[1], df, station = "salu")
+    eq = rt.EquationsRT()
     
+    eqs = [eq.gravity(), eq.drift(), eq.complete()]
+    
+    for num, title in enumerate(eqs):
+        
+        ax[num].set(title = title, 
+                    ylim = [-10, 45],
+                    ylabel = eq.label)
+    
+    
+    ax[0].text(0.9, 1.1, f"{alt} km", transform = ax[0].transAxes)
+    gamma = (9.81 / df["nui"]) * df["L"] 
+    ax[0].plot(gamma *1e4)
+    
+    gamma = (df["vz"] + (9.81 / df["nui"])) * df["L"] 
+    ax[1].plot(gamma *1e4)
+        
+    gamma = (df["vz"] + df["U"] + (9.81 / df["nui"])) * df["L"] 
+    ax[2].plot(gamma *1e4)
+    
+    plot_roti(ax[3], df, hour_locator = 1, station = "salu")
     
     for ax in ax.flat:
         plot_terminators(ax, df)
-        
-fig, ax = plt.subplots(
-    figsize = (8, 10),
-    sharex = True,
-    nrows = 4
-    )
-
-plt.subplots_adjust(hspace = 0.4)
-
-eq = rt.EquationsRT()
-
-eqs = [eq.gravity(), eq.drift(), eq.complete()]
-
-for num, title in enumerate(eqs):
-    
-    ax[num].set(title = title, ylabel = eq.label)
-    
-    
-    
     
 
+df = pd.read_csv("gamma_parameters.txt", index_col = 0)
+df.index = pd.to_datetime(df.index)
+
+
+dn = dt.datetime(2013, 9, 19, 20)
+alt = 250
+df = df.loc[(df["alt"] == alt) & 
+            (df.index >= dn) &
+            (df.index <= dn + dt.timedelta(seconds = 43200))]
+plot_local_timeseries(df, alt = alt)
