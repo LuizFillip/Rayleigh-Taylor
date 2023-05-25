@@ -1,7 +1,7 @@
 class EquationsRT:
     def __init__(self):
         
-        self.L = "\\frac{1}{n_e}  \\frac{\partial n_e}{\partial y}"
+        self.L = "\\frac{1}{n_e} \\frac{\partial n_e}{\partial y}"
         self.g = "\\frac{g}{\\nu_{in}}"
         self.vp = "V_z"
         
@@ -97,5 +97,5 @@ class EquationsFT:
 
     @property
     def label(self):
-        return f"$\gamma_{{FT}} ~(\\times 10^{{-4}}~s^{{-1}})$"
+        return "$\gamma_{{FT}} ~(\\times 10^{{-4}}~s^{{-1}})$"
     
