@@ -29,10 +29,10 @@ def plot_local_timeseries(df, alt = 250, station = "salu"):
     
     ax[0].text(0.9, 1.1, f"{alt} km", transform = ax[0].transAxes)
     gamma = (9.81 / df["nui"]) * df["L"] 
-    ax[0].plot(gamma *1e4)
+    ax[0].plot(gamma * 1e4)
     
     gamma = (df["vz"] + (9.81 / df["nui"])) * df["L"] 
-    ax[1].plot(gamma *1e4)
+    ax[1].plot(gamma * 1e4)
         
     gamma = (df["vz"] + df["U"] + (9.81 / df["nui"])) * df["L"] 
     ax[2].plot(gamma *1e4)
@@ -45,29 +45,29 @@ def plot_local_timeseries(df, alt = 250, station = "salu"):
 
 # dn = dt.datetime(2013, 9, 19, 20)
 alt = 250
-times =  pd.date_range(dt.datetime(2013, 9, 17, 20), 
-                        dt.datetime(2013, 9, 28, 20), freq = "1D")
+times =  pd.date_range(
+    dt.datetime(2013, 9, 17, 20), 
+    dt.datetime(2013, 9, 28, 20), 
+    freq = "1D"
+    )
 
+def save_plots():
+    #dn = dt.datetime(2013, 9, 20, 20)
+    save_in = "D:\\plots2\\Local\\"
+    for dn in times:
+        
+        df = pd.read_csv("gamma_parameters.txt", index_col = 0)
+        df.index = pd.to_datetime(df.index)
+        
+        
+        
+        df = df.loc[(df["alt"] == alt) & 
+                    (df.index >= dn) &
+                    (df.index <= dn + dt.timedelta(seconds = 43200))]
+        fig = plot_local_timeseries(df, alt = alt, station = "ceeu")
+        
+        FigureName = dn.strftime("%Y%m%d.png")
+        print("saving...", dn)
+        save_img(fig, save_in + FigureName)
+    
 
-#dn = dt.datetime(2013, 9, 20, 20)
-save_in = "D:\\plots2\\Local\\"
-for dn in times:
-    
-    df = pd.read_csv("gamma_parameters.txt", index_col = 0)
-    df.index = pd.to_datetime(df.index)
-    
-    
-    
-    df = df.loc[(df["alt"] == alt) & 
-                (df.index >= dn) &
-                (df.index <= dn + dt.timedelta(seconds = 43200))]
-    fig = plot_local_timeseries(df, alt = alt, station = "ceeu")
-    
-    FigureName = dn.strftime("%Y%m%d.png")
-    print("saving...", dn)
-    save_img(fig, save_in + FigureName)
-    
-
-#%%%
-
-dt.datetime(2013, 9 , 24).timetuple().tm_yday
