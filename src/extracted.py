@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue May 23 00:29:09 2023
-
-@author: EMBRACE
-"""
-
 import os
 import ionosphere as io
 import datetime as dt
