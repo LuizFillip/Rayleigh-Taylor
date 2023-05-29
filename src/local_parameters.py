@@ -117,4 +117,34 @@ def add_neutros(ds):
     return ds
 
 df = add_neutros(df)
-df
+
+
+def process_sites():
+    
+    out = []
+    for alt in df.alt.unique():
+        out.append(sampled(df[df["alt"] == alt]))
+    
+    ds = pd.concat(out)
+    
+    def add_winds_vz(df, site = "car"):
+        
+        times = df.index.unique()
+        out = []
+        for dn in times:
+            print(dn)
+            ds = df.loc[df.index == dn]
+            
+            ds["vz"] = load_drift(dn).copy()
+                
+            ds[["zon", "mer"]] = load_winds(
+                site = site, dn = dn).copy()
+            
+            out.append(atm.local_eff_wind(ds))
+            
+        return pd.concat(out)
+    
+    for site in ["car", "caj"]:
+        r = add_winds_vz(ds, site = site)
+        
+        r.to_csv(f"parameters_{site}.txt")

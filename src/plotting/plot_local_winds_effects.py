@@ -19,7 +19,7 @@ def load_by_alt_time(infile, dn):
 def plot_gamma(
         ax, df, alt, 
         sign = 1,
-        wind = "U"
+        wind = "zon"
         ):
 
     df = df[df["alt"] == alt]
@@ -93,24 +93,56 @@ def plot_local_winds_effects(df,  sign = 1):
             plot_gamma(ax[row, 1], df, alt, sign = sign, wind = wd + "_ef")
 
     
-    ax[0, 0].legend(bbox_to_anchor = (.5, 1.2), 
-                    ncol = 3, 
-                    loc = "lower left")
+    ax[0, 0].legend(
+        bbox_to_anchor = (.5, 1.1), 
+        ncol = 3, 
+        loc = "lower left", 
+        title = "Altitudes de $\gamma_{RT}$"
+        )
     
     
     ax[2, 1].set(ylabel = "")
     for ax in ax.flat:    
         plot_terminators(ax, df)
-
+        
+  
     
     return fig
 
-dn = dt.datetime(2013, 3, 18, 20)
+from utils import  save_but_not_show
 
+def save_plots():
 
-infile = "gamma_1620_car.txt"
-
-df = load_by_alt_time(infile, dn)
-fig = plot_local_winds_effects(df, sign = -1)
-
-
+    save_in = "D:\\plots2\\temp_0317\\"
+    
+    for dn in [dt.datetime(2013, 3, 16, 20), 
+               dt.datetime(2013, 3, 17, 20), 
+               dt.datetime(2013, 3, 18, 20)]:
+        
+        for sign in [1, -1]:
+            
+            for site in ["car", "caj"]:
+                infile = f"gamma_1620_{site}.txt"
+                
+                df = load_by_alt_time(infile, dn)
+                fig = plot_local_winds_effects(df, sign = sign)
+                
+                if "car" in infile:
+                    fig.suptitle("Ventos observados em Cariri", y = 1.)
+                else:
+                    fig.suptitle("Ventos observados em Cajazeiras", y = 1.)
+                
+                if sign == 1:
+                    s = "positive"
+                else:
+                    s = "negative"
+                    
+                FigureName = f"{dn.strftime('%Y%m%d')}_{s}_{site}.png"
+                
+                print("saving...", dn)
+                
+                save_but_not_show(
+                       fig, 
+                       save_in + FigureName,
+                       dpi = 300
+                       )

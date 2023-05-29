@@ -17,9 +17,10 @@ def save(
 
 plt.ioff()
     
-def save_gammas():
-    infile = "database/RayleighTaylor/reduced/300.txt"
-    
+def save_gammas(
+        infile = "database/RayleighTaylor/reduced/300.txt"
+        ):
+   
     df = rt.load_process(infile, apex = 300)
     
     for ds in rt.split_by_freq(df):
