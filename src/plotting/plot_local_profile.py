@@ -4,6 +4,8 @@ import datetime as dt
 import ionosphere as io
 import matplotlib.ticker as ticker
 from utils import order_magnitude
+from labels import Labels
+import pandas as pd
 
 
 def plot_local_growth_rate(
@@ -68,3 +70,46 @@ def plot_local_effect():
     
     
     
+infile = "parameters_caj.txt"
+
+df = pd.read_csv(infile, index_col = 0)
+
+df.index = pd.to_datetime(df.index)
+
+
+def growth_rate_from_df(df):
+    df["g"] = df["L"] * (
+        (9.81 / df["nui"]) + df["zon"] + df["vz"])
+    return df
+
+df = growth_rate_from_df(df).dropna()
+
+times = df.index.unique()
+
+dn = dt.datetime(2013, 3, 17, 0)
+
+ds = df.loc[df.index == dn]
+
+
+
+fig, ax = plt.subplots(figsize = (5, 4), 
+                       dpi = 300)
+
+ax.plot(ds["g"] *1e4, ds["alt"])
+
+lim_max = ds["g"].max() *1e4 + 2
+
+ax.set(xlim = [-lim_max, lim_max])
+
+def find_alt_maximum(ds):
+
+    ds = ds.set_index("alt")
+    return ds["g"].idxmax()
+
+
+# for alt in [find_alt_maximum(ds), 
+#             250, 300, 350]:
+#     ax.axhline(alt)
+
+
+ds

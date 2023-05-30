@@ -2,6 +2,10 @@ import pandas as pd
 import atmosphere as atm
 import digisonde as dg
 from utils import sampled
+from GEO import sites 
+from models import point_msis
+import ionosphere as io
+import numpy as np
 
 pd.options.mode.chained_assignment = None 
 
@@ -32,60 +36,26 @@ def load_winds(site = "caj", dn  = None):
     
     
 
-infile = "database/Digisonde/SAA0K_20130316(075).TXT"
 
-def sep_by_altitudes(infile):
-    df =  dg.load_profilogram(infile)
+def sep_by_altitudes(
+        infile, 
+        alt_min = 200, 
+        alt_max = 500
+        ):
+    
+    df = dg.load_profilogram(infile)
     
     times = df.index.unique()
     out = []
     for dn in times:
         ds = df[df.index == dn]
         
-        out.append(ds.loc[(ds["alt"] >= 250) & 
-                          (ds["alt"] <= 350)])
+        out.append(ds.loc[
+            (ds["alt"] >= alt_min) & 
+            (ds["alt"] <= alt_max)]
+            )
       
-    
     return pd.concat(out)
-
-def interpolated_by_times(infile):
-    ds = sep_by_altitudes(infile)
-    out = []
-    for alt in ds.alt.unique():
-        out.append(sampled(ds[ds["alt"] == alt]))
-    
-    return pd.concat(out)
-
-
-def join_from_digisonde(site = "car"):
-
-    df = interpolated_by_times(infile)
-    
-    times = df.index.unique()
-    out = []
-    for dn in times:
-        print(dn)
-        ds = df.loc[df.index == dn]
-        
-        
-        ds["vz"] = load_drift(dn).copy()
-            
-        ds[["zon", "mer"]] = load_winds(
-            site = site, dn = dn).copy()
-        
-        out.append(atm.local_eff_wind(ds))
-        
-    return pd.concat(out)
-
-
-df = sep_by_altitudes(infile)
-
-#%%
-
-from GEO import sites 
-from models import point_msis
-import ionosphere as io
-
 
 
 def add_neutros(ds):
@@ -100,7 +70,8 @@ def add_neutros(ds):
         print("processing...", ds.index[i])
         
         msi = point_msis(
-            ds.index[i], ds.iloc[i, 0], lat, lon
+            ds.index[i], ds.iloc[i, 0],
+            lat, lon
             )
         
         nui.append(
@@ -108,7 +79,9 @@ def add_neutros(ds):
             msi["Tn"], msi["O"], msi["O2"], msi["N2"]
             ))
         
-        R.append(atm.recombination2(msi["O2"], msi["N2"]))
+        R.append(atm.recombination2(
+            msi["O2"], msi["N2"])
+            )
         
     ds["nui"] = nui
     
@@ -116,35 +89,57 @@ def add_neutros(ds):
     
     return ds
 
-df = add_neutros(df)
 
 
-def process_sites():
+def add_winds_vz(df, site = "car"):
     
+    times = df.index.unique()
     out = []
-    for alt in df.alt.unique():
-        out.append(sampled(df[df["alt"] == alt]))
-    
-    ds = pd.concat(out)
-    
-    def add_winds_vz(df, site = "car"):
+    for dn in times:
+        print(dn)
+        ds = df.loc[df.index == dn]
         
-        times = df.index.unique()
-        out = []
-        for dn in times:
-            print(dn)
-            ds = df.loc[df.index == dn]
+        ds["vz"] = load_drift(dn).copy()
+        
+        ds['vzp'] = dg.add_vzp(dn)
             
-            ds["vz"] = load_drift(dn).copy()
-                
-            ds[["zon", "mer"]] = load_winds(
-                site = site, dn = dn).copy()
-            
-            out.append(atm.local_eff_wind(ds))
-            
-        return pd.concat(out)
+        ds[["zon", "mer"]] = load_winds(
+            site = site, dn = dn).copy()
+        
+        out.append(atm.local_eff_wind(ds))
+        
+    return pd.concat(out)
+
+
+def interpolated_by_times(ds):
+    out = []
+    for alt in ds.alt.unique():
+        out.append(sampled(ds[ds["alt"] == alt]))
+    
+    return pd.concat(out)
+
+
+def process_sites(infile):
+    
+    ds = interpolated_by_times(
+        add_neutros(
+            sep_by_altitudes(infile)
+            )
+        )
     
     for site in ["car", "caj"]:
         r = add_winds_vz(ds, site = site)
         
         r.to_csv(f"parameters_{site}.txt")
+        
+infile = "parameters_car.txt"
+# process_sites(infile)
+
+df = pd.read_csv(infile, index_col = 0)
+df.index = pd.to_datetime(df.index)
+
+ds = add_vzp()
+
+dn = df.index[0]
+
+ds.loc[ds.index == dn.date(), "vzp"].item()

@@ -35,3 +35,7 @@ def gamma_maximus(infile = "02_11_north.txt"):
     ts.index = pd.to_datetime(ts.index)
     ts = ts.loc[ts.index.month == 2]
    
+infile = "parameters_car.txt"
+df = pd.read_csv(infile, index_col=0)
+
+df

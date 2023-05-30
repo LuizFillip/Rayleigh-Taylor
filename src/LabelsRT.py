@@ -3,7 +3,7 @@ class EquationsRT:
         
         self.L = "\\frac{1}{n_e} \\frac{\partial n_e}{\partial y}"
         self.g = "\\frac{g}{\\nu_{in}}"
-        self.vp = "V_z"
+        self.vp = "V_{zp}"
         
     def winds(self, sign = 1, rc = False):
         if sign == 1:
@@ -17,9 +17,9 @@ class EquationsRT:
     
     def complete(self, sign = 1, rc = False):
         if sign == 1:
-            self.wd = "+ U"
+            self.wd = "+ u_n"
         else:
-            self.wd = "- U"
+            self.wd = "- u_n"
             
         if rc:
             return f"$\gamma_{{RT}} = ({self.vp} {self.wd} + {self.g}){self.L} - R$"
