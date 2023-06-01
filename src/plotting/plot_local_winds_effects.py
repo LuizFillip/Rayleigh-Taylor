@@ -37,17 +37,19 @@ def plot_gamma(
     ax.text(0.65, 0.1, f'Vzp = {vzp} m/s', 
             transform = ax.transAxes)
     
-    if wind == "zon":
-        name = "Zonal"
-
-    else:
-        name = "Meridional"
+    if wind == "zon_ef":
+        name = "Zonal efetivo"
+    
+    elif wind == "zon":
+        name = "Zonal geográfico"
         
-    if "ef" in wind:
+    elif wind == 'mer_ef':
         
-        name = f'{name} efetivo'
+        name = 'Meridional efetivo'
+    
     else:
-        name = f'{name} geográfico'
+        name = "Meridional geográfico"
+        
         
    
     ax.text(0.05, 0.1, name, 
@@ -80,10 +82,12 @@ def plot_local_winds_effects(infile, dn, sign = 1):
         ax[row, 0].set(ylabel = lbs.label,
                        ylim = [-60, 60])
         
-        plot_roti(ax[2, row], 
-                  df, 
-                  hour_locator = 1,
-                  station = "salu")
+        plot_roti(
+            ax[2, row], 
+            df, 
+            hour_locator = 1,
+            station = "salu"
+            )
         
         ax[0, row].set(title = lbs.complete(
             sign = sign, rc = True)
@@ -113,11 +117,11 @@ def plot_local_winds_effects(infile, dn, sign = 1):
     return fig
 def main():
     
-    infile = "parameters_car.txt"
+    infile = "database/RayleighTaylor/parameters_car.txt"
     
     dn = dt.datetime(2013, 3, 17, 20)
     
     
     f = plot_local_winds_effects(infile, dn, sign = 1)
     
-# main()
+main()
