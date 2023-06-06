@@ -135,11 +135,8 @@ def process_sites(infile):
 infile = "parameters_car.txt"
 # process_sites(infile)
 
-df = pd.read_csv(infile, index_col = 0)
-df.index = pd.to_datetime(df.index)
+ds = load_winds(site = "car", dn  = None)
+ds["alt"] = 300
+df = atm.local_eff_wind(ds)
+df.to_csv("perp_winds.txt")
 
-ds = add_vzp()
-
-dn = df.index[0]
-
-ds.loc[ds.index == dn.date(), "vzp"].item()
