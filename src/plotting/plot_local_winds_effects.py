@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from common import plot_roti, plot_terminators
+from common import plot_roti, plot_terminators, load_by_alt_time
 import RayleighTaylor as rt
 import pandas as pd
 import datetime as dt
@@ -7,14 +7,7 @@ import numpy as np
 import digisonde as dg
 
 
-def load_by_alt_time(infile, dn):
-    
-    df = pd.read_csv(infile, index_col = 0)
-    df.index = pd.to_datetime(df.index)
-    
-    delta = dt.timedelta(seconds = 43200)
 
-    return df.loc[(df.index >= dn) & (df.index <= dn + delta)]
 
 def plot_gamma(
         ax, df, alt, 
@@ -124,4 +117,6 @@ def main():
     
     f = plot_local_winds_effects(infile, dn, sign = 1)
     
-main()
+# main()
+
+

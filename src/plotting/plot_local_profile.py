@@ -107,9 +107,20 @@ def find_alt_maximum(ds):
     return ds["g"].idxmax()
 
 
-# for alt in [find_alt_maximum(ds), 
-#             250, 300, 350]:
-#     ax.axhline(alt)
+def from_data():
+    
+    import datetime as dt
+    infile = "gamma_perp_mer.txt"
+    alt = 300
+    dn = dt.datetime(2013, 3,  17, 1, 0)
+    #df = load_by_alt_time(infile, alt, dn)
+    # df[["mer_ef", "mer_perp"]].plot()
 
+    df = pd.read_csv(infile, index_col = 0)
+    df.index = pd.to_datetime(df.index)
 
-ds
+    from utils import smooth2
+
+    df = df[df.index == dn].sort_values(by=['alt'])
+    df['ne'] =  smooth2(df['ne'], 10)
+    plt.plot(df['ne'], df['alt'])

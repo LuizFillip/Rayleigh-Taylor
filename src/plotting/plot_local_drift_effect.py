@@ -1,6 +1,6 @@
 import settings as s
 import matplotlib.pyplot as plt
-from common import plot_roti, plot_terminators
+from common import plot_roti, plot_terminators, load_by_alt_time
 import RayleighTaylor as rt
 import pandas as pd
 import datetime as dt
@@ -8,14 +8,6 @@ import numpy as np
 import digisonde as dg
 
 
-def load_by_alt_time(infile, dn):
-    
-    df = pd.read_csv(infile, index_col = 0)
-    df.index = pd.to_datetime(df.index)
-    
-    delta = dt.timedelta(seconds = 43200)
-
-    return df.loc[(df.index >= dn) & (df.index <= dn + delta)]
 
 
 
@@ -27,10 +19,11 @@ def plot_gamma(ax, df, alt):
     vz = dg.add_vzp()
     vzp = vz[vz.index == dn]["vzp"].item()
     
-    gamma = df["L"] * ((9.81 / df["nui"]) + vzp)  - df["R"]
+    gamma = df["L"] * ((9.81 / df["nui"]))  - df["R"] #-
     
     ax.plot(gamma*1e4, label = f"{alt} km")
     
+    vzp = 0
     
     ax.axhline(0, linestyle = "--")
     ax.text(0.65, 0.1, f'Vzp = {vzp} m/s', 
@@ -64,7 +57,7 @@ def plot_local_drift_effect(df, dn):
         plot_gamma(ax[0], df, alt)
     
     
-    ax[0].set(title = lbs.drift(rc = True),
+    ax[0].set(title = lbs.gravity(rc = True),
               ylabel = lbs.label,
               ylim = [-60, 60])
     plot_roti(
@@ -88,8 +81,10 @@ infile = "database/RayleighTaylor/parameters_car.txt"
 
 dn = dt.datetime(2013, 3, 16, 20)
 
-
-df = load_by_alt_time(infile, dn)
-FigureName = f"local_drift_{dn.strftime('%Y%m%d')}.png"
-fig = plot_local_drift_effect(df, dn)
-fig.savefig("RayleighTaylor/figures/" + FigureName, dpi = 300)
+for dn in [dt.datetime(2013, 3, 16, 20), 
+           dt.datetime(2013, 3, 17, 20), 
+           dt.datetime(2013, 3, 18, 20)]:
+    df = load_by_alt_time(infile, dn)
+    FigureName = f"local_gravity_{dn.strftime('%Y%m%d')}.png"
+    fig = plot_local_drift_effect(df, dn)
+    fig.savefig("RayleighTaylor/figures/" + FigureName, dpi = 300)

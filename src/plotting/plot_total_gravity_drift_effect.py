@@ -112,9 +112,14 @@ def main():
     
     df = rt.load_process(infile, apex = 300)
     
-    ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
+    #ds = rt.split_by_freq(df, freq_per_split = "10D")[0]
+    
+    import datetime as dt
+
+    start = dt.datetime(2013, 3, 16, 20)
+    end =  dt.datetime(2013, 3, 19, 20)
+    ds = df[(df.index >= start) & (df.index <= end)]
     fig = plot_total_gravity_drift_effect(ds, station = "salu")
     
     plt.show()
-    
 # main()
