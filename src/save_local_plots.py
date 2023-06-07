@@ -14,7 +14,7 @@ def save_plots():
         for sign in [1, -1]:
             
             for site in ["car", "caj"]:
-                infile = f"parameters_{site}.txt"
+                infile = f"database/RayleighTaylor/parameters_{site}.txt"
                 
                 fig = rt.plot_local_winds_effects(
                     infile, dn, sign = sign)

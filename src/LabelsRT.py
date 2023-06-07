@@ -7,9 +7,9 @@ class EquationsRT:
         
     def winds(self, sign = 1, rc = False):
         if sign == 1:
-            self.wd = "+ U"
+            self.wd = "+ u_n"
         else:
-            self.wd = "- U"
+            self.wd = "- u_n"
         if rc:
             return  f"$\gamma_{{RT}} = ({self.wd} + {self.g}){self.L} - R$"
         else:

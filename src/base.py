@@ -28,16 +28,15 @@ def pre_drift(pre_file = "database/Drift/PRE/SAA/2013.txt"):
     
     return pd.concat(dfs)
 
-def vertical_drift(drift_file = "database/Drift/SSA/PRO_2013.txt"):
+def vertical_drift(
+        drift_file = "database/Drift/SSA/PRO_2013.txt"
+        ):
 
     drift = dg.load_drift(drift_file)
     return drift.resample("10min").asfreq().bfill()
 
         
-def set_data(
-        infile = "02_11_north.txt", 
-        alt = 300
-        ):
+def set_data(infile, alt = 300):
     
     df = pd.read_csv(infile, index_col=0)
     
