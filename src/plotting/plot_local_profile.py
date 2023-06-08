@@ -100,28 +100,3 @@ df = pd.read_csv(infile, index_col = 0)
 df.index = pd.to_datetime(df.index)
 
 
-def growth_rate_from_df(df):
-    df["g"] = df["L"] * (
-        (9.81 / df["nui"]) + df["zon"] + df["vz"])
-    return df
-
-df = growth_rate_from_df(df).dropna()
-
-times = df.index.unique()
-
-dn = dt.datetime(2013, 3, 16, 23)
-
-ds = df.loc[df.index == dn].sort_values(by=['alt'])
-
-ds['g'] = smooth2(ds['g'], 15)
-
-fig, ax = plt.subplots(figsize = (5, 4), 
-                       dpi = 300)
-
-ax.plot(ds["ne"] * 1e4, ds["alt"])
-
-lim_max = ds["g"].max() *1e4 + 2
-
-# ax.set(xlim = [-lim_max, lim_max])
-
-

@@ -11,7 +11,7 @@ class EquationsRT:
         else:
             self.wd = "- u_n"
         if rc:
-            return  f"$\gamma_{{RT}} = ({self.wd} + {self.g}){self.L} - R$"
+            return  f"$\gamma_{{RT}} = (-{self.wd} ){self.L} - R$" #+ {self.g}
         else:
             return  f"$\gamma_{{RT}} = ({self.wd} + {self.g}){self.L}$"
     
@@ -28,7 +28,7 @@ class EquationsRT:
     
     def drift(self, rc = False):
         if rc:
-            return f"$\gamma_{{RT}} = ({self.vp} + {self.g}){self.L} - R$"
+            return f"$\gamma_{{RT}} = ({self.vp} ){self.L} - R$" # + {self.g}
         else:
             return f"$\gamma_{{RT}} = ({self.vp} + {self.g}){self.L}$"
     
@@ -44,55 +44,40 @@ class EquationsRT:
         
 class EquationsFT:
     
-    def __init__(self):
-        
+    def __init__(self, r = False):
+        self.r = r
         self.ge = "\\frac{g_e}{\\nu_{eff}^{F}}"
         self.re = "R_T"
         self.kf = "K^F"
         self.vp = "V_P"
         self.ratio = "\\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}"
     
-    def drift(self, recom = False):
-        if recom:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} + {self.ge}){self.kf} - {self.re}$"
+    def drift(self):
+        if self.r:
+            return f"$\gamma_{{FT}} = {self.ratio}({self.vp}){self.kf} - {self.re}$"
         else:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} + {self.ge}){self.kf}$"
+            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} ){self.kf}$"
     
-    def gravity(self, recom = False):
-        if recom:
+    def gravity(self):
+        if self.r:
             return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf} - {self.re}$" 
         else:
             return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf}$"
     
-    def complete(self, 
-              wind_sign = -1, 
-              recom = False):
-        
-        if wind_sign == 1:     
-            wd = "+ U_L^P"
+    def complete(self):
+        if self.r:
+            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf} - {self.re}$"
         else:
-            wd = "- U_L^P"
-            
-        if recom:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} {wd} + {self.ge}){self.kf} - {self.re}$"
-        else:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} {wd} + {self.ge}){self.kf}$"
+            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf}$"
         
       
     
-    def winds(self, 
-              wind_sign = -1, 
-              recom = False):
+    def winds(self):
         
-        if wind_sign == 1:     
-            wd = "+ U_L^P"
+        if self.r:
+            return f"$\gamma_{{FT}} = {self.ratio}( - U_L^P ){self.kf} - {self.re}$" #+ {self.ge}
         else:
-            wd = "- U_L^P"
-            
-        if recom:
-            return f"$\gamma_{{FT}} = {self.ratio}({wd} + {self.ge}){self.kf} - {self.re}$"
-        else:
-            return f"$\gamma_{{FT}} = {self.ratio}({wd} + {self.ge}){self.kf}$"
+            return f"$\gamma_{{FT}} = {self.ratio}( - U_L^P){self.kf}$"
     
 
     @property
