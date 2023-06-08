@@ -18,8 +18,8 @@ def plot_gamma(ax, df, wind = "mer_ef"):
     vzp = vz[vz.index == dn.date()]["vzp"].item()
     
     gammas = [df["L"] * ( 9.81 / df["nui"]) - df["R"], 
-              df["L"] * (-df[wind] + 9.81 / df["nui"]) - df["R"], 
-              df["L"] * (vzp - df[wind] + 9.81 / df["nui"]) - df["R"]]
+              df["L"] * (-df[wind]) - df["R"], 
+              df["L"] * (vzp ) - df["R"]] #- df[wind] + (9.81 / df["nui"])
     
     lbs = rt.EquationsRT()
 
@@ -33,7 +33,7 @@ def plot_gamma(ax, df, wind = "mer_ef"):
     ax.axhline(0, linestyle = "--")
     ax.set(title = f'Vzp = {vzp} m/s')
     
-def plot_compare_dates(alt = 300):
+def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
     fig, ax = plt.subplots(
         figsize = (16, 6),
@@ -62,7 +62,7 @@ def plot_compare_dates(alt = 300):
         plot_roti(ax[1, i], df,  hour_locator = 1)
         
         plot_gamma(
-            ax[0, i], df, wind = 'mer_ef'
+            ax[0, i], df, wind =  wind
             )
             
         if i >= 1:
@@ -76,13 +76,15 @@ def plot_compare_dates(alt = 300):
         ncol = 3, 
         loc = 'upper center'
         )
-    
-    fig.suptitle('Efeitos com vento perpendicular a B', y = 1.1)
+    if wind == 'mer_ef':
+        fig.suptitle('Efeitos com vento paralelo a B', y = 1.1)
+    else:
+        fig.suptitle('Efeitos com vento perpendicular a B', y = 1.1)
     
     return fig
 
 fig = plot_compare_dates(alt = 300)
 
 
-fig.savefig('RayleighTaylor/figures/parallel_winds_effects.png', dpi = 300)
+# fig.savefig('RayleighTaylor/figures/parallel_winds_effects.png', dpi = 300)
 
