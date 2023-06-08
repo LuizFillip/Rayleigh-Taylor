@@ -17,14 +17,21 @@ def plot_gamma(ax, df, wind = "mer_ef"):
     vz = dg.add_vzp()
     vzp = vz[vz.index == dn.date()]["vzp"].item()
     
-    gamma = df["L"] * (
-        + (9.81 / df["nui"])# vzp - df[wind]
-        ) - df["R"]
+    gammas = [df["L"] * ( 9.81 / df["nui"]) - df["R"], 
+              df["L"] * (-df[wind] + 9.81 / df["nui"]) - df["R"], 
+              df["L"] * (vzp - df[wind] + 9.81 / df["nui"]) - df["R"]]
     
+    lbs = rt.EquationsRT()
+
+    names = [lbs.gravity( rc = True),
+             lbs.winds(sign = -1, rc = True), 
+             lbs.complete(sign = -1, rc = True)]
     
-    ax.plot(gamma *1e4, label = label_wind(wind))
+    for i, gamma in enumerate(gammas):
+        ax.plot(gamma *1e4, label = names[i])
+        
     ax.axhline(0, linestyle = "--")
-    #ax.set(title = f'Vzp = {vzp} m/s')
+    ax.set(title = f'Vzp = {vzp} m/s')
     
 def plot_compare_dates(alt = 300):
     
@@ -39,7 +46,7 @@ def plot_compare_dates(alt = 300):
     
     plt.subplots_adjust(
         hspace = 0.1, 
-        wspace = 0.05)
+        wspace = 0.1)
     
     dates = pd.date_range(
         "2013-3-16 20:00", 
@@ -54,30 +61,28 @@ def plot_compare_dates(alt = 300):
     
         plot_roti(ax[1, i], df,  hour_locator = 1)
         
-        for wind in ["mer_ef", "mer_perp"]:
-            plot_gamma(
-                ax[0, i], df, wind = wind
-                )
+        plot_gamma(
+            ax[0, i], df, wind = 'mer_ef'
+            )
             
         if i >= 1:
             ax[1, i].set(ylabel = '')
     
     lbs = rt.EquationsRT()
-    
-    ax[0, 0].set(ylabel = lbs.label, ylim = [-60, 60])
+    ax[0, 0].set(ylabel = lbs.label, ylim = [-50, 50])
     
     ax[0, 1].legend(
         bbox_to_anchor = (0.5, 1.4), 
-        ncol = 2, 
+        ncol = 3, 
         loc = 'upper center'
         )
-    title = lbs.gravity( rc = True)
-    fig.suptitle(title + ' (300 km)', y = 1.1)
+    
+    fig.suptitle('Efeitos com vento perpendicular a B', y = 1.1)
     
     return fig
 
-# fig = plot_compare_dates(alt = 300)
+fig = plot_compare_dates(alt = 300)
 
 
-# fig.savefig('RayleighTaylor/figures/local_all_dates.png', dpi = 300)
+fig.savefig('RayleighTaylor/figures/parallel_winds_effects.png', dpi = 300)
 
