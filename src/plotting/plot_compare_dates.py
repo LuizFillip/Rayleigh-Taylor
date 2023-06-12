@@ -4,6 +4,9 @@ import RayleighTaylor as rt
 import pandas as pd
 import digisonde as dg
 import numpy as np
+import settings as s 
+
+
 
 def label_wind(wind = "mer_ef"):
     if wind == "mer_ef":
@@ -17,15 +20,15 @@ def plot_gamma(ax, df, wind = "mer_ef"):
     vz = dg.add_vzp()
     vzp = vz[vz.index == dn.date()]["vzp"].item()
     
-    gammas = [df["L"] * ( 9.81 / df["nui"]) - df["R"], 
-              df["L"] * (-df[wind]) - df["R"], 
-              df["L"] * (vzp ) - df["R"]] #- df[wind] + (9.81 / df["nui"])
+    gammas = [df["L"] * ( 9.81 / df["nui"]), 
+              df["L"] * (- df[wind]), 
+              df["L"] * (vzp )] 
     
-    lbs = rt.EquationsRT()
+    lbs = rt.EquationsRT(r = False)
 
-    names = [lbs.gravity( rc = True),
-             lbs.winds(sign = -1, rc = True), 
-             lbs.complete(sign = -1, rc = True)]
+    names = [lbs.gravity(),
+             lbs.winds(sign = -1), 
+             lbs.drift()]
     
     for i, gamma in enumerate(gammas):
         ax.plot(gamma *1e4, label = names[i])
@@ -36,7 +39,7 @@ def plot_gamma(ax, df, wind = "mer_ef"):
 def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
     fig, ax = plt.subplots(
-        figsize = (16, 6),
+        figsize = (16, 10),
         sharey = "row",
         sharex= 'col',
         ncols = 3,
@@ -45,7 +48,7 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
         )
     
     plt.subplots_adjust(
-        hspace = 0.1, 
+        hspace = 0.05, 
         wspace = 0.1)
     
     dates = pd.date_range(
@@ -59,32 +62,45 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
         df = load_by_alt_time(infile, alt, dn)
     
-        plot_roti(ax[1, i], df,  hour_locator = 1)
+        plot_roti(ax[1, i], df, hour_locator = 2)
         
         plot_gamma(
-            ax[0, i], df, wind =  wind
+            ax[0, i], df, wind = wind
             )
             
         if i >= 1:
             ax[1, i].set(ylabel = '')
     
     lbs = rt.EquationsRT()
-    ax[0, 0].set(ylabel = lbs.label, ylim = [-50, 50])
+    ax[0, 0].set(ylabel = lbs.label, 
+                 ylim = [-30, 30])
     
     ax[0, 1].legend(
-        bbox_to_anchor = (0.5, 1.4), 
+        bbox_to_anchor = (0.5, 1.35), 
         ncol = 3, 
         loc = 'upper center'
         )
     if wind == 'mer_ef':
-        fig.suptitle('Efeitos com vento paralelo a B', y = 1.1)
+        fig.suptitle('Efeitos locais com vento paralelo a B', y = 1.05)
     else:
-        fig.suptitle('Efeitos com vento perpendicular a B', y = 1.1)
+        fig.suptitle('Local effects with perpendicular winds', y = 1.05)
     
     return fig
 
-fig = plot_compare_dates(alt = 300)
+s.config_labels()
+
+wind = 'mer_perp'
+
+fig = plot_compare_dates(alt = 300, wind = wind)
 
 
-# fig.savefig('RayleighTaylor/figures/parallel_winds_effects.png', dpi = 300)
-
+def save_fig(fig, wind):
+    
+    if wind == 'mer_perp':
+        FigureName = 'perpendicular_winds_effects.png'
+    else:
+        FigureName = 'parallel_winds_effects.png'
+    
+    
+    fig.savefig('RayleighTaylor/figures/' + FigureName, dpi = 300)
+    

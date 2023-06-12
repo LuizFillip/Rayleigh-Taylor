@@ -1,26 +1,23 @@
 import matplotlib.pyplot as plt
-from common import plot_roti, plot_terminators
+from common import plot_roti, plot_terminators, load_by_alt_time
 import RayleighTaylor as rt
 import pandas as pd
 import datetime as dt
 import settings as s
 import os
 
-infile = "database/MSIS/sites/"
+infile = "database/RayleighTaylor/parameters_car.txt"
+dn = dt.datetime(2013, 3, 16, 20)
+alt = 300
+df = load_by_alt_time(infile, alt, dn)
 
-files = os.listdir(infile)
 
+fig, ax = plt.subplots()
+vzp = 30
 
-out = []
-for filename in files:
+for wind in [0, 50, 100]:
+    gamma = df["L"] * (vzp - wind + (9.81 / df["nui"]) )  - df["R"]
+     
+    ax.plot(gamma *1e4, label = f"{wind} m/s")
     
-    
-    out.append(pd.read_csv(infile + filename, index_col = 0))
-    
-df = pd.concat(out)
-df.index = pd.to_datetime(df.index)
-
-#for site in ["saa", 'car', 'caj']:
-site = 'car'   
-ds = df[df['site'] == site]
-ds['O'].plot()
+    ax.legend()

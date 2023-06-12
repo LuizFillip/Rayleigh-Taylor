@@ -93,10 +93,10 @@ def from_data():
     df['ne'] =  smooth2(df['ne'], 10)
     plt.plot(df['ne'], df['alt'])
 
-infile = "database/RayleighTaylor/parameters_car.txt"
+# infile = "database/RayleighTaylor/parameters_car.txt"
 
-df = pd.read_csv(infile, index_col = 0)
+# df = pd.read_csv(infile, index_col = 0)
 
-df.index = pd.to_datetime(df.index)
+# df.index = pd.to_datetime(df.index)
 
 

@@ -1,13 +1,9 @@
 import matplotlib.pyplot as plt
-from common import plot_roti, plot_terminators, load_by_alt_time
+from common import plot_roti
 import RayleighTaylor as rt
 import pandas as pd
 import datetime as dt
-import numpy as np
 import digisonde as dg
-
-
-
 
 
 def set_data(dn, hem = 'south', alt = 300):
@@ -20,12 +16,12 @@ def set_data(dn, hem = 'south', alt = 300):
     
     df = df.set_index('dn')
 
-
     df.index = pd.to_datetime(df.index)
     
     delta = dt.timedelta(seconds = 43200)
 
-    return df.loc[(df.index >= dn) & (df.index <= dn + delta)]
+    return df.loc[(df.index >= dn) & 
+                  (df.index <= dn + delta)]
 
 def set_data_2( dn, hem):
     infile = 'database/RayleighTaylor/reduced/300.txt'
@@ -128,4 +124,4 @@ def plot_compare_fluxtube():
 fig = plot_compare_fluxtube()
 
 
-# fig.savefig("RayleighTaylor/figures/paralelo_winds_effects_ft.png")
+# fig.savefig("RayleighTaylor/figures/paralell_winds_effects_ft.png")

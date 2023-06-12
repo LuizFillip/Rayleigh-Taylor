@@ -6,28 +6,11 @@ import numpy as np
 from GEO import sites
 import models as m
 import ionosphere as io
+import RayleighTaylor as rt
+import settings as s
 
 
 
-def comp_gamma(dn, hem = 'north'):
-    
-    infile = 'wind_perp.txt'
-
-    df = pd.read_csv(infile, index_col=0)
-
-    df['dn'] = pd.to_datetime(df['dn'])
-    
-    df = df.loc[(df['dn'] == dn) & (df['hem'] == hem)]
-    
-    vz = dg.add_vzp()
-    
-    vzp = vz[vz.index == dn.date()]["vzp"].item()
-    
-    gamma = df["ratio"] * df["K"] * (
-        vzp - df['mer_ef'] + (df["ge"] / df["nui"])
-        ) 
-    
-    return smooth2(gamma, 5)
 
 
 
@@ -44,20 +27,20 @@ def add_growth_rate(df, dn):
 
 
 def local(dn):
+    
     glat, glon = sites['saa']['coords']
+    
     wargs = dict(
          dn = dn, 
-         glat =glat, 
+         glat = glat, 
          glon = glon,
          hmin = 200,
          hmax = 500,
          step = 10
          )
     
-    
     infile = "database/Digisonde/SAA0K_20130319(078)_pro"
     df = dg.load_profilogram(infile)
-    
     
     df = df.loc[(df.index == dn) & 
                 (df['alt'] > 200) &
@@ -110,13 +93,14 @@ def plot_int_profiles():
     
     for dn in dates:
         
-        s = comp_gamma(dn, hem = 'north')
-        n = comp_gamma(dn, hem = 'south')
+        south = comp_gamma(dn, hem = 'north')
+        north = comp_gamma(dn, hem = 'south')
         
-        alt = np.linspace(200, 500, len(n))
+        alt = np.linspace(200, 500, len(north))
         
         label = dn.strftime('%d/%m %H:%M (UT)')
-        ax[0].plot((s + n)* 1e4, alt, label = label)
+        ax[0].plot((south + north)* 1e4, alt, 
+                   label = label)
         
         df = add_growth_rate(local(dn), dn)
         
@@ -138,20 +122,24 @@ def plot_int_profiles():
         xlabel = '$\gamma_{RT} ~(10^{-4}~s^{-1})$'
             )
     
-    names = ['Integrada', 'local']
+    integrated = rt.EquationsFT().complete()
+    local_l = rt.EquationsRT().complete()
+    
+    names = [integrated, local_l]
     for i, ax in enumerate(ax.flat):
         ax.axhline(300)
         ax.axvline(0)
-        ax.set(ylim = [200, 500], 
+        ax.set(ylim = [200, 550], 
                xlim = [-30, 30])
     
         letter = s.chars()[i]
         ax.text(
-            0.02, 0.85, f"({letter}) {names[i]}", 
+            0.04, 0.95, f"({letter}) {names[i]}", 
             transform = ax.transAxes
             )
-        
-    fig.suptitle('')
+    
+    fig.suptitle('Comparação entre os perfis locais e integrados')
+
     return fig
 
 
