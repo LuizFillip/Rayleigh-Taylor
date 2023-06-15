@@ -6,7 +6,13 @@ import digisonde as dg
 import numpy as np
 import settings as s 
 
+def parallel_wind(df):
+    D = np.radians(-19.65)
+    
+    df['mer_parl'] = (df['mer'] * np.cos(D) + 
+                      df['zon'] * np.sin(D))
 
+    return df
 
 def label_wind(wind = "mer_ef"):
     if wind == "mer_ef":
@@ -39,7 +45,7 @@ def plot_gamma(ax, df, wind = "mer_ef"):
 def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
     fig, ax = plt.subplots(
-        figsize = (16, 10),
+        figsize = (14, 8),
         sharey = "row",
         sharex= 'col',
         ncols = 3,
@@ -48,7 +54,7 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
         )
     
     plt.subplots_adjust(
-        hspace = 0.05, 
+        hspace = 0, 
         wspace = 0.1)
     
     dates = pd.date_range(
@@ -58,11 +64,16 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
     for i, dn in enumerate(dates):
         
-        infile = "gamma_perp_mer.txt"
+        infile = "database/RayleighTaylor/gamma_perp_mer.txt"
     
-        df = load_by_alt_time(infile, alt, dn)
+        df = parallel_wind(load_by_alt_time(infile, alt, dn))
     
-        plot_roti(ax[1, i], df, hour_locator = 2)
+        plot_roti(
+            ax[1, i], 
+            df, 
+            hour_locator = 2, 
+            pad = 60
+            )
         
         plot_gamma(
             ax[0, i], df, wind = wind
@@ -73,7 +84,7 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
     lbs = rt.EquationsRT()
     ax[0, 0].set(ylabel = lbs.label, 
-                 ylim = [-30, 30])
+                 ylim = [-25, 25])
     
     ax[0, 1].legend(
         bbox_to_anchor = (0.5, 1.35), 
@@ -87,9 +98,9 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
     return fig
 
-s.config_labels()
+# s.config_labels()
 
-wind = 'mer_perp'
+wind = 'mer_parl'
 
 fig = plot_compare_dates(alt = 300, wind = wind)
 
@@ -103,4 +114,4 @@ def save_fig(fig, wind):
     
     
     fig.savefig('RayleighTaylor/figures/' + FigureName, dpi = 300)
-    
+ 
