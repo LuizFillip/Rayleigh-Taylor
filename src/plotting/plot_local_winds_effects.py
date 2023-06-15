@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from common import plot_roti, plot_terminators, load_by_alt_time
 import RayleighTaylor as rt
-import pandas as pd
 import datetime as dt
 import numpy as np
 import digisonde as dg
