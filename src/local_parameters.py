@@ -5,7 +5,6 @@ from utils import sampled
 from GEO import sites 
 from models import point_msis
 import ionosphere as io
-import numpy as np
 
 pd.options.mode.chained_assignment = None 
 
@@ -131,12 +130,13 @@ def process_sites(infile):
         r = add_winds_vz(ds, site = site)
         
         r.to_csv(f"parameters_{site}.txt")
-        
-infile = "parameters_car.txt"
-# process_sites(infile)
 
-ds = load_winds(site = "car", dn  = None)
-ds["alt"] = 300
-df = atm.local_eff_wind(ds)
-df.to_csv("perp_winds.txt")
+def main():
+    infile = "parameters_car.txt"
+    # process_sites(infile)
+    
+    ds = load_winds(site = "car", dn  = None)
+    ds["alt"] = 300
+    df = atm.local_eff_wind(ds)
+    df.to_csv("perp_winds.txt")
 

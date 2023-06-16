@@ -47,7 +47,7 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     fig, ax = plt.subplots(
         figsize = (14, 8),
         sharey = "row",
-        sharex= 'col',
+        sharex = 'col',
         ncols = 3,
         nrows = 2,
         dpi = 300

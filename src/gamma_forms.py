@@ -1,40 +1,39 @@
-import ionosphere as io
-import datetime as dt
 import pandas as pd
-import atmosphere as atm
+import digisonde as dg
 
 
-df = pd.read_csv("perp_winds.txt", index_col = 0)
-df.index = pd.to_datetime(df.index)
-
-
-
-
-
-def compute_nu_like_timeseries():
-    dn = dt.datetime(2013, 3, 17, 0)     
-    glat, glon = sites["saa"]["coords"]   
-    model = point_msis(dn, 300, glat, glon)
+def gamma_forms(df, dn, wind = "mer_perp"):
     
-    temp = pd.read_csv("fp_temp.txt")
-    temp.index = pd.to_datetime(temp.index)
-    mag = mm.load_mag(freq = "5min")
-    B = mag[mag.index == dn]["F"].item()
+    vz = dg.add_vzp()
+    vzp = vz[vz.index == dn.date()]["vzp"].item()
     
-    nu = io.collision_frequencies()
+    try:
+        gammas = [
+            df["L"] * ( 9.81 / df["nui"]), 
+            df["L"] * (-df[wind]), 
+            df["L"] * (vzp),
+            df['L'] * (vzp - df[wind] + 
+                      (9.81 / df["nui"]))
+                  ] 
+    except:
+        gammas = [
+            df['ratio'] * df['K'] * (
+                df['ge'] / df["nui"]), 
+            df['ratio'] * df['K'] * (-df[wind]), 
+            df['ratio'] * df['K'] * (vzp),
+            df['ratio'] * df['K'] * (vzp - df[wind] + 
+                      (df['ge'] / df["nui"]))
+                  ] 
     
-    out = []
-    
-    for dn in temp.index:
-        tn = temp[temp.index == dn]["avg"].item()
-        df = point_msis(dn, 300, glat, glon)
+    gm = pd.concat(gammas, axis = 1).dropna()
         
-        out.append(nu.ion_neutrals(
-            tn, df["O"], 
-            df["O2"], df["N2"]
-            ))
-        
-        
-    temp["nui"] = out
+    gm.columns = [
+        'gravity', 
+        'wind', 
+        'drift', 
+        'all']
     
-    temp.to_csv('nui_temp.txt')    
+    return gm * 1e4
+
+
+
