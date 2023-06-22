@@ -131,12 +131,3 @@ def process_sites(infile):
         
         r.to_csv(f"parameters_{site}.txt")
 
-def main():
-    infile = "parameters_car.txt"
-    # process_sites(infile)
-    
-    ds = load_winds(site = "car", dn  = None)
-    ds["alt"] = 300
-    df = atm.local_eff_wind(ds)
-    df.to_csv("perp_winds.txt")
-
