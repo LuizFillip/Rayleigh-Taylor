@@ -3,37 +3,34 @@ class EquationsRT:
     
     def __init__(self, r = False):
         self.r = r
-        self.L = "\\frac{1}{n_e} \\frac{\partial n_e}{\partial y}"
+        self.L = "L^{-1}"
         self.g = "\\frac{g}{\\nu_{in}}"
         self.vp = "V_{zp}"
-        
-    def winds(self, sign = -1):
-        if sign == 1:
-            self.wd = "+ u_n"
-        else:
-            self.wd = "- u_n"
-        if self.r:
-            return  f"$\gamma_{{RT}} = ({self.wd} ){self.L} - R$" #+ {self.g}
-        else:
-            return  f"$\gamma_{{RT}} = ({self.wd}){self.L}$"
+        self.wd = "u_n"
     
-    def complete(self, sign = -1):
-        if sign == 1:
-            self.wd = "+ u_n"
-        else:
-            self.wd = "- u_n"
+    
+    @property
+    def complete(self):
             
         if self.r:
-            return f"$\gamma_{{RT}} = ({self.vp} {self.wd} + {self.g}){self.L} - R$"
+            return f"$\gamma_{{RT}} = ({self.vp} - {self.wd} + {self.g}){self.L} - R$"
         else:
-            return f"$\gamma_{{RT}} = ({self.vp} {self.wd} + {self.g}){self.L}$"
-    
+            return f"$\gamma_{{RT}} = ({self.vp} - {self.wd} + {self.g}){self.L}$"
+        
+    @property
+    def winds(self):
+            
+        if self.r:
+            return  f"$\gamma_{{RT}} = (-{self.wd}){self.L} - R$" #+ {self.g}
+        else:
+            return  f"$\gamma_{{RT}} = (-{self.wd}){self.L}$"
+    @property
     def drift(self):
         if self.r:
-            return f"$\gamma_{{RT}} = ({self.vp}){self.L} - R$" # + {self.g}
+            return f"$\gamma_{{RT}} = ({self.vp}){self.L} - R$" 
         else:
             return f"$\gamma_{{RT}} = ({self.vp}){self.L}$"
-    
+    @property
     def gravity(self):
         if self.r:
             return  f"$\gamma_{{RT}} = {self.g}{self.L} - R$"
