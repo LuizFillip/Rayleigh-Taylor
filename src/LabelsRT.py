@@ -13,17 +13,17 @@ class EquationsRT:
     def complete(self):
             
         if self.r:
-            return f"$\gamma_{{RT}} = ({self.vp} - {self.wd} + {self.g}){self.L} - R$"
+            return f'$\gamma_{{RT}} = ({self.vp} - {self.wd} + {self.g}){self.L} - R$'
         else:
-            return f"$\gamma_{{RT}} = ({self.vp} - {self.wd} + {self.g}){self.L}$"
+            return f'$\gamma_{{RT}} = ({self.vp} - {self.wd} + {self.g}){self.L}$'
         
     @property
     def winds(self):
             
         if self.r:
-            return  f"$\gamma_{{RT}} = (-{self.wd}){self.L} - R$" #+ {self.g}
+            return  f'$\gamma_{{RT}} = (-{self.wd}){self.L} - R$'
         else:
-            return  f"$\gamma_{{RT}} = (-{self.wd}){self.L}$"
+            return  f'$\gamma_{{RT}} = (-{self.wd}){self.L}$'
     @property
     def drift(self):
         if self.r:
@@ -33,9 +33,9 @@ class EquationsRT:
     @property
     def gravity(self):
         if self.r:
-            return  f"$\gamma_{{RT}} = {self.g}{self.L} - R$"
+            return  f"$\gamma_{{RT}} = ({self.g}){self.L} - R$"
         else:
-            return  f"$\gamma_{{RT}} = {self.g}{self.L}$"
+            return  f"$\gamma_{{RT}} = ({self.g}){self.L}$"
         
     @property
     def label(self):
