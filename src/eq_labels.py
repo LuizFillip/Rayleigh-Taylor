@@ -1,5 +1,6 @@
 class EquationsRT:
     
+    """Local Rayleigh-Taylor (RT) equations"""
     
     def __init__(self, r = False):
         self.r = r
@@ -43,6 +44,8 @@ class EquationsRT:
         
 class EquationsFT:
     
+    """Flux Tube (FT) equations"""
+    
     def __init__(self, r = False):
         self.r = r
         self.ge = "\\frac{g_e}{\\nu_{eff}^{F}}"
@@ -50,35 +53,37 @@ class EquationsFT:
         self.kf = "K^F"
         self.vp = "V_P"
         self.ratio = "\\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}"
-    
+        
+        
+    @property
     def drift(self):
         if self.r:
             return f"$\gamma_{{FT}} = {self.ratio}({self.vp}){self.kf} - {self.re}$"
         else:
             return f"$\gamma_{{FT}} = {self.ratio}({self.vp} ){self.kf}$"
-    
+    @property
     def gravity(self):
         if self.r:
             return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf} - {self.re}$" 
         else:
             return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf}$"
     
+      
+    @property
+    def winds(self):
+        
+        if self.r:
+            return f"$\gamma_{{FT}} = {self.ratio}( -U_L^P ){self.kf} - {self.re}$" 
+        else:
+            return f"$\gamma_{{FT}} = {self.ratio}( - U_L^P){self.kf}$"
+    
+    @property
     def complete(self):
         if self.r:
             return f"$\gamma_{{FT}} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf} - {self.re}$"
         else:
             return f"$\gamma_{{FT}} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf}$"
         
-      
-    
-    def winds(self):
-        
-        if self.r:
-            return f"$\gamma_{{FT}} = {self.ratio}( - U_L^P ){self.kf} - {self.re}$" #+ {self.ge}
-        else:
-            return f"$\gamma_{{FT}} = {self.ratio}( - U_L^P){self.kf}$"
-    
-
     @property
     def label(self):
         return "$\gamma_{{FT}} ~(\\times 10^{{-4}}~s^{{-1}})$"
