@@ -5,9 +5,13 @@ from utils import sampled
 from GEO import sites 
 from models import point_msis
 import ionosphere as io
+import datetime as dt
 
 pd.options.mode.chained_assignment = None 
 
+saint_patrick = [dt.datetime(2013, 3, 16, 20), 
+           dt.datetime(2013, 3, 17, 20), 
+           dt.datetime(2013, 3, 18, 20)]
 
 
 def load_drift(dn = None, freq = "2min"):
@@ -20,7 +24,7 @@ def load_drift(dn = None, freq = "2min"):
         return df
 
 
-def load_winds(site = "caj", dn  = None):
+def load_winds(site = "caj", dn = None):
 
     vnu_file = f"database/FabryPerot/{site}_vnu_2013.txt"
     
@@ -75,7 +79,8 @@ def add_neutros(ds):
         
         nui.append(
             nu.ion_neutrals(
-            msi["Tn"], msi["O"], msi["O2"], msi["N2"]
+            msi["Tn"], msi["O"], 
+            msi["O2"], msi["N2"]
             ))
         
         R.append(atm.recombination2(

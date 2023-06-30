@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from common import plot_roti, plot_terminators, load_by_alt_time
+from common import plot_roti, plot_terminators, load_by_time
 import RayleighTaylor as rt
 import datetime as dt
 import numpy as np
@@ -51,7 +51,7 @@ def plot_gamma(
 
 def plot_local_winds_effects(infile, dn, sign = 1):
    
-    df = load_by_alt_time(infile, dn)
+    df = load_by_time(infile, dn)
     
     fig, ax = plt.subplots(
                 figsize = (14, 10),
@@ -87,8 +87,6 @@ def plot_local_winds_effects(infile, dn, sign = 1):
         
         for alt in np.arange(250, 400, 50):
             
-            
-            
             plot_gamma(ax[row, 0], df, alt, sign = sign, wind = wd)
             plot_gamma(ax[row, 1], df, alt, sign = sign, wind = wd + "_ef")
 
@@ -112,9 +110,8 @@ def main():
     infile = "database/RayleighTaylor/parameters_car.txt"
     
     dn = dt.datetime(2013, 3, 17, 20)
-    
-    
-    f = plot_local_winds_effects(infile, dn, sign = 1)
+
+    plot_local_winds_effects(infile, dn, sign = 1)
     
 # main()
 
