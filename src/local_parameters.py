@@ -135,4 +135,5 @@ def process_sites(infile):
         r = add_winds_vz(ds, site = site)
         
         r.to_csv(f"parameters_{site}.txt")
-
+        
+    return ds

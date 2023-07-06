@@ -1,18 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import digisonde as dg
-from utils import smooth2
 import numpy as np
 from GEO import sites
 import models as m
 import ionosphere as io
 import RayleighTaylor as rt
 import settings as s
-
-
-
-
-
 
 
 def add_growth_rate(df, dn):
@@ -89,7 +83,8 @@ def plot_int_profiles():
     dates = pd.date_range(
         "2013-3-16 22:00", 
         freq = "1D", 
-        periods = 3)
+        periods = 3
+        )
     
     for dn in dates:
         
@@ -117,10 +112,11 @@ def plot_int_profiles():
         xlabel = '$\gamma_{FT} ~(10^{-4}~s^{-1})$', 
         ylabel = 'Altura de apex (km)'
         )
+    
     ax[1].set(
         ylabel = 'Altura local (km)',
         xlabel = '$\gamma_{RT} ~(10^{-4}~s^{-1})$'
-            )
+        )
     
     integrated = rt.EquationsFT().complete()
     local_l = rt.EquationsRT().complete()
@@ -143,6 +139,6 @@ def plot_int_profiles():
     return fig
 
 
-fig = plot_int_profiles()
+# fig = plot_int_profiles()
 
 # fig.savefig('RayleighTaylor/figures/compare_local_fluxtube.png', dpi = 300)

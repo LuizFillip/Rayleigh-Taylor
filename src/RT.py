@@ -57,11 +57,11 @@ def gammas_integrated(df, rc = False):
         for col in ds.columns:
             ds[col] = ds[col] - df['R']
             
-    for col in ds.columns:
+    # for col in ds.columns:
         
-        ds[col] = mm.correct_and_smooth(
-            ds[col], threshold = 0.5
-            )
+    #     ds[col] = mm.correct_and_smooth(
+    #         ds[col], threshold = 0.5
+    #         )
 
     return ds * 1e4
         
