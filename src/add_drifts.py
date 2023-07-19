@@ -34,7 +34,7 @@ def vertical_drift(
 
 
 def add_pre(apex = 300):
-    infile = "database/FluxTube/total/3002.txt"
+    infile = "database/FluxTube/total/3003.txt"
     df = load_by_time(infile)
     
     
@@ -43,20 +43,13 @@ def add_pre(apex = 300):
     
     df["vz"] = ds["vz"].copy()
         
-    pr = load_by_time('drift.txt')
+    pr = load_by_time('database/RayleighTaylor/drift.txt')
     
     df['vzp'] = pr['vp'].copy()
     
-    
     for vz in ["vz", "vzp"]:
         df[vz] = df[vz] * ft.factor_height(apex)**3
-        
-        
-    df.to_csv("database/FluxTube/total/3002.txt")
+            
+    df.to_csv("database/FluxTube/total/3003.txt")
     
-# # add_pre()
-# dn = dt.datetime(2013, 1, 2, 20)
-
-# pr = load_by_time('drift.txt', dn)
-
-# pr.plot()
+# add_pre()

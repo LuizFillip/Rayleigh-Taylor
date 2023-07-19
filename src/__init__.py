@@ -15,6 +15,4 @@ import settings as s
 
 s.config_labels()
 
-from .plotting import *
-
 s.language_mode()

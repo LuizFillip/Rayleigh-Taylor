@@ -1,9 +1,10 @@
 import pandas as pd
 import models as mm
 
-def generalized_rate_growth(nui, L, R, Vp, U):
+def gammas_locals(df):
+    
     """
-    Generalized instability rate growth
+    local Generalized instability rate growth
     local version
     Paramaters:
     ---------- 
@@ -14,10 +15,6 @@ def generalized_rate_growth(nui, L, R, Vp, U):
     R: Recombination rate
     g: acceleration due gravity
     """
-     
-    return (Vp - U + (9.81 / nui))*L - R
-
-def gammas_locals(df):
 
     ds = pd.DataFrame()
     
@@ -34,6 +31,19 @@ def gammas_locals(df):
     return ds * 1e4
 
 def gammas_integrated(df, rc = False):
+    
+    """
+    Generalized instability rate growth
+    Magnetic field Integrated version
+    Paramaters:
+    ---------- 
+    Vp: Prereversal Enhancement (PRE)
+    mer_perp: Neutral wind (effective)
+    nui: ion-neutral collisional frequency
+    K: electron density gradient scale for regionF
+    R: Recombination rate
+    ge: acceleration due gravity
+    """
 
     ds = pd.DataFrame()
     

@@ -98,7 +98,6 @@ def plot_compare_dates(alt = 300, wind = 'mer_ef'):
     
     return fig
 
-# s.config_labels()
 
 wind = 'mer_parl'
 
