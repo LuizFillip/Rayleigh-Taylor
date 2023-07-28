@@ -1,4 +1,3 @@
-from .base import split_by_freq
 from .eq_labels import EquationsFT, EquationsRT
 
 from .RT import (
@@ -10,9 +9,3 @@ from .RT import (
     gammas_locals
     )
 
-
-import settings as s 
-
-s.config_labels()
-
-s.language_mode()

@@ -30,7 +30,12 @@ def gammas_locals(df):
     
     return ds * 1e4
 
-def gammas_integrated(df, rc = False):
+def gammas_integrated(
+        df, 
+        factor = True,
+        rc = False,
+        ratio = False
+        ):
     
     """
     Generalized instability rate growth
@@ -47,19 +52,19 @@ def gammas_integrated(df, rc = False):
 
     ds = pd.DataFrame()
     
-    ds['vz'] =  df['ratio'] * df['K'] * df['vzp'] 
+    if ratio:
+        r = df['ratio']
+    else:
+        r = 1
     
-    ds['g'] =  df['ratio'] * df['K'] * (df['ge'] / df["nui"]) 
     
-    ds['u_parl'] =  df['ratio'] * df['K'] * (-df['mer_parl']) 
+    ds['drift'] =  r * df['K'] * df['vzp'] 
     
-    ds['u_perp'] =  df['ratio'] * df['K'] * (-df['mer_perp']) 
+    ds['gravity'] =  r * df['K'] * (df['ge'] / df["nui"]) 
+        
+    ds['winds'] =  r * df['K'] * (-df['mer_perp']) 
     
-    ds['all_parl'] = df['ratio'] * df['K'] * (
-        df['vzp'] - df['mer_parl'] + (df['ge'] / df["nui"])
-        ) 
-    
-    ds['all_perp'] = df['ratio'] * df['K'] * (
+    ds['all'] = r * df['K'] * (
         df['vzp'] - df['mer_perp'] + (df['ge'] / df["nui"])
         ) 
     
@@ -67,13 +72,10 @@ def gammas_integrated(df, rc = False):
         for col in ds.columns:
             ds[col] = ds[col] - df['R']
             
-    # for col in ds.columns:
-        
-    #     ds[col] = mm.correct_and_smooth(
-    #         ds[col], threshold = 0.5
-    #         )
-
-    return ds * 1e4
+    if factor:    
+        return ds * 1e4
+    else:
+        return ds
         
 def effects_due_to_gravity(
         ds, 
