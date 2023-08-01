@@ -1,5 +1,4 @@
 import pandas as pd
-import models as mm
 
 def gammas_locals(df):
     
@@ -33,8 +32,6 @@ def gammas_locals(df):
 def gammas_integrated(
         df, 
         factor = True,
-        rc = False,
-        ratio = False
         ):
     
     """
@@ -51,31 +48,22 @@ def gammas_integrated(
     """
 
     ds = pd.DataFrame()
-    
-    if ratio:
-        r = df['ratio']
-    else:
-        r = 1
+  
+    ds['parl_mer'] = df['mer_parl'].copy()
+    ds['R'] = df['R'].copy()
     
     
-    ds['drift'] =  r * df['K'] * df['vzp'] 
+    ds['drift'] = df['ratio'] * df['K'] * df['vzp'] 
     
-    ds['gravity'] =  r * df['K'] * (df['ge'] / df["nui"]) 
+    ds['gravity'] = df['ratio'] * df['K'] * (df['ge'] / df["nui"]) 
         
-    ds['winds'] =  r * df['K'] * (-df['mer_perp']) 
+    ds['winds'] = df['ratio'] * df['K'] * (-df['mer_perp']) 
     
-    ds['all'] = r * df['K'] * (
+    ds['all'] =  df['ratio'] * df['K'] * (
         df['vzp'] - df['mer_perp'] + (df['ge'] / df["nui"])
         ) 
-    
-    if rc:
-        for col in ds.columns:
-            ds[col] = ds[col] - df['R']
-            
-    if factor:    
-        return ds * 1e4
-    else:
-        return ds
+
+    return ds
         
 def effects_due_to_gravity(
         ds, 
@@ -137,6 +125,5 @@ def effects_due_to_drift(
     else:
         return gamma 
         
-
 
 
