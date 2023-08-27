@@ -14,6 +14,8 @@ def gammas_locals(df):
     R: Recombination rate
     g: acceleration due gravity
     """
+    
+    
 
     ds = pd.DataFrame()
     
@@ -28,6 +30,9 @@ def gammas_locals(df):
                            (9.81 / df['nui'])) - df['R']
     
     return ds * 1e4
+
+
+
 
 def gammas_integrated(
         df, 
@@ -53,14 +58,14 @@ def gammas_integrated(
     ds['R'] = df['R'].copy()
     
     
-    ds['drift'] = df['ratio'] * df['K'] * df['vzp'] 
+    ds['drift'] = df['ratio'] * df['K'] * df['vp'] 
     
     ds['gravity'] = df['ratio'] * df['K'] * (df['ge'] / df["nui"]) 
         
     ds['winds'] = df['ratio'] * df['K'] * (-df['mer_perp']) 
     
     ds['all'] =  df['ratio'] * df['K'] * (
-        df['vzp'] - df['mer_perp'] + (df['ge'] / df["nui"])
+        df['vp'] - df['mer_perp'] + (df['ge'] / df["nui"])
         ) 
 
     return ds
