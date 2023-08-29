@@ -119,14 +119,14 @@ def run_years():
     
 
 
-# main()
-year = 2013
-
-
-# ds =  run_years()
-
-# ds.to_csv('database/Results/gamma/saa.txt')
+def main():
+    year = 2020
+    
+    
+    ds =  run_years()
+    
+    ds.to_csv('database/Results/gamma/saa.txt')
 
 # ds = load(path_drift + f'R{year}.txt')
-ds = load(path_fluxt + f'{year}.txt')
-ds
+# ds = load(path_fluxt + f'{year}.txt')
+# ds['zon'].plot()
