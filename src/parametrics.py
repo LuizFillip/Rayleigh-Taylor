@@ -2,26 +2,34 @@ import base as b
 import datetime as dt
 import os
 import FluxTube as ft
+import RayleighTaylor as rt
+import GEO as g 
+
 
 PATH_PRE = 'digisonde/data/PRE/'
-PATH_FLUXTUBE =  'FluxTube/data/reduced/'
+PATH_FLUXTUBE = 'FluxTube/data/reduced/'
 
-def PRE(year, site = 'saa', alt = 300):
+
+def PRE(site, alt = 300):
+    
+    fname = 'R2013_2021.txt'
     
     infile = os.path.join(
         PATH_PRE,
         site,
-        f'R{year}.txt'
+        fname
         )
 
     ds = b.load(infile)
     
     ds.rename(
-        columns  = {'vzp': 'vp'}, 
+        columns = {'vzp': 'vp'}, 
         inplace = True
         )
-
-    ds['vp'] = ds['vp'] * ft.factor_height(alt)**3
+    
+    f_apex = ft.factor_height(alt)**3
+    
+    ds['vp'] = ds['vp'] * f_apex
 
     return ds
 
@@ -38,22 +46,36 @@ def FluxTube_dataset(
     ds = b.load(infile)
     
     try:
-        joined = ds.join(PRE(dn.year))
+        joined = ds.join(PRE(site))
     except:
         joined = ds.copy()
     
     return b.sel_times(joined, dn)
 
 
-import datetime as dt 
-
-dn = dt.datetime(2013, 1, 1, 21)
-ds = FluxTube_dataset(dn, site = 'jic')
+def test_and_plot():
+    
+    dn = dt.datetime(2013, 3, 1, 21)
+    site = 'jic'
+     
+    ds = FluxTube_dataset(dn, site)
+        
+        
+    df = rt.gammas_integrated(ds)
     
     
-# df = rt.gammas_integrated(ds)
-
-
-# ds['K'].plot()
-
-ds.columns
+    D = g.sun_terminator(dn, site, twilight_angle = 0)
+    F = g.sun_terminator(dn, site, twilight_angle = 18)
+    
+    # import matplotlib.pyplot as plt 
+    
+    # f, ax = plt.subplots()
+    # ax.plot(df['all'])
+    
+    
+    # ax.axvline(D)
+    # ax.axvline(F)
+    
+    # b.format_time_axes(ax)
+    
+    df

@@ -3,40 +3,19 @@ from base import sel_times, load
 from GEO import sun_terminator
 import RayleighTaylor as rt
 from tqdm import tqdm 
-import FluxTube as ft
-
+import os
 
 path_drift = 'digisonde/data/drift/PRE/saa/'
-path_fluxt =  'FluxTube/data/reduced/saa/'
 
+PATH_GAMMA = 'database/Results/gamma/'
 
-def PRE(year, alt = 300):
-
-    ds = load(path_drift + f'R{year}.txt')
-    
-    ds.rename(
-        columns  = {'vzp':'vp'}, inplace = True)
-
-    ds['vp'] = ds['vp'] * ft.factor_height(alt)**3
-
-    return ds
-
-def FluxTube_dataset(year, dn):
-    
-    ds = load(path_fluxt + f'{year}.txt')
-    
-    try:
-        joined = ds.join(PRE(year, alt = 300))
-    except:
-        joined = ds.copy()
-    
-    return sel_times(joined, dn)
 
     
 def get_maximus(
         ds, 
         dn, 
-        sun_center = 'dusk'
+        sun_center = 'dusk', 
+        site = 'saa'
         ):
     
     """
@@ -46,9 +25,9 @@ def get_maximus(
         
     """
     
-    D = sun_terminator(dn, twilight_angle = 0)
-    E = sun_terminator(dn, twilight_angle = 12)
-    F = sun_terminator(dn, twilight_angle = 18)
+    D = sun_terminator(dn, site, twilight_angle = 0)
+    E = sun_terminator(dn, site, twilight_angle = 12)
+    F = sun_terminator(dn, site, twilight_angle = 18)
     
     if sun_center == 'dusk':
         filtered = ds.loc[
@@ -85,7 +64,7 @@ def maximus_dialy(
         )
     
     out = []
-    for dn in tqdm(dates, desc = str(year)):
+    for dn in tqdm(dates, str(year)):
         
         ds = rt.gammas_integrated(
             FluxTube_dataset(year, dn)
@@ -119,12 +98,15 @@ def run_years():
     
 
 
-def main():
-    year = 2020
+def main(site):
+    save_in = os.path.join(
+        PATH_GAMMA,
+        f'{site}.txt'
+        )
 
-    ds =  run_years()
+    ds = run_years()
     
-    ds.to_csv('database/Results/gamma/saa.txt')
+    ds.to_csv(save_in)
 
 
 # infile = 'database/Results/gamma/saa.txt'

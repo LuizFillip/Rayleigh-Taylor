@@ -23,11 +23,14 @@ def gammas_locals(df):
     ds['g'] =  df["L"] * (9.81 / df['nui']) - df['R']
     ds['u_perp'] = df["L"] * df['mer_perp'] - df['R']
     ds['u_parl'] = df["L"] * df['mer_parl'] - df['R']
-    ds['all_perp'] = df["L"] * (df['vp'] - df['mer_perp'] +
-                           (9.81 / df['nui'])) - df['R']
     
-    ds['all_parl'] = df["L"] * (df['vp'] - df['mer_parl'] +
-                           (9.81 / df['nui'])) - df['R']
+    ds['all_perp'] = df["L"] * (
+        df['vp'] - df['mer_perp'] +
+        (9.81 / df['nui'])) - df['R']
+    
+    ds['all_parl'] = df["L"] * (
+        df['vp'] - df['mer_parl'] +
+        (9.81 / df['nui'])) - df['R']
     
     return ds * 1e4
 
@@ -35,8 +38,7 @@ def gammas_locals(df):
 
 
 def gammas_integrated(
-        df, 
-        factor = True,
+        df
         ):
     
     """
