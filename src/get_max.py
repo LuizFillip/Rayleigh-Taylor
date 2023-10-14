@@ -1,99 +1,108 @@
 import pandas as pd
-from base import sel_times, load
-from GEO import sun_terminator
+import datetime as dt 
+import GEO as g 
 import RayleighTaylor as rt
 from tqdm import tqdm 
 import os
+import numpy as np
 
-path_drift = 'digisonde/data/drift/PRE/saa/'
 
 PATH_GAMMA = 'database/Results/gamma/'
 
 
+def terminators(dn, site = 'saa'):
+    D = g.sun_terminator(dn, site, twilight_angle = 0)
+    E = g.sun_terminator(dn, site, twilight_angle = 12)
+    F = g.sun_terminator(dn, site, twilight_angle = 18)
+    
+    return (D, E, F)
     
 def get_maximus(
         ds, 
         dn, 
-        sun_center = 'dusk', 
-        site = 'saa'
+        site = 'saa',
+        col = 'all'
         ):
     
     """
-    Getting gamma maximus between region E and F 
-    terminators or region F :
+    Getting gamma maximus between D or F an
+    region E and F, or for whole night
+    terminators :
     Parameters:
         
     """
     
-    D = sun_terminator(dn, site, twilight_angle = 0)
-    E = sun_terminator(dn, site, twilight_angle = 12)
-    F = sun_terminator(dn, site, twilight_angle = 18)
+    D, E, F = terminators(dn, site)
+   
+    conds = [((ds.index >= D) & (ds.index <= F)),
+             ((ds.index >= E) & (ds.index <= F)), 
+             slice(None, None)] 
     
-    if sun_center == 'dusk':
-        filtered = ds.loc[
-            (ds.index >= D) & 
-            (ds.index <= F)
-            ]
-    elif sun_center == 'night':
+    names = ['d_f', 'e_f', 'night']
+    
+    out = {}
+    
+    for i, cond in enumerate(conds):
+                
+        out[names[i]] = ds.loc[cond, col].max()
         
-        filtered = ds.copy()
-        
-    else:
-        filtered = ds.loc[
-            (ds.index >= E) & 
-            (ds.index <= F)
-            ]
-    
-    return filtered.max().to_frame(dn.date()).T
+    return pd.DataFrame(out, index = [dn.date()])
 
+def empty(dn):
+    out = {'d_f' : np.nan, 
+           'e_f': np.nan, 
+           'night': np.nan}
+    return pd.DataFrame(
+        out, index = [dn.date()]
+        )
 
     
-def maximus_dialy(
-        year = 2013,
-        sun_center = 'dusk'
+def gamma_maximus(
+        year = 2013, 
+        site = 'saa'
         ):
     
-    """Get gamma maximus for whole year, 
+    """
+    Get gamma maximus for whole year, 
     try for local and integrated quantities
     """
-    
-    dates = pd.date_range(
-        f'{year}-01-01 20:00', 
-        f'{year + 1}-01-01 20:00', 
-        freq = '1D'
-        )
-    
     out = []
-    for dn in tqdm(dates, str(year)):
+    for day in tqdm(range(365), str(year)):
         
-        ds = rt.gammas_integrated(
-            FluxTube_dataset(year, dn)
-            )
+        delta = dt.timedelta(days = day)
         
-        out.append(
-            get_maximus(ds, dn, 
-                    sun_center = sun_center
+        dn = dt.datetime(
+            year, 1, 1, 21, 0
+            ) + delta
+        
+        df = rt.gammas_integrated(
+            rt.FluxTube_dataset(dn, site)
             )
-        )
+
+        try:
+            out.append(get_maximus(df, dn, site))
+        except:
+            out.append(empty(dn))
+        
         
     return pd.concat(out)
 
 
 
-def run_years():
+def run_years(site = 'saa'):
     
     out = []
     
-    for year in range(2013, 2023):
+    for year in range(2013, 2020):
                 
         out.append(
-            maximus_dialy(
-                year = year,
-                sun_center = 'dusk'
+            gamma_maximus(
+                    year, 
+                    site
+                    )
                 )
-            )
             
-    
+            
     return pd.concat(out)
     
 
@@ -109,9 +118,7 @@ def main(site):
     ds.to_csv(save_in)
 
 
-# infile = 'database/Results/gamma/saa.txt'
-# # ds = load(path_drift + f'R{year}.txt')
-# ds = load(infile)
-# # ds['zon'].plot()
+    
+ds = run_years('jic')
 
-# ds['all'].plot()
+ds

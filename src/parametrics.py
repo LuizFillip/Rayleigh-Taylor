@@ -57,11 +57,11 @@ def test_and_plot():
     
     dn = dt.datetime(2013, 3, 1, 21)
     site = 'jic'
-     
-    ds = FluxTube_dataset(dn, site)
+            
         
-        
-    df = rt.gammas_integrated(ds)
+    df = rt.gammas_integrated(
+        FluxTube_dataset(dn, site)
+        )
     
     
     D = g.sun_terminator(dn, site, twilight_angle = 0)
