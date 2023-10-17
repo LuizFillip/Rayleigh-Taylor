@@ -29,7 +29,9 @@ def PRE(site, alt=300):
 
 def FluxTube_dataset(dn, site="saa"):
 
-    infile = os.path.join(PATH_FLUXTUBE, site, f"{dn.year}.txt")
+    infile = os.path.join(
+        PATH_FLUXTUBE, site, f"{dn.year}.txt"
+        )
     ds = b.load(infile)
 
     try:

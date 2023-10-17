@@ -65,21 +65,27 @@ def gamma_maximus(year=2013, site="saa", col="all"):
 
         dn = dt.datetime(year, 1, 1, 21, 0) + delta
 
-        df = rt.gammas_integrated(rt.FluxTube_dataset(dn, site))
+        df = rt.gammas_integrated(
+            rt.FluxTube_dataset(dn, site)
+            )
 
         try:
-            out.append(get_maximus(df, dn, site, col))
+            out.append(
+                get_maximus(df, dn, site, col)
+                )
         except:
             out.append(empty(dn))
 
     return pd.concat(out)
 
 
-def run_years(site="saa"):
-
+def run_years(site = "saa"):
+    
+    print('[processing_gamma]', site)
+    
     out = []
 
-    for year in range(2013, 2020):
+    for year in range(2013, 2022):
 
         out.append(gamma_maximus(year, site))
 
@@ -87,22 +93,20 @@ def run_years(site="saa"):
 
 
 def main(site):
-    save_in = os.path.join(PATH_GAMMA, f"{site}.txt")
+    save_in = os.path.join(
+        PATH_GAMMA, 
+        f"t_{site}.txt"
+        )
 
-    ds = run_years()
+    ds = run_years(site)
 
     ds.to_csv(save_in)
 
 
-site = "jic"
+site = "saa"
+# year = 2015
 # ds = run_years(site)
+# ds = gamma_maximus(year, site, 'all')
 
+main(site)
 
-# #
-# # save_in = os.path.join(
-# #     PATH_GAMMA,
-# #     f'{site}.txt'
-# #     )
-
-# # ds.to_csv(save_in)
-# import matplotlib.pyplot as plt
