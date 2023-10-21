@@ -48,11 +48,55 @@ def get_maximus(ds, dn, site="saa", col="all"):
 
 
 def empty(dn):
-    out = {"d_f": np.nan, "e_f": np.nan, "night": np.nan}
+    out = {
+        "d_f": np.nan, 
+        "e_f": np.nan, 
+        "night": np.nan
+        }
     return pd.DataFrame(out, index=[dn.date()])
 
 
-def gamma_maximus(year=2013, site="saa", col="all"):
+def get_parameters_maxs(dn, site):
+    
+    ds = rt.FluxTube_dataset(dn, site)
+        
+    
+    D, E, F = terminators(dn, site)
+    
+    conds = [
+        ((ds.index >= D) & (ds.index <= F)),
+        ((ds.index >= E) & (ds.index <= F)),
+        slice(None, None),
+    ]
+    
+    names = ["d_f", "e_f", "night"]
+    
+        
+    out_w = []
+    
+    for n, cond in enumerate(conds):
+        
+        out = {}
+        
+        for col in ds.columns:
+            out[col] = ds.loc[cond, col].max()
+        
+        
+        out_w.append(
+            pd.DataFrame(out, index = [names[n]]))
+        
+    df = pd.concat(out_w)
+    df['period'] =  df.index 
+    df.index = [dn.date()] * 3
+
+    return df
+
+
+def gamma_maximus(
+        year = 2013, 
+        site = "saa", 
+        col = "all"
+        ):
 
     """
     Get gamma maximus for whole year,
@@ -61,20 +105,26 @@ def gamma_maximus(year=2013, site="saa", col="all"):
     out = []
     for day in tqdm(range(365), str(year)):
 
-        delta = dt.timedelta(days=day)
+        delta = dt.timedelta(days = day)
 
         dn = dt.datetime(year, 1, 1, 21, 0) + delta
 
-        df = rt.gammas_integrated(
-            rt.FluxTube_dataset(dn, site)
-            )
+        # df = rt.gammas_integrated(
+        #     rt.FluxTube_dataset(dn, site)
+        #     )
+        
 
-        try:
-            out.append(
-                get_maximus(df, dn, site, col)
-                )
-        except:
-            out.append(empty(dn))
+        # try:
+            # out.append(
+            #     get_maximus(df, dn, site, col)
+            #     )
+            
+        out.append(
+            get_parameters_maxs(dn, site)
+            )
+        
+        # except:
+        #     out.append(empty(dn))
 
     return pd.concat(out)
 
@@ -85,7 +135,7 @@ def run_years(site = "saa"):
     
     out = []
 
-    for year in range(2013, 2022):
+    for year in range(2013, 2023):
 
         out.append(gamma_maximus(year, site))
 
@@ -93,20 +143,26 @@ def run_years(site = "saa"):
 
 
 def main(site):
-    save_in = os.path.join(
-        PATH_GAMMA, 
-        f"t_{site}.txt"
-        )
+    
 
-    ds = run_years(site)
+    for site in ['saa', 'jic']:
+     
 
-    ds.to_csv(save_in)
+        save_in = os.path.join(
+            PATH_GAMMA, 
+            f"p_{site}.txt"
+            )
+    
+        ds = run_years(site)
+    
+        ds.to_csv(save_in)
 
+year = 2013
+site = 'saa'
+dn = dt.datetime(year, 1, 1, 21, 0)
 
-site = "saa"
-# year = 2015
-# ds = run_years(site)
-# ds = gamma_maximus(year, site, 'all')
+df = rt.FluxTube_dataset(dn, site)
+    
 
-main(site)
+# df.loc[df.index.time == dt.time(22, 0)]
 

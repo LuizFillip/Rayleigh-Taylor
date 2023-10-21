@@ -4,7 +4,7 @@ import os
 import FluxTube as ft
 import RayleighTaylor as rt
 import GEO as g
-
+import pandas as pd 
 
 PATH_PRE = "digisonde/data/PRE/"
 PATH_FLUXTUBE = "FluxTube/data/reduced/"
@@ -27,10 +27,15 @@ def PRE(site, alt=300):
     return ds
 
 
-def FluxTube_dataset(dn, site="saa"):
+def FluxTube_dataset(
+        dn = None, 
+        site = "saa"
+        ):
 
     infile = os.path.join(
-        PATH_FLUXTUBE, site, f"{dn.year}.txt"
+        PATH_FLUXTUBE, 
+        site, 
+        f"{dn.year}.txt"
         )
     ds = b.load(infile)
 
@@ -38,8 +43,12 @@ def FluxTube_dataset(dn, site="saa"):
         joined = ds.join(PRE(site))
     except:
         joined = ds.copy()
-
-    return b.sel_times(joined, dn)
+        
+    if dn is not None:
+        return b.sel_times(joined, dn)
+    else:
+        return joined
+    
 
 
 def test_and_plot():
@@ -52,14 +61,47 @@ def test_and_plot():
     D = g.sun_terminator(dn, site, twilight_angle=0)
     F = g.sun_terminator(dn, site, twilight_angle=18)
 
-    # import matplotlib.pyplot as plt
 
-    # f, ax = plt.subplots()
-    # ax.plot(df['all'])
+def concat_years( site = "saa"):
+    
 
-    # ax.axvline(D)
-    # ax.axvline(F)
+   
+    
+    out = []
+    
+    for year in range(2013, 2023):
+        
+        infile = os.path.join(
+            PATH_FLUXTUBE, 
+            site, 
+            f"{year}.txt"
+            )
+        ds = b.load(infile)
+        
+        try:
+            joined = ds.join(PRE(site))
+        except:
+            joined = ds.copy()
+            
+            
+        out.append(joined)
+        
+    df = pd.concat(out)
+    
+    save_in = f'database/Results/concat/{site}.txt'
+    
+    df.to_csv(save_in)
+    
+    return df
 
-    # b.format_time_axes(ax)
 
-    df
+# site = "saa"
+# path = f'database/Results/concat/{site}.txt'
+# df = b.load(path)
+
+# dn = dt.datetime(2013, 1, 1, 20)
+
+# df = rt.add_gammas(df)
+# # b.sel_times(df, dn)
+
+# df.to_csv(path)
