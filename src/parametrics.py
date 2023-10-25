@@ -18,7 +18,10 @@ def PRE(site, alt=300):
 
     ds = b.load(infile)
 
-    ds.rename(columns={"vzp": "vp"}, inplace=True)
+    ds.rename(
+        columns = {"vzp": "vp"}, 
+        inplace=True
+        )
 
     f_apex = ft.factor_height(alt) ** 3
 
@@ -62,11 +65,10 @@ def test_and_plot():
     F = g.sun_terminator(dn, site, twilight_angle=18)
 
 
-def concat_years( site = "saa"):
-    
-
-   
-    
+def concat_years( 
+        site = "saa"
+        ):
+  
     out = []
     
     for year in range(2013, 2023):
@@ -95,13 +97,12 @@ def concat_years( site = "saa"):
     return df
 
 
-# site = "saa"
-# path = f'database/Results/concat/{site}.txt'
-# df = b.load(path)
+def run():
 
-# dn = dt.datetime(2013, 1, 1, 20)
-
-# df = rt.add_gammas(df)
-# # b.sel_times(df, dn)
-
-# df.to_csv(path)
+    site = "saa"
+    path = f'database/Results/concat/{site}.txt'
+    df = b.load(path)
+    
+    df = rt.add_gammas(df)
+    
+    # df.to_csv(path)
