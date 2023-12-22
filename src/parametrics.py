@@ -10,7 +10,7 @@ PATH_PRE = "digisonde/data/PRE/"
 PATH_FLUXTUBE = "FluxTube/data/reduced/"
 
 
-def PRE(site, alt=300):
+def PRE(site = 'saa', alt=300):
 
     fname = "R2013_2021.txt"
 
@@ -31,14 +31,14 @@ def PRE(site, alt=300):
 
 
 def FluxTube_dataset(
-        dn = None, 
+        year = 2013, 
         site = "saa"
         ):
 
     infile = os.path.join(
         PATH_FLUXTUBE, 
         site, 
-        f"{dn.year}.txt"
+        f"{year}.txt"
         )
     ds = b.load(infile)
 
@@ -47,22 +47,8 @@ def FluxTube_dataset(
     except:
         joined = ds.copy()
         
-    if dn is not None:
-        return b.sel_times(joined, dn)
-    else:
-        return joined
+    return joined
     
-
-
-def test_and_plot():
-
-    dn = dt.datetime(2013, 3, 1, 21)
-    site = "jic"
-
-    df = rt.gammas_integrated(FluxTube_dataset(dn, site))
-
-    D = g.sun_terminator(dn, site, twilight_angle=0)
-    F = g.sun_terminator(dn, site, twilight_angle=18)
 
 
 def concat_years( 
@@ -106,3 +92,6 @@ def run():
     df = rt.add_gammas(df)
     
     # df.to_csv(path)
+    
+
+

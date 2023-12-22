@@ -11,11 +11,13 @@ PATH_GAMMA = "database/Results/gamma/"
 
 
 def terminators(dn, site="saa"):
-    D = g.sun_terminator(dn, site, twilight_angle=0)
-    E = g.sun_terminator(dn, site, twilight_angle=12)
-    F = g.sun_terminator(dn, site, twilight_angle=18)
+    out = []
+    for angle in [0, 12, 18]:
+        out.append(g.dusk_from_site(
+            dn, site, twilight_angle=angle)
+            ) 
 
-    return (D, E, F)
+    return tuple(out)
 
 
 def get_maximus(ds, dn, site="saa", col="all"):
@@ -56,11 +58,10 @@ def empty(dn):
     return pd.DataFrame(out, index=[dn.date()])
 
 
-def get_parameters_maxs(dn, site):
+def get_parameters_maxs(dn, site = 'saa'):
     
-    ds = rt.FluxTube_dataset(dn, site)
+    ds = rt.FluxTube_dataset(dn.year, site)
         
-    
     D, E, F = terminators(dn, site)
     
     conds = [
@@ -109,22 +110,9 @@ def gamma_maximus(
 
         dn = dt.datetime(year, 1, 1, 21, 0) + delta
 
-        # df = rt.gammas_integrated(
-        #     rt.FluxTube_dataset(dn, site)
-        #     )
-        
-
-        # try:
-            # out.append(
-            #     get_maximus(df, dn, site, col)
-            #     )
-            
         out.append(
             get_parameters_maxs(dn, site)
             )
-        
-        # except:
-        #     out.append(empty(dn))
 
     return pd.concat(out)
 
@@ -166,3 +154,10 @@ def main(site):
 
 # df.loc[df.index.time == dt.time(22, 0)]
 
+df = gamma_maximus(
+        year = 2013, 
+        site = "saa", 
+        col = "all"
+        )
+
+df.to_csv('2013.txt')
