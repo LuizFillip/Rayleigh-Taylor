@@ -145,19 +145,12 @@ def main(site):
     
         ds.to_csv(save_in)
 
-# year = 2013
-# site = 'saa'
-# dn = dt.datetime(year, 1, 1, 21, 0)
 
-# df = rt.FluxTube_dataset(dn, site)
-    
 
-# df.loc[df.index.time == dt.time(22, 0)]
+# df = gamma_maximus(
+#         year = 2013, 
+#         site = "saa", 
+#         col = "all"
+#         )
 
-df = gamma_maximus(
-        year = 2013, 
-        site = "saa", 
-        col = "all"
-        )
-
-df.to_csv('2013.txt')
+# df.to_csv('2013.txt')
