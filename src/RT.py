@@ -35,22 +35,7 @@ def gammas_locals(df):
 
     return ds * 1e4
 
-def add_gammas(df, wind_col = "mer_perp"):
 
-    df["drift"] = df["ratio"] * df["K"] * df["vp"]
-    
-    df["gravity"] = df["ratio"] * df["K"] * (
-        -df[wind_col] + df["ge"] / df["nui"]
-        )
-        
-    df["gamma"] = (
-        df["ratio"] * df["K"] * 
-        (df["vp"] - df[wind_col] + 
-        (df["ge"] / df["nui"]))
-    )
-
-
-    return df
 
 def gammas_integrated(df):
 

@@ -1,17 +1,35 @@
 import base as b
-import datetime as dt
 import os
 import FluxTube as ft
-import RayleighTaylor as rt
-import GEO as g
 import pandas as pd 
+from tqdm import tqdm 
 
 PATH_PRE = "digisonde/data/PRE/"
 PATH_FLUXTUBE = "FluxTube/data/reduced/"
+PATH_GAMMA = 'database/gamma/'
 
+
+def add_gammas(df, wind_col = "mer_perp"):
+
+    df["drift"] = df["ratio"] * df["K"] * df["vp"]
+    
+    df["gravity"] = df["ratio"] * df["K"] * (
+        -df[wind_col] + df["ge"] / df["nui"]
+        )
+        
+    df["gamma"] = (
+        df["ratio"] * df["K"] * 
+        (df["vp"] - df[wind_col] + 
+        (df["ge"] / df["nui"]))
+    )
+
+
+    return df
 
 def PRE(site = 'saa', alt=300):
-
+    """
+    Adding PRE value
+    """
     fname = "R2013_2021.txt"
 
     infile = os.path.join(PATH_PRE, site, fname)
@@ -20,7 +38,7 @@ def PRE(site = 'saa', alt=300):
 
     ds.rename(
         columns = {"vzp": "vp"}, 
-        inplace=True
+        inplace = True
         )
 
     f_apex = ft.factor_height(alt) ** 3
@@ -30,68 +48,68 @@ def PRE(site = 'saa', alt=300):
     return ds
 
 
-def FluxTube_dataset(
+
+def GammaData(
         year = 2013, 
         site = "saa"
         ):
-
+    
     infile = os.path.join(
         PATH_FLUXTUBE, 
         site, 
         f"{year}.txt"
         )
+
     ds = b.load(infile)
 
     try:
-        joined = ds.join(PRE(site))
+        ds = ds.join(PRE(site))
     except:
-        joined = ds.copy()
-        
-    return joined
+        ds = ds.copy()
     
+    return add_gammas(ds)
+
+
 
 
 def concat_years( 
         site = "saa"
         ):
-  
-    out = []
+    '''
+    Concat all processed files of gamma 
+    parameters and save-it
     
-    for year in range(2013, 2023):
+    '''
+    if site == 'saa':
+        end_yr = 2023
+    else:
+        end_yr = 2022
         
-        infile = os.path.join(
-            PATH_FLUXTUBE, 
-            site, 
-            f"{year}.txt"
-            )
-        ds = b.load(infile)
         
-        try:
-            joined = ds.join(PRE(site))
-        except:
-            joined = ds.copy()
-            
-            
-        out.append(joined)
-        
-    df = pd.concat(out)
+    year_list = [GammaData(year, site) 
+                 for year in tqdm(range(2013, end_yr))]
     
-    save_in = f'database/Results/concat/{site}.txt'
-    
-    df.to_csv(save_in)
+    df = pd.concat(year_list)
+        
+    df.to_csv(
+        os.path.join(
+        PATH_GAMMA, 
+        f'p_{site}.txt')
+        )
     
     return df
 
 
-def run():
 
-    site = "saa"
-    path = f'database/Results/concat/{site}.txt'
-    df = b.load(path)
+def load_gamma(site):
     
-    df = rt.add_gammas(df)
+    infile = os.path.join(
+        PATH_GAMMA, 
+        f'{site}.txt'
+        )
     
-    # df.to_csv(path)
+    return b.load(infile)
     
 
 
+# concat_years(site = "jic")

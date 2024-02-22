@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Dec 21 09:19:13 2023
-
-@author: Luiz
-"""
-
 import base as b 
 import os
 import GEO as gg 
