@@ -88,6 +88,7 @@ def vertical_drift(year):
     df = df.loc[df.index.year == year]
     df.index = pd.to_datetime(df['time']).dt.date
     df = df.loc[~df.index.duplicated()]
+    df = df.loc[~(df['vp'] > 40)]
     return df
 
 
@@ -105,7 +106,7 @@ def local_results(
         gradient(year, time), 
         parameters(year, time)
         ], axis = 1)
-    
+
     df['gamma'] = (df['ge'] * df[col_grad]) * 1e3
     df['gamma2'] = ((df['vp'] + df['ge']) * df[col_grad]) * 1e3
     
@@ -114,13 +115,16 @@ def local_results(
     df.index = pd.to_datetime(df.index)
     return df.dropna()
 
-year = 2016
-df = local_results(
-    year, 
-    col_grad = 'L', 
-    time = dt.time(1, 0)
-    )
 
-
-df['vp'].plot()
+def main():
+    
+    year = 2016
+    df = local_results(
+        year, 
+        col_grad = 'L', 
+        time = dt.time(1, 0)
+        )
+    
+    
+    df['vp'].plot()
 
