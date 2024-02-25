@@ -38,6 +38,7 @@ def sel_times(df, year):
     index = pd.to_datetime(dates[:-1].date)
     
     return pd.DataFrame(out, index = index)
+
 def parameters(year, time):
     infile = f'models/temp/local_{year}'
     df = b.load(infile)
@@ -56,8 +57,10 @@ def parameters(year, time):
     df = df.drop(columns = [
         'He', 'O', 'N2', 'foF2',
         'O2', 'H', 'N', 'Tn',
-        'Tn.1', 'Ti', 'Te', 'L'])
-    time = dt.time(1, 0)
+        'Tn.1', 'Ti', 'Te'])
+    
+    df = df.rename(columns = {'L': 'L1'})
+
     ds = df.loc[df.index.time == time]
     
     ds.index = ds.index.date
@@ -68,20 +71,19 @@ def gradient(year, time, smooth = False):
     infile = f'digisonde/data/jic/profiles/{year}'
     
     df = dg.load_profilogram(infile)
-
+    
+    df['L'] = b.smooth(df['L'], 9).copy()
+        
     ds = df.loc[(df['alt'] == 300) & 
                 (df.index.time == time)]
     
-    if smooth:
-        ds['L'] = b.smooth(ds['L'], 10).copy()
-        
     ds = ds.drop(columns = ['alt', 'freq'])
     
     ds.index = ds.index.date
 
     return ds
 
-def PRE(year):
+def vertical_drift(year):
     df = b.load('jic_freqs2')
     df = df.loc[df.index.year == year]
     df.index = pd.to_datetime(df['time']).dt.date
@@ -89,20 +91,36 @@ def PRE(year):
     return df
 
 
-year = 2019
-
-
-time = dt.time(1, 0)
-df = pd.concat([PRE(year), 
-                gradient(year, time), 
-                parameters(year, time)], axis = 1)
 
 
 
-df['gamma'] = (df['ge'] * df['L']) * 1e3
-df['gamma2'] = ((df['vp'] + df['ge']) * df['L']) * 1e3
+def local_results(
+        year, 
+        col_grad = 'L', 
+        time = dt.time(0, 0)
+        ):
 
-df['L'] = df['L'] * 1e5
+    df = pd.concat(
+        [vertical_drift(year), 
+        gradient(year, time), 
+        parameters(year, time)
+        ], axis = 1)
+    
+    df['gamma'] = (df['ge'] * df[col_grad]) * 1e3
+    df['gamma2'] = ((df['vp'] + df['ge']) * df[col_grad]) * 1e3
+    
+    df[['L', 'L1']] = df[['L', 'L1']] * 1e5
+    
+    df.index = pd.to_datetime(df.index)
+    return df.dropna()
+
+year = 2016
+df = local_results(
+    year, 
+    col_grad = 'L', 
+    time = dt.time(1, 0)
+    )
 
 
-df['gamma2'].plot(ylim = [0, 3])
+df['vp'].plot()
+
