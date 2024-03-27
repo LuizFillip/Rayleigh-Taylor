@@ -3,43 +3,49 @@ import aeronomy as ae
 import pandas as pd 
 import datetime as dt
 import digisonde as dg 
+import GEO as gg
+import pyIGRF 
 
 
-def input_specific_time(ss):
-    if ((ss.date() < dt.date(year, 4, 1)) | 
-        (ss.date() > dt.date(year, 10, 1))):
+def dec_dip(
+        df, 
+        site = "jic", alt = 300
+        ):
+    
+    lat, lon = gg.sites[site]["coords"]
         
-        time = dt.time(1, 0)
-    else:
-        time = dt.time(0, 0)
+    for idx, row in df.iterrows():
+        year = idx.year
         
-    return time
+        d, i, h, x, y, z, f = pyIGRF.igrf_value(
+            lat, lon, alt=alt, year=year)
+        
+        # Assign the calculated values to new columns
+        df.loc[idx, 'D'] = d
+        df.loc[idx, 'I'] = i
+
+    return df 
 
 
-def sel_times(df, year):
-    time = dt.time(1, 0)
-    ss = dt.datetime(year, 1, 1, 3)
-    ee = dt.datetime(year + 1, 1, 1, 3)
-    dates = pd.date_range(ss, ee, freq = '1D')
+def winds(year, time = dt.time(1, 0)):
     
-    out = {'gamma': [], 'L': [], 'ge': []}
+    infile = 'database/HWM/winds_jic'
     
-    for i in range(len(dates) - 1):
+    df = b.load(infile)
+    df = df.loc[(df.index.time == time) &
+                ( df.index.year == year)]
+    wind = ae.effective_wind()
     
-        ss = dates[i]
-        ds = df.loc[(df.index > ss) & 
-                    (df.index <= dates[i + 1]) ]
-        
-        
-        for col in ['gamma', 'L', 'ge']:
-            sel = ds.loc[ds.index.time == time]
-            out[col].append(sel[col].max())
+    df = dec_dip(df)
+    df['UL'] = wind.meridional_perp(
+        df['zon'], df['mer'], df['D'], df['I'])
+    df.index = pd.to_datetime(df.index.date)
+    return df 
     
-    index = pd.to_datetime(dates[:-1].date)
-    
-    return pd.DataFrame(out, index = index)
 
-def parameters(year, time):
+
+
+def parameters(year, time = dt.time(1, 0)):
     infile = f'models/temp/local_{year}'
     df = b.load(infile)
         
@@ -71,8 +77,6 @@ def gradient(year, time, smooth = False):
     infile = f'digisonde/data/jic/profiles/{year}'
     
     df = dg.load_profilogram(infile)
-    
-    df['L'] = b.smooth(df['L'], 9).copy()
         
     ds = df.loc[(df['alt'] == 300) & 
                 (df.index.time == time)]
@@ -80,11 +84,11 @@ def gradient(year, time, smooth = False):
     ds = ds.drop(columns = ['alt', 'freq'])
     
     ds.index = ds.index.date
-
+    ds = ds.loc[~ds.index.duplicated()]
     return ds
 
 def vertical_drift(year):
-    df = b.load('jic_freqs2')
+    df = b.load('database/jic_freqs2')
     df = df.loc[df.index.year == year]
     df.index = pd.to_datetime(df['time']).dt.date
     df = df.loc[~df.index.duplicated()]
@@ -92,39 +96,49 @@ def vertical_drift(year):
     return df
 
 
+def another_pre(year):
+    path = 'digisonde/data/PRE/jic/2013_2021.txt'
+    ds = b.load(path)
+    ds = ds.loc[ds.index.year == year]
+    ds = ds.loc[~(ds['vz']> 100)]
+
 
 
 
 def local_results(
         year, 
-        col_grad = 'L', 
+        col_grad = 'L1', 
         time = dt.time(0, 0)
         ):
 
     df = pd.concat(
-        [vertical_drift(year), 
-        gradient(year, time), 
+        [vertical_drift(year), winds(year, time), 
         parameters(year, time)
         ], axis = 1)
-
-    df['gamma'] = (df['ge'] * df[col_grad]) * 1e3
-    df['gamma2'] = ((df['vp'] + df['ge']) * df[col_grad]) * 1e3
-    
-    df[['L', 'L1']] = df[['L', 'L1']] * 1e5
-    
+   
+    df['gamma'] = ((df['vp'] + df['ge']) * df[col_grad]) * 1e3
+        
     df.index = pd.to_datetime(df.index)
+    
+    df['doy'] = df.index.day_of_year
     return df.dropna()
 
-
-def main():
+def concat_results():
     
-    year = 2016
-    df = local_results(
-        year, 
-        col_grad = 'L', 
-        time = dt.time(1, 0)
+    out = []
+    for year in range(2013, 2022):
+        
+        out.append(
+            local_results(
+                year, 
+                col_grad = 'L1', 
+                time = dt.time(1, 0)
+                )
         )
+            
+    df = pd.concat(out)
+
+    df.to_csv('database/jic_local')
     
-    
-    df['vp'].plot()
+
 
