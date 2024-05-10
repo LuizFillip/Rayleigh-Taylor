@@ -3,7 +3,6 @@ import os
 import FluxTube as ft
 import pandas as pd 
 from tqdm import tqdm 
-import datetime as dt 
 
 PATH_PRE = "digisonde/data/drift/PRE/"
 PATH_FLUXTUBE = "FluxTube/data/reduced/"
@@ -15,6 +14,10 @@ def add_gammas(df):
     df["drift"] = df["ratio"] * df["K"] * df["vp"]
     
     df["gravity"] = df["ratio"] * df["K"] * (df["ge"] / df["nui"])
+    
+    df["winds_ge"] = df["ratio"] * df["K"] * (- df['mer_perp'] +  df["ge"] / df["nui"])
+    
+    df["winds"] = df["ratio"] * df["K"] * (- df['mer_perp'])
         
     df["gamma"] = (
         df["ratio"] * df["K"] * (df["vp"] - df['mer_perp'] + (df["ge"] /df["nui"])))
@@ -66,7 +69,8 @@ def GammaData(
 
 
 def concat_years( 
-        site = "saa"
+        site = "saa",
+        name = 'p2'
         ):
     '''
     Concat all processed files of gamma 
@@ -80,19 +84,14 @@ def concat_years(
         
         
     year_list = [GammaData(year, site) for year 
-                 in tqdm(range(2013, end_yr), 
-                         'join_results')]
+                 in tqdm(range(2013, end_yr), 'join_results')]
     
     df = pd.concat(year_list)
     
     del df['alt']
     
     
-    df.to_csv(
-        os.path.join(
-        PATH_GAMMA, 
-        f'p1_{site}.txt')
-        )
+    df.to_csv(os.path.join(PATH_GAMMA, f'{name}_{site}.txt'))
     
     return df
 
@@ -107,17 +106,12 @@ def load_gamma(site):
     
     return b.load(infile)
 
-year = 2014
-site = 'saa'
+def main():
+    year = 2014
+    site = 'saa'
+    
+    
+    concat_years(site = "saa")
 
-
-# # concat_years(site = "saa")
-# infile = os.path.join(
-# PATH_GAMMA, 
-# f'p1_{site}.txt')
-
-
-# df = b.load(infile)
-
-# df['gamma'].plot()
-
+    
+    

@@ -55,36 +55,37 @@ class EquationsFT:
         self.kf = "K^F"
         self.vp = "V_P"
         self.ratio = "\\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}"
+        self.gamma = '\gamma_{RT}'
 
     @property
     def drift(self):
         if self.r:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp}){self.kf} - {self.re}$"
+            return f"${self.gamma}= {self.ratio}({self.vp}){self.kf} - {self.re}$"
         else:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} ){self.kf}$"
+            return f"${self.gamma} = {self.ratio}({self.vp} ){self.kf}$"
 
     @property
     def gravity(self):
         if self.r:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf} - {self.re}$"
+            return f"${self.gamma} = {self.ratio}({self.ge}){self.kf} - {self.re}$"
         else:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.ge}){self.kf}$"
+            return f"${self.gamma} = {self.ratio}({self.ge}){self.kf}$"
 
     @property
     def winds(self):
 
         if self.r:
-            return f"$\gamma_{{FT}} = {self.ratio}( -U_L^P ){self.kf} - {self.re}$"
+            return f"${self.gamma} = {self.ratio}( -U_L^P ){self.kf} - {self.re}$"
         else:
-            return f"$\gamma_{{FT}} = {self.ratio}( - U_L^P){self.kf}$"
+            return f"${self.gamma} = {self.ratio}( - U_L^P){self.kf}$"
 
     @property
     def complete(self):
         if self.r:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf} - {self.re}$"
+            return f"${self.gamma} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf} - {self.re}$"
         else:
-            return f"$\gamma_{{FT}} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf}$"
+            return f"${self.gamma} = {self.ratio}({self.vp} - U_L^P + {self.ge}){self.kf}$"
 
     @property
     def label(self):
-        return "$\gamma_{{FT}} ~(\\times 10^{{-4}}~s^{{-1}})$"
+        return "${self.gamma} ~(\\times 10^{{-4}}~s^{{-1}})$"
