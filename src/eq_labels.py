@@ -21,23 +21,23 @@ class EquationsRT:
     def winds(self):
 
         if self.r:
-            return f"$\gamma_{{RT}} = (-{self.wd}){self.L} - R$"
+            return f"$\gamma_{{RT}}^2 = (-{self.wd}){self.L} - R$"
         else:
-            return f"$\gamma_{{RT}} = (-{self.wd}){self.L}$"
+            return f"$\gamma_{{RT}}^2 = (-{self.wd}){self.L}$"
 
     @property
     def drift(self):
         if self.r:
-            return f"$\gamma_{{RT}} = ({self.vp}){self.L} - R$"
+            return f"$\gamma_{{RT}}^1 = ({self.vp}){self.L} - R$"
         else:
-            return f"$\gamma_{{RT}} = ({self.vp}){self.L}$"
+            return f"$\gamma_{{RT}}^1 = ({self.vp}){self.L}$"
 
     @property
     def gravity(self):
         if self.r:
-            return f"$\gamma_{{RT}} = ({self.g}){self.L} - R$"
+            return f"$\gamma_{{RT}}^3 = ({self.g}){self.L} - R$"
         else:
-            return f"$\gamma_{{RT}} = ({self.g}){self.L}$"
+            return f"$\gamma_{{RT}}^3  = ({self.g}){self.L}$"
 
     @property
     def label(self):
@@ -56,28 +56,33 @@ class EquationsFT:
         self.vp = "V_P"
         self.ratio = "\\frac{\Sigma_P^F}{\Sigma_P^E + \Sigma_P^F}"
         self.gamma = '\gamma_{RT}'
-
+    
+    @property
+    def ylabel(self):
+        return f'${self.gamma}$'+'$~(10^{-3}~s^{-1})$'
+    
+    
     @property
     def drift(self):
         if self.r:
             return f"${self.gamma}= {self.ratio}({self.vp}){self.kf} - {self.re}$"
         else:
-            return f"${self.gamma} = {self.ratio}({self.vp} ){self.kf}$"
+            return f"${self.gamma}^1 = {self.ratio}({self.vp} ){self.kf}$"
 
     @property
     def gravity(self):
         if self.r:
             return f"${self.gamma} = {self.ratio}({self.ge}){self.kf} - {self.re}$"
         else:
-            return f"${self.gamma} = {self.ratio}({self.ge}){self.kf}$"
+            return f"${self.gamma}^3 = {self.ratio}({self.ge}){self.kf}$"
 
     @property
     def winds(self):
 
         if self.r:
-            return f"${self.gamma} = {self.ratio}( -U_L^P ){self.kf} - {self.re}$"
+            return f"${self.gamma} = -{self.ratio}(U_L^P ){self.kf} - {self.re}$"
         else:
-            return f"${self.gamma} = {self.ratio}( - U_L^P){self.kf}$"
+            return f"${self.gamma}^2 = -{self.ratio}(U_L^P){self.kf}$"
 
     @property
     def complete(self):
