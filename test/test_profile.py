@@ -10,10 +10,7 @@ ds = ds * 1e3
 
 # col = 'night'
 # ds = ds.loc[~(ds[col] > 4)]
-ds = ds.loc[ds.index.year == 2015]
-# ds[col].plot()
 
-#
 
 ds["drift"].plot()
 plt.show()
