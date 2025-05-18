@@ -1,51 +1,44 @@
 import base as b 
-import os
+import GEO as gg 
 import datetime as dt
 import pandas as pd 
 import digisonde as dg 
 import matplotlib.pyplot as plt
 import aeronomy as ae 
-
+import core as c
+import FabryPerot as fp 
+import numpy as np 
 PATH_GAMMA = 'database/gamma/'
 PATH_RESULT ='database/Results/concat/'
 
 
-def get_gamma2():
-    
-    path = os.path.join(PATH_GAMMA, 'p1_saa.txt')
-    
-    df = b.load(path)
-    
-    df['gr'] = df['ge'] /df['nui']
-    
-    start = dt.datetime(2015, 12, 19)
-    end = dt.datetime(2015, 12, 23)
-    
-    return b.sel_dates(df, start, end)
-
-
-def get_drift():
-    
-    site = 'SAA0K'
-    
+def get_drift(site = 'SAA0K'):
+      
     start = dt.datetime(2015, 12, 19)
     
-    cols = list(range(3, 10, 1))
+    cols = [5, 6]
     
     df1 = dg.join_iono_days(
             site, 
             start,
-            cols = cols, 
-            smooth = 3
+            cols = cols
             )
     
-    df1.rename(columns = {site: 'vz'}, 
-               inplace = True)
+    df1.rename(
+        columns = {site: 'vz'}, 
+        inplace = True
+        )
+    
+    df1 = df1.loc[~df1.index.duplicated(keep='first')]
+    
     return df1.interpolate()
 
-def get_models(alt):
+def get_models(site = 'SAA0K', 
+               cols = ['vr', 'gr']):
     
-    df = b.load(f'RayleighTaylor/src/models_{alt}')
+    path = 'RayleighTaylor/data/'
+    
+    df = b.load(path + f'{site}_models_storm')
     
     nu = ae.collision_frequencies()
     
@@ -62,48 +55,186 @@ def get_models(alt):
     
     df['ON2'] = df['O'] / df['N2']
     
-    return df[['vr', 'gr', 'ON2']]
+    return df[cols]
 
-def get_scale(alt = 250):
-    infile = 'digisonde/data/SAO/pro_profiles/SAA0K_20151219(353).TXT'
-    df = dg.load_profilogram(infile)
-    
-    return df.loc[df['alt'] == alt][['L']]
 
-def get_gamma(alt = 300):
+
+def get_winds():
     
+    days = [19, 20, 21, 22]
+    out = []
+    path =   'database/FabryPerot/car/'
+    for day in days:
+        fn = f'minime01_car_201512{day}.cedar.003.txt'
+        df = fp.process_directions(
+                path + fn, 
+                freq = "10min", 
+                parameter = "vnu"
+                )
+        
+        out.append(df)
+        
+    return pd.concat(out)
+
+def get_scale(site, alt = 250):
+    
+
+    df = dg.storm_profiles(site = site)
+    
+    df = df.loc[df['alt'] == alt]
+    
+    df = df.loc[~df.index.duplicated(keep='first')]
+    
+    return df['L']
+
+
+def get_gamma(site):
+ 
+
     ds = pd.concat(
-        [get_models(alt), 
-        get_scale(alt), 
-        get_drift()], axis = 1)
+          [get_drift(site), 
+          get_scale(site), 
+          get_models(site, cols = ['vr', 'gr', 'mer']), 
+          # get_winds()
+          ], axis = 1)
+  
+
+    ds = ds.replace(np.nan, 0)
+    
+    # ds['vr'] = 0
+    
+    ds['gamma'] =  (ds['L'] * (
+        ds['vz'] - ds['mer'] + ds['gr']) - ds['vr']) * 1e3
+    
+    ds['gamma3'] =  (ds['L'] * (
+        ds['vz'] + ds['gr']) - ds['vr']) * 1e3
+    
+    ds1 = c.quiettimeRTI()
+    
+    # ds1['vr'] = 0
+    ds['gamma2'] =  (ds1['L'] * (
+        ds1['vz'] - ds1['mer'] + ds1['gr']) - ds1['vr'])* 1e3
+    
+    ds['gamma4'] =  (ds1['L'] * (
+        ds1['vz']  + ds1['gr']) - ds1['vr'] ) * 1e3
+    
+    ds = ds.resample('10min').mean()
+    
+    dn = dt.datetime(2015, 12, 21)
+    
+    delta = dt.timedelta(hours = 12)
+    
+    end = dn + delta
+    
+    ds.loc[dn: end] = ds.loc[dn: end].rolling(
+        window = 5, 
+        center = True
+        ).mean()
+    
+  
+    return ds.interpolate()
+
+def plot_gamma_quiet_and_storm(ax, ds, gs, lim = 2):
+        
+    ax.plot(ds[gs[0]], label = 'Storm-time', lw = 2)
+    ax.plot(ds[gs[1]], label = 'Quiet-time', 
+            lw = 2, linestyle = '--')
+    
+    ax.set(
+        ylim = [-lim, lim],
+        xlim = [ds.index[0], ds.index[-1]],
+        ylabel = '$\\gamma_{RT}~ (\\times 10^{-3} ~s^{-1})$'
+        )
+    
+    ax.axhline(0, lw = 0.5)
+    
+    dn = dt.datetime(2015, 12, 20)
+    
+    dusk = gg.dusk_from_site(
+            dn, 
+            'saa',
+            twilight_angle = 18
+            )
+    
+    ax.axvline(dusk, lw = 2, linestyle = '--')
+    
+    dn = dt.datetime(2015, 12, 20, 21, 40)
+    delta = dt.timedelta(minutes = 30)
+    
+    ax.axvspan(
+         dn - delta, 
+         dn + delta, 
+         ymin = 0, 
+         ymax = 1,
+         alpha = 0.2, 
+         color = 'red'
+         )
+    
+    return None 
+
+def plot_winds_effects_on_gamma(site = 'FZA0M'):
+    
+    fig, ax = plt.subplots(
+        figsize = (16, 12), 
+        dpi = 300, 
+        nrows = 2, 
+        sharex = True
+        )
+    
+    plt.subplots_adjust(hspace = 0.05)
+    ds = get_gamma(site)
+        
+    dn = dt.datetime(2015, 12, 20, 12)
+    ds = b.sel_times(ds, dn, hours = 24)
+    
+    plot_gamma_quiet_and_storm(ax[0], ds, gs = ['gamma', 'gamma2'])
+    plot_gamma_quiet_and_storm(ax[1], ds, gs = ['gamma3', 'gamma4'])
+    
+    b.format_time_axes(
+         ax[-1], 
+         hour_locator = 2, 
+         translate = True, 
+         pad = 85, 
+         format_date = '%d/%m/%y'
+         )
+    
+       
+    ax[0].legend(
+        ncol = 2, 
+        loc = 'upper center', 
+        bbox_to_anchor = (0.5, 1.2), 
+    
+        )
+     
+    ax[0].text(
+        0.01, 0.85, 
+        '(a) With meridional winds', 
+        transform = ax[0].transAxes
+        )
+    
+    ax[1].text(
+        0.01, 0.85, 
+        '(b) Without meridional winds', 
+        transform = ax[1].transAxes
+        )
+    
+    return fig 
+    
+def main():
+    
+    site = 'FZA0M'
+    site = 'SAA0K'
+    fig = plot_winds_effects_on_gamma(site)
     
     
-    ds['gamma'] =  ds['L'] * (ds['vz'] + ds['gr']) * 1e3
-    ds['gamma2'] =  (ds['L'] * (ds['vz'] + ds['gr']) - ds['vr']) * 1e3
+    FigureName = 'winds_effects_on_gamma'
     
+    path_to_save = 'G:\\My Drive\\Papers\\Paper 2\\Geomagnetic control on EPBs\\June-2024-latex-templates\\'
+    
+    
+    # fig.savefig(path_to_save + FigureName, dpi = 400)
 
-    return ds
 
-fig, ax = plt.subplots(
-    figsize = (14, 6), 
-    dpi = 300
-    )
 
-ds = get_gamma()
+# main()
 
-ax.plot(ds['gamma'])
-ax.plot(ds['gamma2'])
-
-ax.set(
-    xlim = [ds.index[0], ds.index[-1]],
-    ylabel = '$\\gamma_{RT}~ (\\times 10^{-3} ~s^{-1})$'
-    )
-
-ax.axhline(0, lw = 1)
-b.format_time_axes(
-    ax, 
-    hour_locator = 12, 
-    translate = True, 
-    pad = 85, 
-    format_date = '%d/%m/%y'
-    )

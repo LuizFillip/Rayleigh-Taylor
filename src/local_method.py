@@ -123,22 +123,13 @@ def local_results(
     df['doy'] = df.index.day_of_year
     return df.dropna()
 
-def concat_results():
+
+
+# site = 'saa'
+
+# lat, lon = gg.sites[site]["coords"]
     
-    out = []
-    for year in range(2013, 2022):
-        
-        out.append(
-            local_results(
-                year, 
-                col_grad = 'L1', 
-                time = dt.time(1, 0)
-                )
-        )
-            
-    df = pd.concat(out)
+# d, i, h, x, y, z, f = pyIGRF.igrf_value(
+#         lat, lon, alt=300, year=2015)
 
-    df.to_csv('database/jic_local')
-    
-
-
+# d, i
