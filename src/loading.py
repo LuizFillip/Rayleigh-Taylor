@@ -134,31 +134,17 @@ def get_gamma(site):
   
     return ds.interpolate()
 
-def plot_gamma_quiet_and_storm(ax, ds, gs, lim = 2):
-        
-    ax.plot(ds[gs[0]], label = 'Storm-time', lw = 2)
-    ax.plot(ds[gs[1]], label = 'Quiet-time', 
-            lw = 2, linestyle = '--')
+def plot_shade_around_terminator(ax, dn, site):
     
-    ax.set(
-        ylim = [-lim, lim],
-        xlim = [ds.index[0], ds.index[-1]],
-        ylabel = '$\\gamma_{RT}~ (\\times 10^{-3} ~s^{-1})$'
-        )
-    
-    ax.axhline(0, lw = 0.5)
-    
-    dn = dt.datetime(2015, 12, 20)
     
     dusk = gg.dusk_from_site(
             dn, 
-            'saa',
+            site[:3].lower(),
             twilight_angle = 18
             )
     
     ax.axvline(dusk, lw = 2, linestyle = '--')
     
-    dn = dt.datetime(2015, 12, 20, 21, 40)
     delta = dt.timedelta(minutes = 30)
     
     ax.axvspan(
@@ -168,8 +154,35 @@ def plot_gamma_quiet_and_storm(ax, ds, gs, lim = 2):
          ymax = 1,
          alpha = 0.2, 
          color = 'red'
-         )
+     )
+    return None 
+def plot_gamma_quiet_and_storm(ax, ds, gs, lim = 2, site = 'saa'):
+        
+    ax.plot(
+        ds[gs[0]], 
+        label = 'Storm-time', 
+        lw = 2
+        )
+    ax.plot(
+        ds[gs[1]], 
+        label = 'Quiet-time', 
+        lw = 2, 
+        linestyle = '--'
+        )
     
+    ax.set(
+        ylim = [-lim, lim],
+        xlim = [ds.index[0], ds.index[-1]],
+        ylabel = '$\\gamma_{RT}~ (\\times 10^{-3} ~s^{-1})$'
+        )
+    
+    ax.axhline(0, lw = 0.5)
+    
+    dn = dt.datetime(2015, 12, 20, 21, 40)
+    
+    plot_shade_around_terminator(ax, dn, site)
+    
+
     return None 
 
 def plot_winds_effects_on_gamma(site = 'FZA0M'):
@@ -187,8 +200,8 @@ def plot_winds_effects_on_gamma(site = 'FZA0M'):
     dn = dt.datetime(2015, 12, 20, 12)
     ds = b.sel_times(ds, dn, hours = 24)
     
-    plot_gamma_quiet_and_storm(ax[0], ds, gs = ['gamma', 'gamma2'])
-    plot_gamma_quiet_and_storm(ax[1], ds, gs = ['gamma3', 'gamma4'])
+    plot_gamma_quiet_and_storm(ax[0], ds, gs = ['gamma', 'gamma2'], site = site)
+    plot_gamma_quiet_and_storm(ax[1], ds, gs = ['gamma3', 'gamma4'], site = site)
     
     b.format_time_axes(
          ax[-1], 
@@ -237,4 +250,3 @@ def main():
 
 
 # main()
-
