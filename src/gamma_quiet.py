@@ -97,7 +97,8 @@ def quiettime_models(site, cols = ['gr', 'vr']):
 def quiettime_gamma(site = 'FZA0M'):
     
     datas = [
-            c.quiettime_winds(),
+            c.quiettime_winds('mer'),
+            c.quiettime_winds('zon'),
             dg.quiettime_gradient_scale(site), 
             dg.quiettime_drift(site, cols = [5, 6, 7], window = None),
             quiettime_models(site, ['gr', 'vr']), 
@@ -111,9 +112,27 @@ def quiettime_gamma(site = 'FZA0M'):
     
     ds = ds.replace(np.nan, 0)
     
+    import aeronomy as ae 
+    
+    wind = ae.effective_wind()
+    
+    ds["mer_perp"] = wind.meridional_perp(
+        ds["zon"], 
+        ds["mer"], 
+        -20.67, 
+        -19.45
+        )
+    
     ds['wind'] =  (ds['L'] * (ds['vz'] - ds['mer'] + ds['gr']) - ds['vr'])* 1e3
 
     ds['no_wind'] =  (ds['L'] * (ds['vz']  + ds['gr']) - ds['vr'] ) * 1e3
-
+    t0  = pd.Timestamp('2015-12-20 20:40')   
+    t1 = pd.Timestamp('2015-12-20 21:40')
+    # ds.loc[(ds.index > t0) & (ds.index < t1), ['no_wind']  ] /= 2
     return ds 
 
+# df = get_winds()
+
+# df
+
+# quiettime_gamma('FZA0M').columns  

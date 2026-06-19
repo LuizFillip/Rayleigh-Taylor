@@ -95,18 +95,39 @@ def stormtime_gamma(site):
     
     ds = get_drift(site)
     
-    frames = [get_scale(site), get_models(site), get_winds() ]
+    frames = [get_scale(site), 
+              get_models(site), 
+              get_winds() ]
     
     for frame in frames:
         ds = concat_by_map(ds, frame)
     
     ds = ds.replace(np.nan, 0)
+    import aeronomy as ae 
     
-    ds['wind'] =  (ds['L'] * (ds['vz'] - ds['mer'] + ds['gr']) - ds['vr']) * 1e3
+    wind = ae.effective_wind()
     
-    ds['no_wind'] =  (ds['L'] * (ds['vz'] + ds['gr']) - ds['vr']) * 1e3
+    ds["mer_perp"] = wind.meridional_perp(
+        ds["zon"], 
+        ds["mer"], 
+        -20.67, 
+        -19.45
+        )
+    
+    ds['wind'] =  (ds['L'] * (
+        ds['vz'] - 
+        ds['mer_perp'] + 
+        ds['gr']) - ds['vr']) * 1e3
+    
+    ds['no_wind'] =  (
+        ds['L'] * (
+            ds['vz'] + 
+            ds['gr']) - 
+        ds['vr']) * 1e3
      
     t0  = pd.Timestamp('2015-12-20 20:40')   
     t1 = pd.Timestamp('2015-12-20 21:20')
-    ds.loc[(ds.index > t0) & (ds.index < t1), ['wind']  ] /= 4
+    # ds.loc[(ds.index > t0) & (ds.index < t1), ['wind']  ] /= 4
+    
     return ds 
+
